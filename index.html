@@ -1,0 +1,1772 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="AI Gym PT">
+<meta name="theme-color" content="#0b0f14">
+<title>AI Gym PT — HLV ảo đếm rep &amp; cổ vũ khi tập gym</title>
+<meta name="description" content="AI Gym PT — huấn luyện viên ảo tiếng Việt: tự đếm rep bằng cảm biến điện thoại, đo nhịp tập và cổ vũ bằng giọng nói như PT thật. Miễn phí, chạy ngay trên trình duyệt.">
+<meta name="keywords" content="AI Gym PT, đếm rep, huấn luyện viên ảo, PT ảo, tập gym, đếm số lần tập, gym coach tiếng Việt, app tập gym">
+<meta name="author" content="AI Gym PT">
+<meta name="robots" content="index, follow">
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="AI Gym PT">
+<meta property="og:title" content="AI Gym PT — HLV ảo đếm rep &amp; cổ vũ khi tập gym">
+<meta property="og:description" content="Tự đếm rep bằng cảm biến điện thoại, đo nhịp tập và cổ vũ bằng giọng nói tiếng Việt như PT thật.">
+<meta property="og:locale" content="vi_VN">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="AI Gym PT — HLV ảo đếm rep &amp; cổ vũ khi tập gym">
+<meta name="twitter:description" content="Huấn luyện viên ảo tiếng Việt: đếm rep, đo nhịp, cổ vũ như PT thật.">
+<link rel="icon" href="icon-192.png" type="image/png">
+<link rel="apple-touch-icon" href="apple-touch-icon.png">
+<link rel="manifest" href="manifest.json">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+<script type="application/ld+json">
+{"@context":"https://schema.org","@type":"WebApplication","name":"AI Gym PT","alternateName":"AI GYM PT","description":"Huấn luyện viên ảo tiếng Việt: tự đếm rep bằng cảm biến điện thoại, đo nhịp tập và cổ vũ bằng giọng nói như PT thật.","applicationCategory":"HealthApplication","operatingSystem":"Web","inLanguage":"vi","offers":{"@type":"Offer","price":"0","priceCurrency":"VND"}}
+</script>
+<style>
+:root{
+  --bg:#0b0f14; --card:#131a23; --card2:#1b2430; --line:#26313f;
+  --txt:#f2f5f9; --sub:#93a1b4; --faint:#5b6879;
+  --accent:#c9f653; --accent2:#7bd82c;
+  --grad:linear-gradient(135deg,#c9f653 0%,#8fe33b 55%,#5fc42a 100%);
+  --on-accent:#0c1207;
+  --danger:#ff7a76; --warn:#ffc24b; --blue:#5ca9ff;
+}
+*{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html,body{height:100%}
+body{
+  background:
+    radial-gradient(900px 520px at 88% -12%, rgba(201,246,83,.08), transparent 60%),
+    radial-gradient(720px 440px at -12% 32%, rgba(92,169,255,.05), transparent 55%),
+    var(--bg);
+  color:var(--txt);
+  font-family:'Be Vietnam Pro',-apple-system,'Segoe UI',Roboto,'Helvetica Neue',Arial,sans-serif;
+  overflow-x:hidden;-webkit-font-smoothing:antialiased;text-rendering:optimizeLegibility;
+}
+#app{max-width:430px;margin:0 auto;min-height:100vh;display:flex;flex-direction:column;position:relative}
+.screen{display:none;flex:1;flex-direction:column;padding:22px 18px 28px;animation:fade .25s ease}
+.screen.on{display:flex}
+@keyframes fade{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:none}}
+h1{font-size:25px;font-weight:800;letter-spacing:-.4px;line-height:1.2}
+h2{font-size:16.5px;font-weight:700;letter-spacing:-.2px}
+.sub{color:var(--sub);font-size:13.5px;line-height:1.55}
+.logo{display:flex;align-items:center;gap:12px;margin-bottom:8px}
+.logo .dot{width:46px;height:46px;border-radius:14px;background:var(--grad);color:var(--on-accent);display:flex;align-items:center;justify-content:center;font-size:17px;font-weight:900;letter-spacing:-.5px;box-shadow:0 8px 22px rgba(139,227,59,.28);flex-shrink:0}
+.card{background:var(--card);border:1px solid var(--line);border-radius:18px;padding:16px;margin-top:14px;box-shadow:0 6px 22px rgba(0,0,0,.22)}
+.btn{display:block;width:100%;border:none;border-radius:14px;padding:16px 18px;font-size:16px;font-weight:700;letter-spacing:.1px;cursor:pointer;font-family:inherit;transition:transform .08s,filter .15s}
+.btn:active{transform:scale(.97);filter:brightness(1.05)}
+.btn-main{background:var(--grad);color:var(--on-accent);font-weight:800;box-shadow:0 10px 26px rgba(139,227,59,.25)}
+.btn-ghost{background:var(--card2);color:var(--txt);border:1px solid var(--line)}
+.btn-danger{background:transparent;color:var(--danger);border:1px solid rgba(255,122,118,.35)}
+.btn-sm{padding:11px 14px;font-size:13.5px;border-radius:11px;width:auto}
+.row{display:flex;gap:10px}
+.row .btn{flex:1}
+.chips{display:flex;flex-wrap:wrap;gap:8px;margin-top:10px}
+.chip{padding:10px 15px;border-radius:999px;background:var(--card2);border:1px solid var(--line);color:var(--txt);font-size:13.5px;font-weight:600;cursor:pointer;transition:border-color .15s}
+.chip.sel{background:var(--grad);color:var(--on-accent);border-color:transparent;font-weight:700}
+.stepper{display:flex;align-items:center;justify-content:space-between;background:var(--card2);border:1px solid var(--line);border-radius:14px;padding:8px;margin-top:10px}
+.stepper button{width:48px;height:48px;border-radius:11px;border:none;background:var(--card);color:var(--txt);font-size:22px;font-weight:800;cursor:pointer}
+.stepper .val{font-size:25px;font-weight:800;font-variant-numeric:tabular-nums}
+.stepper .val small{display:block;font-size:11px;color:var(--faint);font-weight:600;text-align:center;letter-spacing:.4px}
+label.f{display:block;margin-top:20px;font-size:13px;font-weight:700;color:var(--sub);letter-spacing:.2px}
+/* accordion nhom co */
+.cat{background:var(--card2);border:1px solid var(--line);border-radius:14px;margin-top:8px;overflow:hidden;transition:border-color .15s}
+.cat.open{border-color:#33414f}
+.cat.haspick{border-color:rgba(201,246,83,.4)}
+.cat-h{display:flex;align-items:center;gap:10px;padding:13px 14px;cursor:pointer;font-weight:700;font-size:14.5px;user-select:none}
+.cat-h .ico{font-size:16px}
+.cat-h .cnt{margin-left:auto;color:var(--faint);font-size:12px;font-weight:600}
+.cat-h .picked{margin-left:auto;color:var(--accent);font-size:12px;font-weight:600;max-width:55%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.cat-h .chev{color:var(--faint);font-size:11px;transition:transform .2s;margin-left:8px}
+.cat.open .chev{transform:rotate(180deg)}
+.cat-body{display:none;padding:2px 12px 12px}
+.cat.open .cat-body{display:block}
+/* the huong dan bai tap */
+.guide{background:var(--card);border:1px solid var(--line);border-radius:16px;padding:14px;margin-top:12px;box-shadow:0 6px 22px rgba(0,0,0,.22)}
+.gimgs{display:flex;gap:8px;margin-bottom:11px}
+.gimgs img{width:calc(50% - 4px);aspect-ratio:4/3;object-fit:contain;background:#fff;border-radius:12px;border:1px solid var(--line)}
+.gimgs img.hide{display:none}
+.gimgs img:only-child,.gimgs img.solo{width:100%}
+.gname{font-size:15.5px;font-weight:800;letter-spacing:-.2px}
+.gmus{font-size:12px;color:var(--accent);font-weight:600;margin-top:3px}
+.gcues{margin:9px 0 0;padding-left:18px}
+.gcues li{font-size:13px;color:var(--sub);line-height:1.55;margin-top:4px}
+.gpos{margin-top:10px;padding:9px 11px;border-radius:10px;background:rgba(92,169,255,.08);border:1px solid rgba(92,169,255,.25);font-size:12.5px;color:var(--sub);line-height:1.5}
+/* che do bo tui: nen den tuyet doi (OLED gan nhu tat), chu toi mo de do hao pin */
+#pocketOverlay{position:fixed;inset:0;background:#000;z-index:90;display:none;flex-direction:column;align-items:center;justify-content:center;gap:8px}
+#pocketOverlay.on{display:flex}
+.po-num{font-size:120px;font-weight:900;color:#3a4150;font-variant-numeric:tabular-nums;line-height:1}
+.po-sub{font-size:16px;color:#2a303b;font-weight:700}
+.po-hint{position:absolute;bottom:36px;text-align:center;font-size:12px;color:#232830;line-height:1.7}
+.gvideo{display:block;text-align:center;margin-top:12px;padding:11px;border-radius:11px;background:var(--card2);border:1px solid var(--line);color:var(--txt);font-size:13.5px;font-weight:600;text-decoration:none}
+.gvideo:active{border-color:var(--accent)}
+/* thong ke hom nay + can nang + goi y ta */
+.statsrow{display:flex;gap:8px;margin-top:11px}
+.statbox{flex:1;background:var(--card2);border:1px solid var(--line);border-radius:12px;padding:11px 6px;text-align:center}
+.statbox b{display:block;font-size:21px;font-weight:800;font-variant-numeric:tabular-nums}
+.statbox span{font-size:11px;color:var(--sub);font-weight:600}
+.inp{width:100%;margin-top:8px;background:var(--card2);border:1px solid var(--line);border-radius:12px;padding:12px 13px;color:var(--txt);font-family:inherit;font-size:15px;font-weight:600;outline:none}
+.inp:focus{border-color:var(--accent)}
+.pfrow{display:flex;gap:10px}
+.pfcol{flex:1}
+.pfcol .inp{padding:12px 10px;text-align:center;font-variant-numeric:tabular-nums}
+.pfcol label.f{margin-top:16px;font-size:11.5px}
+.kghint{margin-top:8px;font-size:12.5px;line-height:1.5}
+.kghint .sug{color:var(--accent);font-weight:700;cursor:pointer}
+/* workout */
+.wtop{display:flex;justify-content:space-between;align-items:center}
+.pill{background:var(--card2);border:1px solid var(--line);border-radius:999px;padding:7px 14px;font-size:13px;font-weight:700}
+.pill b{color:var(--accent);font-variant-numeric:tabular-nums}
+.ring-wrap{position:relative;width:270px;height:270px;margin:26px auto 6px;filter:drop-shadow(0 8px 26px rgba(139,227,59,.14))}
+.ring-wrap svg{transform:rotate(-90deg)}
+.ring-bg{fill:none;stroke:var(--card2);stroke-width:14}
+.ring-fg{fill:none;stroke:var(--accent);stroke-width:14;stroke-linecap:round;transition:stroke-dashoffset .35s ease}
+.ring-center{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center}
+.repnum{font-size:100px;font-weight:900;line-height:1;letter-spacing:-3px;font-variant-numeric:tabular-nums}
+.reptotal{font-size:15px;color:var(--sub);font-weight:600;margin-top:4px}
+.coachbox{min-height:74px;background:var(--card);border:1px solid var(--line);border-radius:18px;padding:14px 16px;margin-top:14px;display:flex;gap:12px;align-items:center;box-shadow:0 6px 22px rgba(0,0,0,.22)}
+.coachbox .face{width:44px;height:44px;border-radius:50%;background:var(--grad);display:flex;align-items:center;justify-content:center;font-size:22px;flex-shrink:0}
+.coachbox .msg{font-size:15.5px;font-weight:600;line-height:1.45}
+.tempo{display:flex;align-items:center;gap:10px;margin-top:12px}
+.tempo .bar{flex:1;height:8px;border-radius:99px;background:var(--card2);overflow:hidden}
+.tempo .fill{height:100%;width:0%;border-radius:99px;background:var(--accent);transition:width .3s,background .3s}
+.tempo span{font-size:12px;color:var(--sub);font-weight:600;min-width:70px;font-variant-numeric:tabular-nums}
+.tapzone{margin-top:14px;background:var(--card2);border:2px dashed var(--line);border-radius:18px;padding:26px;text-align:center;font-weight:700;font-size:16px;color:var(--sub);cursor:pointer;user-select:none;transition:border-color .15s}
+.tapzone:active{background:#222c39;color:var(--accent);border-color:var(--accent)}
+.sensorbar{margin-top:14px;background:var(--card2);border-radius:12px;padding:10px 14px;font-size:12.5px;color:var(--sub);display:flex;align-items:center;gap:10px}
+.sig{flex:1;height:6px;background:var(--card);border-radius:99px;overflow:hidden}
+.sig i{display:block;height:100%;width:0%;background:var(--blue);border-radius:99px;transition:width .12s}
+.senstune{display:flex;align-items:center;gap:8px;margin-top:8px;font-size:12px;color:var(--sub);font-weight:600}
+.seg-sm{padding:3px;margin:0;flex:1}
+.seg-sm button{padding:8px 4px;font-size:12.5px}
+.corr{width:42px;height:38px;border-radius:11px;border:1px solid var(--line);background:var(--card2);color:var(--txt);font-size:16px;font-weight:800;cursor:pointer;flex-shrink:0}
+.corr:active{background:var(--accent);color:var(--on-accent)}
+/* countdown & rest */
+.bignum{font-size:116px;font-weight:900;text-align:center;letter-spacing:-4px;font-variant-numeric:tabular-nums}
+.center{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:8px}
+/* modal */
+.modal{position:fixed;inset:0;background:rgba(3,6,10,.8);backdrop-filter:blur(3px);display:none;align-items:flex-end;justify-content:center;z-index:50}
+.modal.on{display:flex}
+.sheet{background:var(--card);border-radius:22px 22px 0 0;padding:22px 18px 32px;width:100%;max-width:430px;border-top:1px solid var(--line);box-shadow:0 -12px 40px rgba(0,0,0,.4)}
+.sheet h2{margin-bottom:4px;font-size:18px}
+.sheet .btn{margin-top:10px}
+/* summary */
+.stat{display:flex;justify-content:space-between;padding:11px 0;border-bottom:1px solid var(--line);font-size:14.5px}
+.stat:last-child{border:none}
+.stat b{font-weight:700;font-variant-numeric:tabular-nums}
+.badge{display:inline-block;background:rgba(255,194,75,.14);color:var(--warn);font-size:10.5px;font-weight:700;padding:3px 9px;border-radius:99px;margin-left:8px;vertical-align:2px;letter-spacing:.3px}
+.hist{font-size:13.5px;color:var(--sub);padding:9px 0;border-bottom:1px solid var(--line)}
+.hist:last-child{border:none}
+.seg{display:flex;background:var(--card2);border:1px solid var(--line);border-radius:12px;padding:4px;margin-top:10px}
+.seg button{flex:1;border:none;background:transparent;color:var(--sub);padding:10px 4px;border-radius:9px;font-weight:600;font-size:13px;cursor:pointer;font-family:inherit;transition:color .15s}
+.seg button.sel{background:var(--grad);color:var(--on-accent);font-weight:700}
+.micbtn{width:100%;margin-top:12px;background:var(--card2);border:1px solid var(--line);color:var(--txt);border-radius:14px;padding:14px;font-size:14.5px;font-weight:600;cursor:pointer;font-family:inherit}
+.micbtn.listening{border-color:var(--danger);color:var(--danger);animation:pulse 1s infinite}
+@keyframes pulse{50%{opacity:.55}}
+.footer-note{text-align:center;font-size:11.5px;color:var(--faint);margin-top:auto;padding-top:18px;line-height:1.6}
+/* trang lich su */
+.histrow{display:flex;align-items:center;gap:10px;padding:11px 0;border-bottom:1px solid var(--line)}
+.histrow:last-child{border:none}
+.histrow .hinfo{flex:1;min-width:0}
+.histrow .hd{font-size:13.5px;font-weight:700}
+.histrow .hs{font-size:12px;color:var(--sub);margin-top:2px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.histrow .hdel{width:36px;height:36px;border-radius:10px;border:1px solid rgba(255,122,118,.3);background:transparent;color:var(--danger);cursor:pointer;font-size:14px;flex-shrink:0}
+#histChart svg{width:100%;height:auto;display:block}
+.setdots{display:flex;gap:7px;justify-content:center;margin-top:10px}
+.setdots i{width:9px;height:9px;border-radius:50%;background:var(--card2);border:1px solid var(--line)}
+.setdots i.done{background:var(--accent);border-color:var(--accent)}
+.setdots i.cur{border-color:var(--accent)}
+</style>
+</head>
+<body>
+<div id="app">
+
+  <!-- ====== HOME ====== -->
+  <section class="screen on" id="scr-home">
+    <header class="logo"><div class="dot">AI</div><div><h1>AI Gym PT</h1><div class="sub" id="homeSub">Huấn luyện viên ảo — đếm rep &amp; cổ vũ như PT thật</div></div></header>
+    <div class="card">
+      <h2>Chế độ đếm rep</h2>
+      <div class="seg" id="modeSeg">
+        <button data-m="sensor">📱 Cảm biến</button>
+        <button data-m="tap">👆 Chạm tay</button>
+        <button data-m="demo">▶️ Demo</button>
+      </div>
+      <div class="sub" id="modeDesc" style="margin-top:10px"></div>
+    </div>
+    <div class="card">
+      <div style="display:flex;justify-content:space-between;align-items:center">
+        <h2>Giọng HLV</h2>
+        <button class="btn btn-ghost btn-sm" id="voiceToggle">🔊 Bật</button>
+      </div>
+      <div class="sub" style="margin-top:6px">HLV sẽ đếm to từng rep, cổ vũ khi bạn chậm nhịp và khen khi hoàn thành.</div>
+    </div>
+    <div class="card">
+      <h2>Hôm nay</h2>
+      <div class="statsrow">
+        <div class="statbox"><b id="tdEx">0</b><span>bài tập</span></div>
+        <div class="statbox"><b id="tdReps">0</b><span>rep</span></div>
+        <div class="statbox"><b id="tdKcal">0</b><span>kcal</span></div>
+      </div>
+      <div class="sub" id="weekLine" style="margin-top:10px"></div>
+    </div>
+    <div class="card">
+      <div style="display:flex;justify-content:space-between;align-items:center;gap:10px">
+        <h2>Hồ sơ của bạn</h2>
+        <button class="btn btn-ghost btn-sm" id="pfEdit">✏️ Sửa</button>
+      </div>
+      <div class="sub" id="pfLine" style="margin-top:8px">Chưa có hồ sơ — bấm Sửa để điền.</div>
+    </div>
+    <div class="card">
+      <div style="display:flex;justify-content:space-between;align-items:center">
+        <h2>Buổi tập gần đây</h2>
+        <button class="btn btn-ghost btn-sm" id="btnHistAll">Xem tất cả →</button>
+      </div>
+      <div id="histList"><div class="sub" style="margin-top:8px">Chưa có buổi tập nào. Bắt đầu ngay hôm nay! 🔥</div></div>
+    </div>
+    <div style="margin-top:auto;padding-top:18px">
+      <button class="btn btn-main" id="btnStart">Bắt đầu buổi tập 🔥</button>
+    </div>
+    <div class="footer-note">Đồng hồ thông minh &amp; tai nghe: sắp ra mắt · Chấm form bằng camera: sắp ra mắt (Pro)</div>
+  </section>
+
+  <!-- ====== SETUP ====== -->
+  <section class="screen" id="scr-setup">
+    <h1 id="setupTitle">Bài tập tiếp theo?</h1>
+    <div class="sub" style="margin-top:4px">Chọn bài hoặc bấm mic và nói: <i>"Squat 3 set 12 cái"</i></div>
+    <button class="micbtn" id="micBtn">🎤 Nói bài tập</button>
+    <label class="f">Bài tập — chọn nhóm cơ</label>
+    <div id="exCats"></div>
+    <div class="guide" id="guideCard">
+      <div class="gimgs" id="gImgs">
+        <img id="gImg0" alt="Tư thế bắt đầu">
+        <img id="gImg1" alt="Tư thế kết thúc">
+      </div>
+      <div class="gname" id="gName"></div>
+      <div class="gmus" id="gMus"></div>
+      <ul class="gcues" id="gCues"></ul>
+      <div class="gpos" id="gPos"></div>
+      <a class="gvideo" id="gVideo" target="_blank" rel="noopener">🎬 Xem video hướng dẫn</a>
+    </div>
+    <label class="f">Số set (hiệp)</label>
+    <div class="stepper"><button id="setMinus">−</button><div class="val"><span id="setVal">3</span><small>set</small></div><button id="setPlus">+</button></div>
+    <label class="f" id="lblReps">Số rep mỗi set</label>
+    <div class="stepper"><button id="repMinus">−</button><div class="val"><span id="repVal">12</span><small id="repUnit">rep</small></div><button id="repPlus">+</button></div>
+    <label class="f">Mức tạ</label>
+    <div class="stepper"><button id="kgMinus">−</button><div class="val"><span id="kgVal">0</span><small>kg</small></div><button id="kgPlus">+</button></div>
+    <div class="sub kghint" id="kgHint"></div>
+    <label class="f">Nghỉ giữa set</label>
+    <div class="chips" id="restChips"></div>
+    <div style="margin-top:auto;padding-top:20px">
+      <button class="btn btn-main" id="btnGo">Vào set 1 →</button>
+      <button class="btn btn-ghost" id="btnBackHome" style="margin-top:10px">← Quay lại</button>
+    </div>
+  </section>
+
+  <!-- ====== COUNTDOWN ====== -->
+  <section class="screen" id="scr-count">
+    <div class="center">
+      <div class="sub" id="cdLabel" style="font-size:16px;font-weight:700"></div>
+      <div class="bignum" id="cdNum">3</div>
+      <div class="sub">Vào vị trí, chuẩn bị nào!</div>
+    </div>
+  </section>
+
+  <!-- ====== WORKOUT ====== -->
+  <section class="screen" id="scr-work">
+    <div class="wtop">
+      <div class="pill" id="wEx">Squat</div>
+      <div class="pill" id="modeBadge" style="display:none"></div>
+      <div class="pill">Set <b id="wSet">1/3</b></div>
+    </div>
+    <div class="ring-wrap">
+      <svg width="270" height="270" viewBox="0 0 270 270">
+        <circle class="ring-bg" cx="135" cy="135" r="120"></circle>
+        <circle class="ring-fg" id="ringFg" cx="135" cy="135" r="120" stroke-dasharray="754" stroke-dashoffset="754"></circle>
+      </svg>
+      <div class="ring-center">
+        <div class="repnum" id="repNum">0</div>
+        <div class="reptotal" id="repTotal">/ 12 rep</div>
+      </div>
+    </div>
+    <div class="setdots" id="setDots"></div>
+    <div class="tempo"><span>Nhịp tập</span><div class="bar"><div class="fill" id="tempoFill"></div></div><span id="tempoTxt" style="text-align:right">—</span></div>
+    <div class="coachbox"><div class="face">🧑‍🏫</div><div class="msg" id="coachMsg">Sẵn sàng chưa? Lên nào!</div></div>
+    <div class="tapzone" id="tapZone" style="display:none">👆 Chạm mỗi khi xong 1 rep</div>
+    <div id="sensorPanel" style="display:none">
+      <div class="gpos" id="posHint" style="margin-top:14px"></div>
+      <div class="sensorbar">📱 <div class="sig"><i id="sigFill"></i></div><span id="sensorState">đang đo…</span></div>
+      <div class="senstune">
+        <span>Độ nhạy</span>
+        <div class="seg seg-sm" id="sensSeg">
+          <button data-s="soft">Nhạy</button>
+          <button data-s="mid">Vừa</button>
+          <button data-s="hard">Chắc</button>
+        </div>
+        <button class="corr" id="repCorrMinus" title="Bớt 1 (đếm dư)">−1</button>
+        <button class="corr" id="repCorrPlus" title="Thêm 1 (đếm thiếu)">+1</button>
+      </div>
+      <div class="sub" style="font-size:11.5px;margin-top:6px;text-align:center">Đếm dư (rung/xoay nhẹ cũng tính)? Chọn <b>Chắc</b>. Đếm thiếu? Chọn <b>Nhạy</b>. Sai vài cái thì bấm −1/+1.</div>
+      <button class="btn btn-ghost" id="btnPocket" style="margin-top:10px">🌙 Bỏ túi — màn hình tối, vẫn đếm</button>
+      <div class="sub" style="text-align:center;margin-top:8px"><span id="slogExport" style="text-decoration:underline;cursor:pointer;font-size:11.5px">📋 Xuất log cảm biến (khi đếm sai, gửi file này để tinh chỉnh)</span></div>
+    </div>
+    <div class="row" style="margin-top:14px">
+      <button class="btn btn-ghost" id="btnPause">⏸ Tạm dừng</button>
+      <button class="btn btn-danger" id="btnEndSet">Kết thúc set</button>
+    </div>
+  </section>
+
+  <!-- ====== REST ====== -->
+  <section class="screen" id="scr-rest">
+    <div class="center">
+      <div class="sub" style="font-size:16px;font-weight:700">Nghỉ ngơi 😮‍💨</div>
+      <div class="bignum" id="restNum">60</div>
+      <div class="sub" id="restLabel">Chuẩn bị Set 2 · Squat</div>
+      <div class="coachbox" style="width:100%;margin-top:22px"><div class="face">🧑‍🏫</div><div class="msg" id="restMsg">Thở đều, uống ngụm nước nhé!</div></div>
+    </div>
+    <button class="btn btn-main" id="btnSkipRest">Bỏ qua nghỉ — vào luôn 💥</button>
+  </section>
+
+  <!-- ====== HISTORY: lich su day du + tien bo ====== -->
+  <section class="screen" id="scr-hist">
+    <h1>Lịch sử &amp; tiến bộ</h1>
+    <div class="card">
+      <h2>Tiến bộ theo bài 📈</h2>
+      <div class="chips" id="histExChips"></div>
+      <div id="histChart" style="margin-top:12px"></div>
+      <div class="sub" id="histChartNote" style="margin-top:6px"></div>
+    </div>
+    <div class="card">
+      <h2>Tất cả buổi tập</h2>
+      <div id="histAll"></div>
+    </div>
+    <div class="card">
+      <h2>Dữ liệu của bạn</h2>
+      <div class="sub" style="margin-top:4px">Dữ liệu lưu trên máy này. Sao lưu ra file để không mất khi xoá cache, hoặc chuyển sang máy khác.</div>
+      <div class="row" style="margin-top:12px">
+        <button class="btn btn-ghost btn-sm" style="flex:1" id="btnBackup">💾 Sao lưu ra file</button>
+        <button class="btn btn-ghost btn-sm" style="flex:1" id="btnRestore">📂 Khôi phục từ file</button>
+      </div>
+      <input type="file" id="restoreFile" accept=".json,application/json" style="display:none">
+    </div>
+    <div style="margin-top:auto;padding-top:18px">
+      <button class="btn btn-main" id="btnHistBack">← Về trang chủ</button>
+    </div>
+  </section>
+
+  <!-- ====== SUMMARY ====== -->
+  <section class="screen" id="scr-sum">
+    <div class="center" style="flex:0;padding:26px 0 6px">
+      <div style="font-size:56px">🏆</div>
+      <h1>Buổi tập hoàn thành!</h1>
+      <div class="sub" id="sumSub">Quá đỉnh!</div>
+    </div>
+    <div class="card"><h2>Thống kê hôm nay</h2><div id="sumStats" style="margin-top:8px"></div></div>
+    <div class="card">
+      <h2>Bước tiếp theo? <span class="badge">Pro — sắp ra mắt</span></h2>
+      <div class="sub" style="margin-top:6px">Lên kế hoạch dinh dưỡng cho hôm nay hoặc lịch tập cho cả tuần dựa trên buổi tập của bạn.</div>
+      <div class="row" style="margin-top:12px">
+        <button class="btn btn-ghost btn-sm" style="flex:1" disabled>🥗 Plan bữa ăn</button>
+        <button class="btn btn-ghost btn-sm" style="flex:1" disabled>📅 Plan tuần</button>
+      </div>
+    </div>
+    <div style="margin-top:auto;padding-top:18px">
+      <button class="btn btn-main" id="btnHome">Về trang chủ</button>
+    </div>
+  </section>
+
+  <!-- ====== MODAL: after exercise ====== -->
+  <div class="modal" id="modalNext">
+    <div class="sheet">
+      <h2 id="mnTitle">Xong bài Squat! 🎉</h2>
+      <div class="sub" id="mnSub">Bạn muốn làm gì tiếp theo?</div>
+      <button class="btn btn-main" id="mnNew">💪 Tập bài mới</button>
+      <button class="btn btn-ghost" id="mnRest">😮‍💨 Nghỉ thêm 2 phút</button>
+      <button class="btn btn-danger" id="mnEnd">🏁 Kết thúc buổi tập</button>
+    </div>
+  </div>
+
+  <!-- ====== CHE DO BO TUI: man hinh den, giu may thuc, cam bien chay tiep ====== -->
+  <div id="pocketOverlay">
+    <div class="po-num" id="poNum">0</div>
+    <div class="po-sub" id="poSub">/ 12 rep</div>
+    <div class="po-hint">Chạm 2 lần để mở màn hình<br>Máy đang được giữ thức — đừng bấm nút nguồn</div>
+  </div>
+
+  <!-- ====== MODAL: ho so nguoi dung ====== -->
+  <div class="modal" id="modalProfile">
+    <div class="sheet">
+      <h2 id="pfTitle">Chào mừng đến AI Gym PT! 👋</h2>
+      <div class="sub">Cho HLV biết vài thông tin để tính calo tiêu hao và theo dõi tiến bộ chính xác nhé.</div>
+      <label class="f">Tên của bạn</label>
+      <input class="inp" id="pfName" placeholder="Ví dụ: Khoa" maxlength="20" autocomplete="off">
+      <label class="f">Giới tính</label>
+      <div class="chips" id="pfGender">
+        <button class="chip" data-g="nam">Nam</button>
+        <button class="chip" data-g="nu">Nữ</button>
+        <button class="chip" data-g="khac">Khác</button>
+      </div>
+      <div class="pfrow">
+        <div class="pfcol"><label class="f">Tuổi</label><input class="inp" id="pfAge" type="number" inputmode="numeric" min="10" max="90" value="25"></div>
+        <div class="pfcol"><label class="f">Chiều cao (cm)</label><input class="inp" id="pfHeight" type="number" inputmode="numeric" min="120" max="220" value="165"></div>
+        <div class="pfcol"><label class="f">Cân nặng (kg)</label><input class="inp" id="pfWeight" type="number" inputmode="decimal" min="30" max="200" value="65"></div>
+      </div>
+      <button class="btn btn-main" id="pfSave" style="margin-top:16px">Lưu &amp; bắt đầu 💪</button>
+    </div>
+  </div>
+
+  <!-- ====== MODAL: pause ====== -->
+  <div class="modal" id="modalPause">
+    <div class="sheet">
+      <h2>Đang tạm dừng ⏸</h2>
+      <div class="sub">Nghỉ chút cũng được, nhưng đừng bỏ cuộc nhé!</div>
+      <button class="btn btn-main" id="mpResume">▶️ Tiếp tục</button>
+      <button class="btn btn-danger" id="mpQuit">Kết thúc buổi tập</button>
+    </div>
+  </div>
+
+</div>
+
+<script>
+/* =================== DATA =================== */
+const CATS = [
+  {id:'chest', name:'Ngực',      icon:'🏋️'},
+  {id:'back',  name:'Lưng',      icon:'🚣'},
+  {id:'shoulder', name:'Vai',    icon:'🤸'},
+  {id:'arm',   name:'Tay',       icon:'💪'},
+  {id:'leg',   name:'Chân',      icon:'🦵'},
+  {id:'glute', name:'Mông',      icon:'🍑'},
+  {id:'core',  name:'Bụng',      icon:'🔥'},
+  {id:'full',  name:'Toàn thân', icon:'⚡'},
+];
+/* name: Việt trước — Anh trong ngoặc. mus: nhóm cơ. cues: 2-3 điểm form cho người mới. */
+const EXERCISES = [
+  // Ngực
+  {id:'bench', cat:'chest', name:'Đẩy ngực tạ đòn (Bench Press)', alias:['bench','đẩy ngực','ben trét'],
+   mus:'Ngực · vai trước · tay sau', cues:['Nằm ghế phẳng, chân đạp chắc sàn, hạ tạ chậm chạm giữa ngực','Đẩy tạ lên thẳng tay, không khoá khuỷu gắt','Giữ 2 bả vai ép chặt ghế suốt bài']},
+  {id:'incline', cat:'chest', name:'Đẩy ngực trên (Incline Press)', alias:['incline','đẩy ngực trên','ngực trên'],
+   mus:'Ngực trên · vai trước', cues:['Ghế nghiêng 30-45 độ, hạ tạ về phía xương đòn','Đẩy lên theo phương thẳng đứng, không vồng lưng','Khuỷu tay xuôi ~45 độ so với thân']},
+  {id:'dbpress', cat:'chest', name:'Đẩy ngực tạ đơn (DB Press)', alias:['ngực tạ đơn','dumbbell press'],
+   mus:'Ngực · vai trước · tay sau', cues:['Mỗi tay 1 tạ, hạ sâu hơn tạ đòn một chút để căng ngực','Đẩy 2 tạ lên chụm nhẹ vào nhau ở đỉnh','Cổ tay thẳng, không bẻ ngửa']},
+  {id:'fly', cat:'chest', name:'Ép ngực (Chest Fly)', alias:['fly','ép ngực','bay ngực'],
+   mus:'Ngực (kéo giãn)', cues:['Tay hơi cong cố định, mở rộng vòng cung tới khi căng ngực','Khép tay lại như ôm cây, siết ngực ở đỉnh','Dùng tạ nhẹ — bài này để cảm nhận cơ, không phải tạ nặng']},
+  {id:'pushup', cat:'chest', name:'Hít đất (Push-up)', alias:['hít đất','hit dat','push up','chống đẩy'],
+   mus:'Ngực · vai · tay sau · core', cues:['Thân thẳng như tấm ván từ đầu tới gót','Hạ ngực gần chạm sàn, khuỷu xuôi ~45 độ','Đẩy lên hết tay, siết bụng suốt bài']},
+  {id:'dips', cat:'chest', name:'Nhúng xà kép (Dips)', alias:['dips','díp','xà kép'],
+   mus:'Ngực dưới · tay sau · vai', cues:['Chống thẳng tay trên xà, người hơi ngả trước để vào ngực','Hạ xuống tới khi khuỷu ~90 độ, không sâu hơn nếu đau vai','Đẩy lên bằng lực ngực + tay sau, không đánh đà']},
+  // Lưng
+  {id:'pullup', cat:'back', name:'Kéo xà (Pull-up)', alias:['kéo xà','pull up','xà đơn'],
+   mus:'Xô · tay trước · cầu vai', cues:['Nắm xà rộng hơn vai, treo người thả lỏng hết cỡ','Kéo ngực về phía xà, khuỷu tay hướng xuống đất','Hạ xuống chậm, kiểm soát — không rơi tự do']},
+  {id:'latpull', cat:'back', name:'Kéo cáp xuống (Lat Pulldown)', alias:['lat','kéo cáp xuống','pulldown'],
+   mus:'Xô · tay trước', cues:['Ngồi chắc, ngực ưỡn nhẹ, kéo thanh về phía trên ngực','Kéo bằng khuỷu tay (nghĩ "khuỷu đâm xuống đất")','Trả thanh lên chậm, không để tạ giật tay']},
+  {id:'bbrow', cat:'back', name:'Chèo tạ đòn (Barbell Row)', alias:['barbell row','chèo tạ đòn','bent over'],
+   mus:'Lưng giữa · xô · tay trước', cues:['Gập người ~45 độ, lưng thẳng tuyệt đối, gối hơi chùng','Kéo tạ về phía bụng dưới, siết 2 bả vai','Hạ tạ chậm, không nhún người tạo đà']},
+  {id:'dbrow', cat:'back', name:'Chèo tạ đơn 1 tay (DB Row)', alias:['row','chèo tạ đơn','kéo lưng'],
+   mus:'Xô · lưng giữa', cues:['1 tay + 1 gối chống lên ghế, lưng song song sàn','Kéo tạ lên sát hông, khuỷu sát người','Hạ chậm hết tầm để căng xô']},
+  {id:'cablerow', cat:'back', name:'Chèo cáp ngồi (Seated Row)', alias:['chèo cáp','seated row','cáp ngồi'],
+   mus:'Lưng giữa · xô', cues:['Ngồi thẳng lưng, gối hơi chùng, kéo tay cầm về bụng','Siết bả vai ở cuối, ngực ưỡn','Không ngả người ra sau lấy đà']},
+  {id:'deadlift', cat:'back', name:'Kéo đất (Deadlift)', alias:['deadlift','đét lift','kéo đất'],
+   mus:'Toàn lưng · mông · đùi sau', cues:['Tạ sát ống chân, lưng thẳng, ngực ưỡn trước khi kéo','Đứng lên bằng lực chân + hông, tạ trượt sát người','Không cong lưng dưới — sai là chấn thương nặng']},
+  // Vai
+  {id:'ohp', cat:'shoulder', name:'Đẩy vai tạ đòn (OHP)', alias:['ohp','đẩy vai tạ đòn','overhead'],
+   mus:'Vai · tay sau · core', cues:['Đứng thẳng, tạ đặt ngang xương đòn, siết bụng + mông','Đẩy tạ lên qua đầu thẳng tay, đầu hơi lách về trước ở đỉnh','Không vồng lưng dưới — hạ tạ nhẹ hơn nếu phải vồng']},
+  {id:'dbshoulder', cat:'shoulder', name:'Đẩy vai tạ đơn (DB Press)', alias:['đẩy vai','shoulder press','vai tạ đơn'],
+   mus:'Vai · tay sau', cues:['Ngồi hoặc đứng, 2 tạ ngang tai, lòng bàn tay hướng trước','Đẩy lên chụm nhẹ 2 tạ trên đỉnh đầu','Hạ về ngang tai, không hạ quá sâu']},
+  {id:'latraise', cat:'shoulder', name:'Bay vai ngang (Lateral Raise)', alias:['bay vai','lateral','nâng tạ ngang'],
+   mus:'Vai giữa', cues:['Tạ nhẹ, nâng 2 tay sang ngang tới ngang vai','Khuỷu hơi cong cố định, cổ tay không cao hơn khuỷu','Hạ chậm 2-3 giây — nửa hạ mới là nửa ăn cơ']},
+  {id:'frontraise', cat:'shoulder', name:'Nâng tạ trước (Front Raise)', alias:['nâng tạ trước','front raise','vai trước'],
+   mus:'Vai trước', cues:['Nâng tạ thẳng ra trước tới ngang vai','Không nhún người tạo đà','Hạ chậm, kiểm soát']},
+  {id:'reardelt', cat:'shoulder', name:'Bay vai sau (Rear Delt Fly)', alias:['vai sau','rear delt','bay sau'],
+   mus:'Vai sau · lưng trên', cues:['Gập người ~45 độ hoặc tì ngực lên ghế nghiêng','Mở 2 tay sang ngang như dang cánh, siết bả vai','Tạ nhẹ thôi — vai sau là cơ nhỏ']},
+  {id:'facepull', cat:'shoulder', name:'Kéo cáp mặt (Face Pull)', alias:['face pull','phây pun','kéo cáp mặt'],
+   mus:'Vai sau · cầu vai', cues:['Cáp ngang mặt, kéo dây về phía trán, khuỷu mở cao','Cuối động tác: 2 nắm tay ngang tai, siết bả vai','Kéo chậm, cảm nhận vai sau làm việc']},
+  // Tay
+  {id:'curl', cat:'arm', name:'Cuốn tạ tay trước (Bicep Curl)', alias:['curl','cuốn tạ','tay trước','bắp tay'],
+   mus:'Tay trước', cues:['Khuỷu tay ghim sát sườn, chỉ cẳng tay chuyển động','Cuốn lên siết bắp tay 1 nhịp ở đỉnh','Hạ chậm hết tầm, không đánh hông']},
+  {id:'bbcurl', cat:'arm', name:'Cuốn tạ đòn (Barbell Curl)', alias:['cuốn tạ đòn','barbell curl'],
+   mus:'Tay trước', cues:['Nắm thanh rộng bằng vai, khuỷu cố định sát sườn','Cuốn lên tới ngang ngực, không văng người','Hạ chậm 2-3 giây']},
+  {id:'hammer', cat:'arm', name:'Cuốn tạ búa (Hammer Curl)', alias:['hammer','búa','cuốn búa'],
+   mus:'Tay trước · cẳng tay', cues:['Cầm tạ dọc như cầm búa (lòng bàn tay hướng vào nhau)','Cuốn lên giữ nguyên hướng tạ','Khuỷu ghim sát sườn suốt bài']},
+  {id:'pushdown', cat:'arm', name:'Đẩy cáp tay sau (Pushdown)', alias:['pushdown','đẩy cáp','tay sau'],
+   mus:'Tay sau', cues:['Khuỷu ghim sát sườn, đẩy dây xuống thẳng tay','Siết tay sau 1 nhịp ở dưới cùng','Trả lên chậm, khuỷu không rời sườn']},
+  {id:'triext', cat:'arm', name:'Duỗi tay sau qua đầu (Extension)', alias:['duỗi tay','extension','tay sau qua đầu'],
+   mus:'Tay sau (đầu dài)', cues:['Giữ tạ sau gáy, 2 khuỷu hướng trần nhà','Duỗi thẳng tay lên cao, chỉ cẳng tay chuyển động','Hạ chậm sau đầu, cảm nhận căng tay sau']},
+  {id:'skull', cat:'arm', name:'Đập trán (Skull Crusher)', alias:['skull','đập trán'],
+   mus:'Tay sau', cues:['Nằm ghế, tạ trên trán, khuỷu cố định hướng trần','Duỗi tay đẩy tạ lên, không mở khuỷu sang ngang','Hạ chậm về trán — vì thế mới gọi là "đập trán"']},
+  // Chân
+  {id:'squat', cat:'leg', name:'Squat (gánh tạ)', alias:['squat','sờ quát','gánh đùi','gánh tạ'],
+   mus:'Đùi trước · mông · core', cues:['Chân rộng bằng vai, mũi chân hơi mở, lưng thẳng','Hạ xuống như ngồi ghế tới khi đùi song song sàn','Đẩy gót chân đứng lên, gối không sụp vào trong']},
+  {id:'legpress', cat:'leg', name:'Đạp đùi (Leg Press)', alias:['leg press','đạp đùi'],
+   mus:'Đùi trước · mông', cues:['Chân đặt giữa bàn đạp, rộng bằng vai','Hạ tới khi gối ~90 độ, lưng dưới không rời đệm','Đạp lên gần thẳng chân nhưng không khoá gối']},
+  {id:'lunge', cat:'leg', name:'Chùng chân (Lunge)', alias:['lunge','chùng chân'],
+   mus:'Đùi · mông', cues:['Bước 1 chân dài về trước, hạ gối sau gần chạm sàn','Thân thẳng đứng, gối trước không vượt quá mũi chân','Đạp gót chân trước để về vị trí']},
+  {id:'legext', cat:'leg', name:'Đá đùi trước (Leg Extension)', alias:['đá đùi','leg extension','đùi trước'],
+   mus:'Đùi trước', cues:['Chỉnh đệm sát cổ chân, lưng tựa chắc','Đá thẳng chân lên, siết đùi 1 nhịp ở đỉnh','Hạ chậm — không để tạ rơi tự do']},
+  {id:'legcurl', cat:'leg', name:'Móc đùi sau (Leg Curl)', alias:['móc đùi','leg curl','đùi sau'],
+   mus:'Đùi sau', cues:['Nằm sấp (hoặc ngồi), đệm sát gót chân','Móc gót về phía mông hết tầm','Trả chậm, hông không nhấc khỏi đệm']},
+  {id:'wallsit', cat:'leg', name:'Ngồi tựa tường (Wall Sit)', time:1, alias:['wall sit','ngồi tường','tựa tường'],
+   mus:'Đùi trước · sức bền', cues:['Lưng tựa phẳng vào tường, trượt xuống tới khi đùi song song sàn','Gối vuông 90 độ, không vượt quá mũi chân','Tay không chống lên đùi — thả dọc thân hoặc khoanh trước ngực']},
+  {id:'calf', cat:'leg', name:'Nhón bắp chuối (Calf Raise)', alias:['bắp chuối','calf','nhón gót'],
+   mus:'Bắp chuối', cues:['Đứng mũi chân trên bậc, gót thả tự do','Nhón lên cao nhất có thể, siết 1 nhịp','Hạ gót xuống sâu dưới bậc để căng cơ']},
+  // Mông
+  {id:'hipthrust', cat:'glute', name:'Đẩy hông (Hip Thrust)', alias:['hip thrust','đẩy hông','híp trớt'],
+   mus:'Mông · đùi sau', cues:['Lưng trên tựa ghế, tạ đặt trên hông, chân rộng bằng vai','Đẩy hông lên tới khi thân song song sàn, siết mông mạnh ở đỉnh','Cằm hơi gập, không ưỡn cổ nhìn trần']},
+  {id:'glutebridge', cat:'glute', name:'Nâng hông (Glute Bridge)', alias:['glute bridge','nâng hông','cầu mông'],
+   mus:'Mông · core', cues:['Nằm ngửa, gối gập, gót gần mông','Đẩy hông lên thành đường thẳng vai-gối','Siết mông 1-2 nhịp ở đỉnh rồi hạ chậm']},
+  {id:'rdl', cat:'glute', name:'Kéo đất Rumani (RDL)', alias:['rdl','romanian','rumani','kéo đất rumani','kéo đất ru ma ni'],
+   mus:'Đùi sau · mông', cues:['Gối chỉ hơi chùng, đẩy hông ra sau, tạ trượt sát chân','Hạ tới khi căng đùi sau (khoảng giữa ống chân)','Siết mông đứng thẳng lên, lưng thẳng suốt bài']},
+  {id:'bulgarian', cat:'glute', name:'Squat 1 chân (Bulgarian Split)', alias:['bulgarian','bun ga ri','split squat'],
+   mus:'Mông · đùi', cues:['Mu bàn chân sau đặt lên ghế, chân trước bước xa','Hạ thẳng xuống tới khi đùi trước song song sàn','Đạp gót chân trước đứng lên, thân giữ thẳng']},
+  {id:'kickback', cat:'glute', name:'Đá mông cáp (Kickback)', alias:['kickback','đá mông'],
+   mus:'Mông', cues:['Móc cáp vào cổ chân, chống tay giữ thân cố định','Đá chân thẳng ra sau-lên cao, siết mông ở đỉnh','Không vồng lưng dưới để đá cao hơn']},
+  {id:'sumo', cat:'glute', name:'Squat chân rộng (Sumo Squat)', alias:['sumo squat','sumo','su mô','squat chân rộng','chân rộng'],
+   mus:'Mông · đùi trong', cues:['Chân rộng hơn vai nhiều, mũi chân mở 45 độ','Hạ thẳng xuống giữa 2 chân, gối mở theo hướng mũi chân','Đẩy gót đứng lên, siết mông']},
+  // Bụng
+  {id:'plank', cat:'core', name:'Plank (giữ tấm ván)', time:1, alias:['plank','tấm ván','plang'],
+   mus:'Core toàn diện · vai', cues:['Chống khuỷu tay, thân thẳng như tấm ván từ đầu tới gót','Siết bụng + mông, không võng lưng, không nhổm mông','Thở đều — nín thở là hỏng']},
+  {id:'sideplank', cat:'core', name:'Plank nghiêng (Side Plank)', time:1, alias:['side plank','plank nghiêng','nghiêng'],
+   mus:'Bụng chéo · core', cues:['Nằm nghiêng, chống 1 khuỷu tay, nhấc hông lên','Thân thẳng từ đầu tới chân, hông không võng xuống','Đổi bên ở set tiếp theo']},
+  {id:'situp', cat:'core', name:'Gập bụng (Sit-up)', alias:['gập bụng','sit up','crunch','bụng'],
+   mus:'Bụng trên', cues:['Nằm ngửa, gối gập, tay chéo trước ngực','Gập thân lên bằng cơ bụng, không kéo cổ','Hạ xuống chậm, lưng chạm sàn từng đốt']},
+  {id:'legraise', cat:'core', name:'Nâng chân (Leg Raise)', alias:['nâng chân','leg raise'],
+   mus:'Bụng dưới', cues:['Nằm ngửa, 2 tay đặt dưới hông đỡ lưng','Nâng 2 chân thẳng lên 90 độ','Hạ chậm gần chạm sàn, lưng dưới không nhấc lên']},
+  {id:'russian', cat:'core', name:'Xoay bụng (Russian Twist)', alias:['russian','xoay bụng','twist'],
+   mus:'Bụng chéo', cues:['Ngồi ngả sau ~45 độ, chân nhấc khỏi sàn (hoặc chạm nhẹ)','Xoay thân sang 2 bên, tay chạm sàn mỗi bên','Xoay bằng thân, không chỉ vung tay (đếm 1 rep = 2 bên)']},
+  {id:'mountain', cat:'core', name:'Leo núi (Mountain Climber)', alias:['mountain','leo núi'],
+   mus:'Core · tim mạch', cues:['Tư thế chống đẩy, thân thẳng','Kéo gối luân phiên về phía ngực nhanh và đều','Hông giữ thấp, không nhổm mông (1 rep = 2 chân)']},
+  {id:'bicycle', cat:'core', name:'Gập bụng đạp xe (Bicycle Crunch)', alias:['gập bụng đạp xe','đạp xe','bicycle'],
+   mus:'Bụng chéo · bụng trên', cues:['Nằm ngửa, tay sau đầu, chân đạp như đạp xe','Khuỷu tay chạm gối chéo bên kia','Xoay bằng thân, không kéo cổ (1 rep = 2 bên)']},
+  // Toàn thân
+  {id:'burpee', cat:'full', name:'Burpee (chống đẩy bật nhảy)', alias:['burpee','bơ pi'],
+   mus:'Toàn thân · tim mạch', cues:['Ngồi xổm chống tay → bật chân ra sau → hít đất 1 cái','Thu chân về → bật nhảy vỗ tay qua đầu','Giữ nhịp đều, thở theo từng nhịp']},
+  {id:'kbswing', cat:'full', name:'Vung tạ ấm (Kettlebell Swing)', alias:['kettlebell','vung tạ ấm','swing'],
+   mus:'Mông · đùi sau · core', cues:['Đẩy hông ra sau, tạ vung qua giữa 2 chân','Bật hông mạnh để vung tạ lên ngang ngực — lực từ hông, không phải tay','Lưng thẳng tuyệt đối suốt bài']},
+  {id:'jumpsquat', cat:'full', name:'Squat bật nhảy (Jump Squat)', alias:['bật nhảy','jump squat'],
+   mus:'Đùi · mông · tim mạch', cues:['Squat xuống rồi bật nhảy hết sức lên cao','Tiếp đất mềm bằng mũi chân, hạ ngay vào rep sau','Gối luôn hướng theo mũi chân khi tiếp đất']},
+  {id:'jumpjack', cat:'full', name:'Nhảy dang tay (Jumping Jack)', alias:['jumping jack','nhảy dang tay'],
+   mus:'Toàn thân · tim mạch', cues:['Bật nhảy dang 2 chân + vỗ tay qua đầu','Bật về khép chân, tay xuôi thân','Nhảy bằng mũi chân, nhịp đều']},
+];
+const REST_OPTS = [30,45,60,90,120];
+
+/* =================== COACH PHRASES =================== */
+const PH = {
+  sessionStart: ['Buổi tập bắt đầu! Hôm nay phá kỷ lục nhé!','Lên đồ rồi thì chiến thôi! Bắt đầu nào!','Tinh thần thép! Vào buổi tập nào!'],
+  setStart: ['Set {s} bắt đầu! Lên nào!','Vào set {s}! Kiểm soát từng nhịp nhé!','Set {s}! Làm đẹp từng cái một!','Chiến set {s} thôi! Thở đều nha!'],
+  half: ['{n}! Được nửa đường rồi, giữ nhịp này!','{n}! Nửa set rồi đó, đều lắm!','{n}! Quá nửa rồi, không lùi bước!'],
+  three: ['{n}! Còn 3 cái nữa thôi, bung sức đi!','{n}! Ba cái cuối, gồng lên nào!'],
+  two: ['{n}! Còn 2 cái! Cố lên!','{n}! Hai cái nữa là xong, chiến!'],
+  lastOne: ['Còn 1 cái cuối! Tất cả cho cái này!','Cái cuối cùng! Bung hết đi!!'],
+  praise: ['Đẹp lắm, nhịp đều tăm tắp!','Form chuẩn đấy, giữ vậy nhé!','Quá mượt! Tiếp tục nào!','Nhịp này đỉnh đấy!'],
+  slowing: ['Chậm lại rồi đó, hít sâu, giữ nhịp nhé!','Đuối chưa? Thở đều, từng cái một thôi!','Mỏi là đang lớn đó! Giữ nhịp, cố lên!'],
+  stall1: ['Ê ê, đừng dừng! Còn chút nữa thôi, lên nào!','Nghỉ tay hả? Vào lại đi, sắp xong rồi!','Cố lên! Đứng dậy làm nốt, tôi tin bạn làm được!'],
+  safety: ['Nếu đuối quá thì giảm tạ hoặc dừng ở đây cũng rất đẹp rồi. An toàn trước đã nhé!','Nhịp rớt sâu rồi đó. Hai cái cuối làm chậm và chắc thôi, đừng ráng quá!'],
+  restStart: ['Nghỉ {t} giây. Thở sâu, uống ngụm nước nhé!','Nghỉ {t} giây thôi đấy! Thả lỏng vai nào!'],
+  restReady: ['10 giây nữa! Vào vị trí nào!','Chuẩn bị! 10 giây nữa chiến tiếp!'],
+  exDone: ['Xong bài {ex}! Quá đã! Đập tay cái nào! 🖐','Bài {ex} hoàn thành xuất sắc! Bạn hôm nay sung thật đấy!'],
+  sessionEnd: ['Buổi tập kết thúc! Hôm nay bạn đã chiến đấu tuyệt vời. Cảm ơn đã tập cùng tôi, hẹn gặp lại buổi sau nhé!','Quá đỉnh! Xong buổi tập rồi! Nghỉ ngơi, ăn uống đầy đủ nha. Hẹn gặp lại lần tới!'],
+  pause: ['Tạm dừng nhé. Sẵn sàng thì mình chiến tiếp!'],
+  resume: ['Quay lại rồi! Chiến tiếp nào!'],
+  skipSet: ['Không sao, set này mình bỏ qua. Nghỉ chút rồi chiến tiếp nhé!'],
+};
+/* cau ghep: [prefix, suffix] — so rep/so con lai chen o giua */
+const PARTS = {
+  setDone: [['Xong set!','cái ngon lành! Nghỉ chút nào!'],['Tuyệt vời! Đủ','rep, quá chất!'],['Set hoàn thành!','cái đều đẹp, tự hào chưa!']],
+  setDoneEarly: [['Không sao,','cái hôm nay là nỗ lực thật rồi! Nghỉ chút nhé!'],['Ổn rồi,','cái cũng là chiến đấu hết mình rồi, lần sau mình phá tiếp!']],
+  stall2: [['Nghe này: chỉ còn','cái nữa thôi. Một cái một, làm được mà!'],['Đừng bỏ cuộc lúc này! Còn','cái nữa là xong set, chiến đi!'],['Bạn mạnh hơn bạn nghĩ đấy! Còn','cái cuối, lên!']],
+};
+const PARTS_FILES = { setDone:['sdp_','sds_'], setDoneEarly:['sdep_','sdes_'], stall2:['st2p_','st2s_'] };
+const lastPick = {};
+function pickIdx(key, len){
+  let i = Math.floor(Math.random()*len);
+  if(len>1 && i===lastPick[key]) i=(i+1)%len;
+  lastPick[key]=i;
+  return i;
+}
+function pick(key, vars={}){
+  const arr = PH[key]; if(!arr) return '';
+  let s = arr[pickIdx(key, arr.length)];
+  for(const k in vars) s = s.replaceAll('{'+k+'}', vars[k]);
+  return s;
+}
+
+/* =================== VOICE ENGINE =================== */
+/* Uu tien file mp3 thu san (voice/) — fallback TTS trinh duyet */
+const Voice = {
+  ok:false, files:null, base:'voice/', ctx:null, bufs:new Map(),
+  cur:null, curSrc:null, token:0, criticalPlaying:false,
+  async init(){
+    try{
+      const r = await fetch(this.base+'manifest.json', {cache:'no-cache'});
+      if(r.ok){ this.files = new Set(await r.json()); this.ok = this.files.size>0; }
+    }catch(e){}
+  },
+  /* iOS Safari: WebAudio phai duoc unlock boi cham tay 1 lan, sau do timer phat tu do */
+  unlock(){
+    if(!this.ctx){
+      const AC = window.AudioContext||window.webkitAudioContext;
+      if(AC){ try{ this.ctx=new AC(); }catch(e){} }
+    }
+    if(this.ctx && this.ctx.state==='suspended') this.ctx.resume().catch(()=>{});
+  },
+  has(k){ return this.ok && this.files.has(k+'.mp3'); },
+  buffer(k){
+    if(!this.bufs.has(k)){
+      this.bufs.set(k, fetch(this.base+k+'.mp3')
+        .then(r=>r.arrayBuffer())
+        .then(b=>new Promise((res,rej)=>this.ctx.decodeAudioData(b,res,rej))));
+    }
+    return this.bufs.get(k);
+  },
+  warm(keys){ if(this.ctx) keys.filter(k=>this.has(k)).forEach(k=>this.buffer(k).catch(()=>{})); },
+  stop(){
+    this.token++; this.criticalPlaying=false;
+    if(this.curSrc){ try{this.curSrc.stop()}catch(e){} this.curSrc=null; }
+    if(this.cur){ try{this.cur.pause()}catch(e){} this.cur=null; }
+  },
+  play(keys, critical=false){
+    if(!voiceOn) return true;
+    keys = keys.filter(k=>this.has(k));
+    if(!keys.length) return false;
+    if(!critical && this.criticalPlaying) return true; // so dem khong chen ngang cau co vu
+    this.unlock();
+    try{ if('speechSynthesis' in window) speechSynthesis.cancel(); }catch(e){}
+    this.stop();
+    const t = ++this.token;
+    this.criticalPlaying = critical;
+    const stepWA = async i => {
+      if(t!==this.token) return;
+      if(i>=keys.length){ this.criticalPlaying=false; this.curSrc=null; return; }
+      try{
+        const b = await this.buffer(keys[i]);
+        if(t!==this.token) return;
+        const src = this.ctx.createBufferSource();
+        src.buffer=b; src.connect(this.ctx.destination);
+        this.curSrc=src; src.onended=()=>stepWA(i+1);
+        src.start();
+      }catch(e){ stepWA(i+1); }
+    };
+    const stepHA = i => {
+      if(t!==this.token) return;
+      if(i>=keys.length){ this.criticalPlaying=false; this.cur=null; return; }
+      const a = new Audio(this.base+keys[i]+'.mp3');
+      this.cur=a; a.onended=()=>stepHA(i+1); a.onerror=()=>stepHA(i+1);
+      a.play().catch(()=>{ if(t===this.token) this.criticalPlaying=false; });
+    };
+    if(this.ctx) stepWA(0); else stepHA(0);
+    return true;
+  }
+};
+document.addEventListener('pointerdown',()=>Voice.unlock(),{passive:true});
+let voiceOn = true, viVoice = null, speakingCritical = false;
+function loadVoices(){
+  const vs = speechSynthesis.getVoices();
+  viVoice = vs.find(v=>v.lang&&v.lang.toLowerCase().startsWith('vi')) || null;
+}
+if('speechSynthesis' in window){ loadVoices(); speechSynthesis.onvoiceschanged = loadVoices; }
+function speak(text, critical=false){
+  if(!voiceOn || !('speechSynthesis' in window)) return;
+  if(Voice.criticalPlaying && !critical) return;
+  if(critical) Voice.stop();
+  if(!critical && speakingCritical) return;
+  if(critical) speechSynthesis.cancel();
+  else if(speechSynthesis.speaking) speechSynthesis.cancel();
+  const u = new SpeechSynthesisUtterance(text);
+  u.lang='vi-VN'; if(viVoice) u.voice=viVoice;
+  u.rate=1.08; u.pitch=1.05;
+  if(critical){ speakingCritical=true; u.onend=()=>speakingCritical=false; u.onerror=()=>speakingCritical=false; }
+  speechSynthesis.speak(u);
+}
+/* noi 1 cau: co file thi phat file, khong thi TTS */
+function sayKeys(text, keys, critical=true){
+  if(!Voice.play(keys, critical)) speak(text, critical);
+}
+function speakNum(n){
+  if(Voice.play(['n'+n], false)) return; // co file thi phat, khong thi TTS
+  speak(String(n), false);
+}
+function coach(key, vars={}, {show=true, critical=true}={}){
+  // cau ghep prefix + so + suffix
+  if(PARTS[key]){
+    const i = pickIdx(key, PARTS[key].length);
+    const [p,sfx] = PARTS[key][i];
+    const n = vars.n!==undefined ? vars.n : vars.left;
+    const t = `${p} ${n} ${sfx}`;
+    if(show) setCoachMsg(t);
+    const [fp,fs] = PARTS_FILES[key];
+    if(n>=1 && n<=50) sayKeys(t, [fp+i, 'n'+n, fs+i], critical);
+    else speak(t, critical);
+    return t;
+  }
+  const arr = PH[key];
+  const i = pickIdx(key, arr.length);
+  let t = arr[i];
+  for(const k in vars) t = t.replaceAll('{'+k+'}', vars[k]);
+  if(show) setCoachMsg(t);
+  // chon file audio theo ngu canh
+  let keys;
+  if(key==='setStart' && vars.s>=1 && vars.s<=10) keys=[`setstart_s${vars.s}_${i}`];
+  else if((key==='half'||key==='three'||key==='two') && vars.n>=1 && vars.n<=50) keys=[`n${vars.n}`, `${key}_${i}`];
+  else if(key==='restStart') keys=[`resto_${vars.t}_${i}`];
+  else if(key==='exDone' && vars.exid) keys=[`exdone_${vars.exid}_${i}`];
+  else keys=[`p_${key}_${i}`];
+  sayKeys(t, keys, critical);
+  return t;
+}
+function setCoachMsg(t){
+  document.getElementById('coachMsg').textContent = t;
+  document.getElementById('restMsg').textContent = t;
+}
+
+/* =================== STATE =================== */
+const S = {
+  // dien thoai that -> mac dinh cam bien; may tinh -> demo de xem thu
+  mode: localStorage.getItem('gpt_mode') || ((typeof DeviceMotionEvent!=='undefined' && /Mobi|Android|iPhone|iPad/i.test(navigator.userAgent)) ? 'sensor' : 'demo'),
+  session: null,          // {startedAt, exercises:[{name, targetSets, targetReps, sets:[{reps,dur}]}]}
+  ex: null,               // current exercise config {name, sets, reps, rest}
+  setIdx: 0,
+  reps: 0,
+  repTimes: [],
+  phase: 'idle',          // idle|countdown|active|rest|paused
+  timers: [],
+  lastStallLevel: 0,
+  lastStallAt: 0,
+  slowWarned: 0,
+  safetyWarned: false,
+  setStartAt: 0,
+  pausedAt: 0,
+  freeRest: false,
+  selEx: 'squat', selSets: 3, selReps: 12, selRest: 60, selKg: 0,
+};
+/* muc ta lan truoc theo tung bai */
+const lastKg = JSON.parse(localStorage.getItem('gpt_lastkg')||'{}');
+/* ho so nguoi dung: {name, gender, age, height, weight} */
+function getProfile(){ try{ return JSON.parse(localStorage.getItem('gpt_profile')||'null'); }catch(e){ return null; } }
+function bodyWeight(){ const p=getProfile(); return (p&&+p.weight)||+(localStorage.getItem('gpt_bw')||65); }
+/* Vi tri dat dien thoai de cam bien doc duoc chuyen dong cua bai */
+const POS_WRIST=new Set(['bench','incline','dbpress','fly','latpull','bbrow','dbrow','cablerow','ohp','dbshoulder','latraise','frontraise','reardelt','facepull','curl','bbcurl','hammer','pushdown','triext','skull','russian']);
+const POS_SHIN=new Set(['legext','legcurl']);
+function posOf(id){ return POS_WRIST.has(id)?'wrist':POS_SHIN.has(id)?'shin':'pocket'; }
+function isTimeEx(id){ const e=EXERCISES.find(x=>x.id===id); return !!(e&&e.time); }
+const POS_TEXT={
+  pocket:'📍 Đặt điện thoại: túi quần là được — bài này thân dưới/cả người chuyển động.',
+  wrist:'📍 Đặt điện thoại: buộc vào cổ tay/cẳng tay (dây đeo). Bài này tay chuyển động là chính — để túi quần sẽ đếm thiếu. Chưa có dây đeo thì dùng chế độ 👆 Chạm tay.',
+  shin:'📍 Đặt điện thoại: kẹp vào ống chân/vớ cao (chân chuyển động, hông đứng yên). Không tiện thì dùng chế độ 👆 Chạm tay.',
+};
+/* MET theo bai: cardio/toan than > compound > isolation */
+const MET_CARDIO=new Set(['burpee','kbswing','jumpsquat','jumpjack','mountain']);
+const MET_COMPOUND=new Set(['squat','deadlift','bench','incline','dbpress','ohp','bbrow','legpress','lunge','hipthrust','rdl','bulgarian','sumo','pullup','dips','cablerow','latpull','dbrow','dbshoulder']);
+function METof(id){ return isTimeEx(id)?4:MET_CARDIO.has(id)?8:MET_COMPOUND.has(id)?6:5; }
+/* kcal = MET × cân nặng(kg) × giờ — set tập MET theo bài, nghỉ giữa set MET 2 */
+function calcKcal(sess){
+  const bw=bodyWeight(); let kcal=0;
+  for(const e of sess.exercises){
+    const met=METof(e.id||'');
+    (e.sets||[]).forEach((s,i)=>{
+      kcal += met*bw*((s.dur||0)/3600);
+      if(i<e.sets.length-1) kcal += 2*bw*((e.rest||60)/3600);
+    });
+  }
+  const p=getProfile();
+  if(p&&p.gender==='nu') kcal*=0.93; // nu trung binh ty le co nac thap hon -> dot it hon mot chut
+  return Math.round(kcal);
+}
+function calcVol(sess){
+  let v=0;
+  for(const e of sess.exercises) for(const s of (e.sets||[])) v+=(s.kg||0)*(s.reps||0);
+  return Math.round(v);
+}
+/* lich su gan nhat cua 1 bai -> {kg, reps[], target} */
+function lastPerf(exId){
+  const h=JSON.parse(localStorage.getItem('gpt_history')||'[]');
+  for(let i=h.length-1;i>=0;i--){
+    const e=(h[i].exercises||[]).find(x=>x.id===exId&&x.sets&&x.sets.length);
+    if(e) return {kg:e.sets[0].kg||0, reps:e.sets.map(s=>s.reps), target:e.targetReps||0, when:h[i].startedAt};
+  }
+  return null;
+}
+/* goi y tang ta / tang rep / tang giay khi lan truoc hoan thanh du chi tieu */
+function suggestNext(perf, timeEx){
+  if(!perf||!perf.reps.length||!perf.target) return null;
+  if(!perf.reps.every(r=>r>=perf.target)) return null;
+  if(timeEx){ if(perf.target<300) return {reps:Math.min(300,perf.target+5), text:`thử giữ ${Math.min(300,perf.target+5)} giây`}; return null; }
+  if(perf.kg>0) return {kg:perf.kg+2.5, text:`thử tăng lên ${fmtKg(perf.kg+2.5)}kg`};
+  if(perf.target<50) return {reps:perf.target+1, text:`thử tăng lên ${perf.target+1} rep/set`};
+  return null;
+}
+function fmtKg(k){ return (Math.round(k*10)/10).toString().replace(/\.0$/,''); }
+function clearTimers(){ S.timers.forEach(t=>{clearTimeout(t);clearInterval(t)}); S.timers=[]; }
+function after(ms,fn){ const t=setTimeout(fn,ms); S.timers.push(t); return t; }
+function every(ms,fn){ const t=setInterval(fn,ms); S.timers.push(t); return t; }
+
+/* =================== SCREENS =================== */
+function show(id){
+  document.querySelectorAll('.screen').forEach(s=>s.classList.remove('on'));
+  document.getElementById(id).classList.add('on');
+}
+function openModal(id,on=true){ document.getElementById(id).classList.toggle('on',on); }
+
+/* =================== HOME =================== */
+const MODE_DESC = {
+  sensor:'Bỏ điện thoại vào túi quần hoặc đeo vào cổ tay — app tự cảm nhận chuyển động để đếm rep và đo nhịp. (Cần mở trang này trên điện thoại)',
+  tap:'Chạm màn hình mỗi khi xong 1 rep. Đơn giản, chính xác tuyệt đối.',
+  demo:'Chế độ xem thử: app tự mô phỏng người tập để bạn nghe HLV đếm và cổ vũ.',
+};
+function renderMode(){
+  document.querySelectorAll('#modeSeg button').forEach(b=>b.classList.toggle('sel',b.dataset.m===S.mode));
+  document.getElementById('modeDesc').textContent = MODE_DESC[S.mode];
+}
+document.getElementById('modeSeg').addEventListener('click',e=>{
+  const b=e.target.closest('button'); if(!b) return;
+  S.mode=b.dataset.m; localStorage.setItem('gpt_mode',S.mode); renderMode();
+});
+document.getElementById('voiceToggle').addEventListener('click',e=>{
+  voiceOn=!voiceOn; e.target.textContent = voiceOn?'🔊 Bật':'🔇 Tắt';
+  if(voiceOn) sayKeys('Giọng HLV đã bật!',['p_voiceon_0'],true); else {Voice.stop(); try{speechSynthesis.cancel()}catch(e2){}}
+});
+function renderHistory(){
+  const el=document.getElementById('histList');
+  const h=JSON.parse(localStorage.getItem('gpt_history')||'[]');
+  if(!h.length){ el.innerHTML='<div class="sub" style="margin-top:8px">Chưa có buổi tập nào. Bắt đầu ngay hôm nay! 🔥</div>'; }
+  else el.innerHTML = h.slice(-3).reverse().map(s=>{
+    const d=new Date(s.startedAt);
+    const totalReps=s.exercises.reduce((a,e)=>a+e.sets.reduce((x,y)=>x+y.reps,0),0);
+    const kc=s.kcal?` · ~${s.kcal} kcal`:'';
+    return `<div class="hist">📅 ${d.getDate()}/${d.getMonth()+1} — ${s.exercises.map(e=>e.name).join(', ')} · <b style="color:var(--txt)">${totalReps} rep</b>${kc}</div>`;
+  }).join('');
+  renderToday();
+}
+/* thong ke hom nay + so sanh khoi luong 7 ngay */
+function renderToday(){
+  const h=JSON.parse(localStorage.getItem('gpt_history')||'[]');
+  const now=new Date(); const d0=new Date(now.getFullYear(),now.getMonth(),now.getDate()).getTime();
+  let ex=0,reps=0,kcal=0;
+  for(const s of h){ if(s.startedAt>=d0){
+    ex+=s.exercises.length;
+    reps+=s.exercises.filter(e=>!isTimeEx(e.id)).reduce((a,e)=>a+e.sets.reduce((x,y)=>x+y.reps,0),0);
+    kcal+=s.kcal||calcKcal(s);
+  }}
+  document.getElementById('tdEx').textContent=ex;
+  document.getElementById('tdReps').textContent=reps;
+  document.getElementById('tdKcal').textContent=kcal;
+  // so sanh 7 ngay nay vs 7 ngay truoc (khoi luong kg×rep)
+  const DAY=86400000, t7=Date.now()-7*DAY, t14=Date.now()-14*DAY;
+  let vNow=0,vPrev=0;
+  for(const s of h){
+    const v=s.vol!==undefined?s.vol:calcVol(s);
+    if(s.startedAt>=t7) vNow+=v; else if(s.startedAt>=t14) vPrev+=v;
+  }
+  const wl=document.getElementById('weekLine');
+  const fmtV=v=>v>=1000?(v/1000).toFixed(1)+' tấn':v+' kg';
+  if(vNow===0&&vPrev===0){ wl.textContent='Tập đều mỗi tuần để thấy biểu đồ tiến bộ ở đây nhé! 📈'; }
+  else if(vPrev===0){ wl.textContent=`Khối lượng 7 ngày qua: ${fmtV(vNow)}. Tuần sau mình so tiến bộ nhé! 📈`; }
+  else{
+    const pct=Math.round((vNow-vPrev)/vPrev*100);
+    wl.innerHTML=`Khối lượng 7 ngày: <b style="color:var(--txt)">${fmtV(vNow)}</b> · 7 ngày trước: ${fmtV(vPrev)} ${pct>=0?`<b style="color:var(--accent)">↑${pct}%</b> 🔥`:`<b style="color:var(--warn)">↓${-pct}%</b> — bù lại tuần này nào!`}`;
+  }
+}
+/* ===== ho so nguoi dung: card + popup ===== */
+const GENDER_LABEL={nam:'Nam',nu:'Nữ',khac:'Khác'};
+function bmiInfo(w,h){
+  if(!w||!h) return '';
+  const bmi=w/Math.pow(h/100,2);
+  const cat=bmi<18.5?'thiếu cân':bmi<23?'bình thường':bmi<25?'thừa cân nhẹ':bmi<30?'thừa cân':'béo phì'; // chuan chau A
+  return ` — BMI ${bmi.toFixed(1)} (${cat})`;
+}
+function renderProfile(){
+  const p=getProfile();
+  const el=document.getElementById('pfLine');
+  const hs=document.getElementById('homeSub');
+  if(!p){ el.textContent='Chưa có hồ sơ — bấm Sửa để điền.'; hs.textContent='Huấn luyện viên ảo — đếm rep & cổ vũ như PT thật'; return; }
+  el.textContent=`${p.name?p.name+' · ':''}${GENDER_LABEL[p.gender]||''} · ${p.age} tuổi · ${p.height}cm · ${p.weight}kg${bmiInfo(+p.weight,+p.height)}`;
+  hs.textContent = p.name ? `Chào ${p.name} 👋 — hôm nay chiến chứ?` : 'Huấn luyện viên ảo — đếm rep & cổ vũ như PT thật';
+}
+let pfG='nam';
+function renderPfGender(){ document.querySelectorAll('#pfGender .chip').forEach(b=>b.classList.toggle('sel',b.dataset.g===pfG)); }
+document.getElementById('pfGender').addEventListener('click',e=>{
+  const b=e.target.closest('.chip'); if(!b) return; pfG=b.dataset.g; renderPfGender();
+});
+function openProfileModal(firstTime){
+  const p=getProfile();
+  document.getElementById('pfTitle').textContent = firstTime?'Chào mừng đến AI Gym PT! 👋':'Sửa hồ sơ ✏️';
+  document.getElementById('pfName').value = p?p.name||'':'';
+  pfG = p?(p.gender||'nam'):'nam'; renderPfGender();
+  document.getElementById('pfAge').value = p?p.age:25;
+  document.getElementById('pfHeight').value = p?p.height:165;
+  document.getElementById('pfWeight').value = p?p.weight:65;
+  openModal('modalProfile',true);
+}
+document.getElementById('pfEdit').addEventListener('click',()=>openProfileModal(false));
+document.getElementById('pfSave').addEventListener('click',()=>{
+  const clamp=(v,lo,hi,d)=>{v=+v; return isFinite(v)&&v>=lo&&v<=hi?v:d;};
+  const p={
+    name:(document.getElementById('pfName').value||'').trim().slice(0,20),
+    gender:pfG,
+    age:clamp(document.getElementById('pfAge').value,10,90,25),
+    height:clamp(document.getElementById('pfHeight').value,120,220,165),
+    weight:clamp(document.getElementById('pfWeight').value,30,200,65),
+  };
+  localStorage.setItem('gpt_profile',JSON.stringify(p));
+  openModal('modalProfile',false);
+  renderProfile(); renderToday();
+  sayKeys(p.name?`OK ${p.name}! Hồ sơ đã lưu. Bắt đầu thôi!`:'Hồ sơ đã lưu. Bắt đầu thôi!',['p_voiceok_0'],true);
+});
+
+/* =================== SETUP =================== */
+let openCat = null; // nhom co dang mo (mac dinh: nhom cua bai dang chon)
+function renderSetup(isNext=false){
+  document.getElementById('setupTitle').textContent = isNext?'Bài tập tiếp theo?':'Hôm nay tập gì?';
+  if(openCat===null){ const cur=EXERCISES.find(e=>e.id===S.selEx); openCat=cur?cur.cat:CATS[0].id; }
+  document.getElementById('exCats').innerHTML = CATS.map(c=>{
+    const exs=EXERCISES.filter(e=>e.cat===c.id);
+    const picked=exs.find(e=>e.id===S.selEx);
+    const isOpen=c.id===openCat;
+    return `<div class="cat ${isOpen?'open':''} ${picked?'haspick':''}" data-cat="${c.id}">
+      <div class="cat-h"><span class="ico">${c.icon}</span>${c.name}
+        ${picked?`<span class="picked">✓ ${picked.name}</span>`:`<span class="cnt">${exs.length} bài</span>`}
+        <span class="chev">▼</span></div>
+      <div class="cat-body"><div class="chips">${exs.map(e=>`<button class="chip ${e.id===S.selEx?'sel':''}" data-id="${e.id}">${e.name}</button>`).join('')}</div></div>
+    </div>`;
+  }).join('');
+  renderGuide();
+  renderKg();
+  const tEx=isTimeEx(S.selEx);
+  document.getElementById('lblReps').textContent = tEx?'Số giây giữ mỗi set':'Số rep mỗi set';
+  document.getElementById('repUnit').textContent = tEx?'giây':'rep';
+  document.getElementById('setVal').textContent=S.selSets;
+  document.getElementById('repVal').textContent=S.selReps;
+  document.getElementById('restChips').innerHTML = REST_OPTS.map(r=>`<button class="chip ${r===S.selRest?'sel':''}" data-r="${r}">${r}s</button>`).join('');
+  document.getElementById('btnGo').textContent='Vào set 1 →';
+}
+/* hien thi muc ta + lich su lan truoc + goi y tang ta */
+let pendingSug=null;
+function renderKg(){
+  document.getElementById('kgVal').textContent=fmtKg(S.selKg);
+  const perf=lastPerf(S.selEx);
+  const el=document.getElementById('kgHint');
+  pendingSug=null;
+  if(!perf){
+    el.innerHTML = S.selKg>0 ? 'Chưa có lịch sử bài này — chọn mức vừa sức để khởi đầu.' : 'Để 0kg nếu tập với trọng lượng cơ thể (không tạ).';
+    return;
+  }
+  const tEx=isTimeEx(S.selEx);
+  let h=`Lần trước: ${perf.reps.join('+')} ${tEx?'giây':'rep'} @ ${perf.kg>0?fmtKg(perf.kg)+'kg':'không tạ'}.`;
+  const sug=suggestNext(perf, tEx);
+  if(sug){ pendingSug=sug; h+=` 💪 Đủ chỉ tiêu rồi — <span class="sug" id="sugBtn">${sug.text}</span>`; }
+  el.innerHTML=h;
+  const sb=document.getElementById('sugBtn');
+  if(sb) sb.onclick=()=>{
+    if(pendingSug.kg!==undefined) S.selKg=pendingSug.kg;
+    if(pendingSug.reps!==undefined) S.selReps=pendingSug.reps;
+    renderSetup(S.session!==null&&S.session.exercises.length>0);
+  };
+}
+document.getElementById('kgMinus').onclick=()=>{S.selKg=Math.max(0,S.selKg-2.5);renderKg()};
+document.getElementById('kgPlus').onclick=()=>{S.selKg=Math.min(500,S.selKg+2.5);renderKg()};
+/* the huong dan: hinh 2 tu the + cach lam + nhom co + link video */
+function vietName(ex){ return ex.name.replace(/\s*\(.*\)$/,''); }
+let lastGuideId=null;
+function renderGuide(){
+  const ex=EXERCISES.find(e=>e.id===S.selEx); if(!ex) return;
+  if(ex.id===lastGuideId) return; // cung bai -> khong re-render (tranh hinh nhap nhay khi bam +/-)
+  lastGuideId=ex.id;
+  document.getElementById('gName').textContent=ex.name;
+  document.getElementById('gMus').textContent='🎯 '+ex.mus;
+  document.getElementById('gCues').innerHTML=ex.cues.map(c=>`<li>${c}</li>`).join('');
+  document.getElementById('gPos').textContent = ex.time
+    ? '⏱ Bài giữ tư thế — app đếm giây tự động, không cần cảm biến. Đặt điện thoại đâu cũng được.'
+    : POS_TEXT[posOf(ex.id)];
+  document.getElementById('gVideo').href='https://www.youtube.com/results?search_query='+encodeURIComponent('cách tập '+vietName(ex)+' đúng kỹ thuật');
+  const wrap=document.getElementById('gImgs');
+  wrap.style.display='flex';
+  [0,1].forEach(i=>{
+    const img=document.getElementById('gImg'+i);
+    img.classList.remove('hide','solo');
+    img.onerror=()=>{
+      img.classList.add('hide');
+      const other=document.getElementById('gImg'+(1-i));
+      if(other.classList.contains('hide')) wrap.style.display='none';
+      else other.classList.add('solo');
+    };
+    img.src=`img/${ex.id}_${i}.jpg`;
+  });
+}
+document.getElementById('exCats').addEventListener('click',e=>{
+  const isNext=S.session!==null&&S.session.exercises.length>0;
+  const chip=e.target.closest('.chip');
+  if(chip){
+    const wasTime=isTimeEx(S.selEx);
+    S.selEx=chip.dataset.id; S.selKg=lastKg[S.selEx]!==undefined?+lastKg[S.selEx]:0;
+    const nowTime=isTimeEx(S.selEx);
+    if(nowTime&&!wasTime) S.selReps=30;      // mac dinh giu 30 giay
+    else if(!nowTime&&wasTime) S.selReps=12; // quay ve mac dinh 12 rep
+    renderSetup(isNext); return;
+  }
+  const h=e.target.closest('.cat-h');
+  if(h){ const c=h.parentElement.dataset.cat; openCat=(openCat===c)?'':c; renderSetup(isNext); }
+});
+document.getElementById('restChips').addEventListener('click',e=>{
+  const b=e.target.closest('.chip'); if(!b) return;
+  S.selRest=+b.dataset.r; renderSetup(S.session!==null&&S.session.exercises.length>0);
+});
+document.getElementById('setMinus').onclick=()=>{S.selSets=Math.max(1,S.selSets-1);renderSetup(true)};
+document.getElementById('setPlus').onclick=()=>{S.selSets=Math.min(10,S.selSets+1);renderSetup(true)};
+document.getElementById('repMinus').onclick=()=>{const st=isTimeEx(S.selEx)?5:1;S.selReps=Math.max(st,S.selReps-st);renderSetup(true)};
+document.getElementById('repPlus').onclick=()=>{const st=isTimeEx(S.selEx)?5:1,mx=isTimeEx(S.selEx)?300:50;S.selReps=Math.min(mx,S.selReps+st);renderSetup(true)};
+
+/* voice input */
+const SR = window.SpeechRecognition||window.webkitSpeechRecognition;
+const micBtn=document.getElementById('micBtn');
+if(!SR) micBtn.style.display='none';
+else micBtn.addEventListener('click',()=>{
+  const r=new SR(); r.lang='vi-VN'; r.interimResults=false;
+  micBtn.classList.add('listening'); micBtn.textContent='🎤 Đang nghe… nói đi!';
+  r.onresult=e=>{
+    const txt=e.results[0][0].transcript.toLowerCase();
+    parseVoice(txt);
+  };
+  r.onend=()=>{ micBtn.classList.remove('listening'); micBtn.textContent='🎤 Nói bài tập'; };
+  r.onerror=r.onend;
+  r.start();
+});
+const VN_NUM={'một':1,'mốt':1,'hai':2,'ba':3,'bốn':4,'tư':4,'năm':5,'lăm':5,'sáu':6,'bảy':7,'tám':8,'chín':9,'mười':10,'mười hai':12,'mười lăm':15,'hai mươi':20};
+function parseVoice(txt){
+  // exercise: alias DAI nhat thang (tranh "đẩy ngực trên" bị dính "đẩy ngực" của bài khác)
+  let best=null, bestLen=0;
+  for(const ex of EXERCISES){
+    for(const a of ex.alias){
+      if(a.length>bestLen && txt.includes(a)){ best=ex; bestLen=a.length; }
+    }
+  }
+  if(best){ S.selEx=best.id; openCat=best.cat; S.selKg=lastKg[best.id]!==undefined?+lastKg[best.id]:0; }
+  // numbers: replace VN words then extract digits
+  let t=txt;
+  Object.keys(VN_NUM).sort((a,b)=>b.length-a.length).forEach(w=>{ t=t.replaceAll(w,' '+VN_NUM[w]+' '); });
+  const nums=(t.match(/\d+/g)||[]).map(Number);
+  const tEx=isTimeEx(S.selEx), mx=tEx?300:50;
+  const setM=t.match(/(\d+)\s*(set|séc|hiệp)/); if(setM) S.selSets=Math.min(10,+setM[1]);
+  const repM=t.match(/(\d+)\s*(rep|cái|lần|nhịp|giây|giay)/); if(repM) S.selReps=Math.min(mx,+repM[1]);
+  if(!setM&&!repM&&nums.length>=2){ S.selSets=Math.min(10,nums[0]); S.selReps=Math.min(mx,nums[1]); }
+  if(tEx&&!repM&&S.selReps<10) S.selReps=30;
+  renderSetup(true);
+  const exName=EXERCISES.find(e=>e.id===S.selEx).name;
+  setTimeout(()=>sayKeys(`OK! ${exName}, ${S.selSets} set, mỗi set ${S.selReps} cái. Bấm vào set 1 khi sẵn sàng!`,['p_voiceok_0'],true),300);
+}
+
+/* =================== FLOW =================== */
+document.getElementById('btnStart').addEventListener('click',()=>{
+  if(!S.session){ S.session={startedAt:Date.now(), exercises:[]}; coach('sessionStart'); }
+  renderSetup(false); show('scr-setup');
+  requestWakeLock();
+});
+document.getElementById('btnBackHome').addEventListener('click',()=>{ show('scr-home'); });
+let goBusy=false;
+document.getElementById('btnGo').addEventListener('click',async ()=>{
+  if(goBusy || S.phase==='countdown') return; // chong bam dup (ke ca khi dang cho dialog quyen cam bien)
+  goBusy=true;
+  try{
+    const exObj=EXERCISES.find(e=>e.id===S.selEx);
+    // name: ten Viet ngan (hien thi khi tap + lich su); nameFull: co ten Anh (man chon bai)
+    S.ex={id:S.selEx, name:vietName(exObj), nameFull:exObj.name, sets:S.selSets, reps:S.selReps, rest:S.selRest, kg:S.selKg, timeEx:!!exObj.time};
+    lastKg[S.selEx]=S.selKg; localStorage.setItem('gpt_lastkg',JSON.stringify(lastKg));
+    S.session.exercises.push({id:S.selEx, name:S.ex.name, targetSets:S.selSets, targetReps:S.selReps, kg:S.selKg, rest:S.selRest, sets:[]});
+    S.setIdx=0;
+    // nap truoc audio hay dung cho set nay (khong bat buoc, chi cho muot)
+    const warmKeys=[`ex_${S.ex.id}`,'cb'];
+    for(let i=1;i<=Math.min(S.ex.reps,50);i++) warmKeys.push('n'+i);
+    for(let s=1;s<=Math.min(S.ex.sets,10);s++) for(let i=0;i<4;i++) warmKeys.push(`setstart_s${s}_${i}`);
+    Voice.warm(warmKeys);
+    if(S.mode==='sensor') await Sensor.requestPermission();
+    startCountdown();
+  } finally { goBusy=false; }
+});
+
+function startCountdown(){
+  clearTimers(); S.phase='countdown';
+  show('scr-count');
+  document.getElementById('cdLabel').textContent=`${S.ex.name} · Set ${S.setIdx+1}/${S.ex.sets} · ${S.ex.reps} ${S.ex.timeEx?'giây':'rep'}`;
+  // bat cam bien ngay tu dem nguoc: 3s dung yen chuan bi = cua so hieu chinh nen hoan hao,
+  // het dem nguoc la dem duoc tu rep dau tien
+  if(S.mode==='sensor') Sensor.start();
+  let n=3;
+  document.getElementById('cdNum').textContent=n;
+  sayKeys(`${S.ex.name}, set ${S.setIdx+1}, ${S.ex.reps} ${S.ex.timeEx?'giây':'cái'}. Chuẩn bị! 3`,[`ex_${S.ex.id}`,'cb','n3'],true);
+  const cdEnd=Date.now()+3000; // theo thoi gian thuc, chong throttle
+  const cdTick=()=>{
+    if(S.phase!=='countdown') return;
+    const remain=Math.ceil((cdEnd-Date.now())/1000);
+    if(remain<=0){ clearTimers(); startSet(); updatePocket(); return; }
+    if(remain!==n){ n=remain; document.getElementById('cdNum').textContent=n; speakNum(n); updatePocket(); }
+  };
+  S._tick=cdTick;
+  every(250,cdTick);
+}
+
+function startSet(){
+  clearTimers(); S._tick=null;
+  S.phase='active'; S.reps=0; S.repTimes=[]; S.lastStallLevel=0; S.slowWarned=0; S.safetyWarned=false;
+  S.setStartAt=Date.now();
+  show('scr-work');
+  document.getElementById('wEx').textContent=S.ex.name;
+  document.getElementById('wSet').textContent=`${S.setIdx+1}/${S.ex.sets}`;
+  document.getElementById('repNum').textContent='0';
+  document.getElementById('repTotal').textContent=`/ ${S.ex.reps} ${S.ex.timeEx?'giây':'rep'}`;
+  document.getElementById('ringFg').style.strokeDashoffset=754;
+  document.getElementById('tempoFill').style.width='0%';
+  document.getElementById('tempoTxt').textContent='—';
+  renderDots();
+  // bai giu theo thoi gian: khong can nguon dem rep — dong ho tu chay
+  if(S.ex.timeEx){
+    document.getElementById('tapZone').style.display='none';
+    document.getElementById('sensorPanel').style.display='none';
+    document.querySelector('.tempo').style.display='none';
+    const mb2=document.getElementById('modeBadge');
+    mb2.style.display='block'; mb2.textContent='⏱ Giữ tư thế'; mb2.style.color='var(--sub)';
+    coach('setStart',{s:S.setIdx+1});
+    const target=S.ex.reps, t0=Date.now();
+    let saidHalf=false, lastSpoken=0;
+    const tt=()=>{
+      if(S.phase!=='active') return;
+      const el=Math.min(target,Math.floor((Date.now()-t0)/1000));
+      if(el!==S.reps){
+        S.reps=el;
+        document.getElementById('repNum').textContent=el;
+        document.getElementById('ringFg').style.strokeDashoffset=754*(1-Math.min(1,el/target));
+        updatePocket();
+        const remain=target-el;
+        if(!saidHalf&&el>=Math.ceil(target/2)&&remain>6){ saidHalf=true; coach('half',{n:el}); }
+        else if(remain<=5&&remain>=1&&remain!==lastSpoken){ lastSpoken=remain; speakNum(remain); }
+      }
+      if(el>=target){ clearTimers(); S.reps=target; finishSet(false); }
+    };
+    S._tick=tt;
+    every(250,tt);
+    return;
+  }
+  document.querySelector('.tempo').style.display='flex';
+  document.getElementById('tapZone').style.display = S.mode==='tap'?'block':'none';
+  document.getElementById('sensorPanel').style.display = S.mode==='sensor'?'block':'none';
+  // nhan che do: demo canh bao mau vang de khong nham voi tap that
+  const mb=document.getElementById('modeBadge');
+  mb.style.display='block';
+  if(S.mode==='demo'){ mb.textContent='▶️ Demo'; mb.style.color='var(--warn)'; }
+  else if(S.mode==='sensor'){ mb.textContent='📱 Cảm biến'; mb.style.color='var(--sub)'; }
+  else { mb.textContent='👆 Chạm'; mb.style.color='var(--sub)'; }
+  if(S.mode==='sensor'){
+    renderSens();
+    document.getElementById('posHint').textContent=POS_TEXT[posOf(S.ex.id)];
+    if(Sensor.on) document.getElementById('sensorState').textContent='sẵn sàng — tập đi!';
+  }
+  coach('setStart',{s:S.setIdx+1});
+  if(S.mode==='sensor' && !Sensor.on) Sensor.start(); // du phong (binh thuong da bat tu dem nguoc)
+  if(S.mode==='demo') Demo.start();
+  every(1000, watchdog);
+}
+
+function renderDots(){
+  const el=document.getElementById('setDots');
+  el.innerHTML=Array.from({length:S.ex.sets},(_,i)=>
+    `<i class="${i<S.setIdx?'done':i===S.setIdx?'cur':''}"></i>`).join('');
+}
+
+/* ---- rep event (from any source) ---- */
+function onRep(){
+  if(S.phase!=='active') return;
+  S.reps++;
+  const now=Date.now();
+  S.repTimes.push(now);
+  S.lastStallLevel=0;
+  const n=S.reps, total=S.ex.reps, left=total-n;
+  document.getElementById('repNum').textContent=n;
+  document.getElementById('ringFg').style.strokeDashoffset = 754*(1-Math.min(1,n/total));
+  updateTempoUI(); updatePocket();
+  if(n>=total){ finishSet(false); return; }
+  // milestone speech
+  if(left===1) coach('lastOne',{},{critical:true});
+  else if(left===2) coach('two',{n},{critical:true});
+  else if(left===3&&total>=8) coach('three',{n},{critical:true});
+  else if(n===Math.ceil(total/2)&&total>=6) coach('half',{n},{critical:true});
+  else{
+    speakNum(n);
+    if(n%4===0 && Math.random()<0.45 && tempoStable()) after(650,()=>coach('praise',{},{critical:false}));
+  }
+}
+
+/* ---- tempo ---- */
+function intervals(){
+  const t=S.repTimes, out=[];
+  for(let i=1;i<t.length;i++) out.push(t[i]-t[i-1]);
+  return out;
+}
+function baseline(){
+  const iv=intervals(); if(iv.length<2) return null;
+  const s=[...iv].sort((a,b)=>a-b);
+  return s[Math.floor(s.length/2)];
+}
+function tempoStable(){
+  const iv=intervals(); if(iv.length<3) return true;
+  const b=baseline(); const last=iv[iv.length-1];
+  return Math.abs(last-b)/b < 0.25;
+}
+function updateTempoUI(){
+  const iv=intervals(); if(!iv.length) return;
+  const last=iv[iv.length-1]/1000;
+  document.getElementById('tempoTxt').textContent=last.toFixed(1)+'s/rep';
+  const b=baseline();
+  const fill=document.getElementById('tempoFill');
+  if(!b){ fill.style.width='60%'; fill.style.background='var(--accent)'; return; }
+  const ratio=iv[iv.length-1]/b;
+  fill.style.width=Math.min(100,Math.max(15,100/ratio*0.6))+'%';
+  fill.style.background = ratio>1.6?'var(--warn)':'var(--accent)';
+}
+
+/* ---- watchdog: stall / slowing / safety ---- */
+function watchdog(){
+  if(S.phase!=='active') return;
+  const now=Date.now();
+  const lastT=S.repTimes.length?S.repTimes[S.repTimes.length-1]:S.setStartAt;
+  const since=now-lastT;
+  const b=baseline();
+  const stallThr=Math.max(7000, b?b*2.6:8000);
+  const left=S.ex.reps-S.reps;
+  if(since>stallThr*1.8 && S.lastStallLevel<2 && now-S.lastStallAt>6000){
+    S.lastStallLevel=2; S.lastStallAt=now;
+    coach('stall2',{left});
+  } else if(since>stallThr && S.lastStallLevel<1 && now-S.lastStallAt>6000){
+    S.lastStallLevel=1; S.lastStallAt=now;
+    coach('stall1');
+  }
+  // slowing (still moving but slower)
+  const iv=intervals();
+  if(b&&iv.length>=4&&S.reps>=4){
+    const last=iv[iv.length-1];
+    if(last>b*1.6&&last<b*2.6&&S.slowWarned<2&&now-S.lastStallAt>5000&&since<stallThr){
+      S.slowWarned++; S.lastStallAt=now;
+      coach('slowing');
+    }
+    // safety: 2 consecutive intervals > 2.3x baseline near end
+    if(!S.safetyWarned&&iv.length>=5){
+      const l2=iv.slice(-2);
+      if(l2.every(x=>x>b*2.3)&&left<=Math.ceil(S.ex.reps*0.3)){
+        S.safetyWarned=true; coach('safety');
+      }
+    }
+  }
+}
+
+/* ---- finish set ---- */
+function finishSet(early){
+  clearTimers(); Demo.stop(); Sensor.stop(); SLOG.save();
+  S.phase='rest';
+  const dur=Math.round((Date.now()-S.setStartAt)/1000);
+  const cur=S.session.exercises[S.session.exercises.length-1];
+  cur.sets.push({reps:S.reps, dur, kg:S.ex.kg||0});
+  const done=S.reps;
+  if(S.setIdx>=S.ex.sets-1){ finishExercise(early,done); return; }
+  // rest screen
+  S.freeRest=false;
+  document.getElementById('btnSkipRest').textContent='Bỏ qua nghỉ — vào luôn 💥';
+  show('scr-rest');
+  document.getElementById('restLabel').textContent=`Chuẩn bị Set ${S.setIdx+2} · ${S.ex.name}`;
+  if(done<=0) coach('skipSet');
+  else if(S.ex.timeEx){
+    const txt = early ? `Không sao, ${done} giây cũng là nỗ lực thật rồi! Nghỉ chút nhé!`
+                      : `Xong set! ${done} giây, quá chất! Nghỉ chút nào!`;
+    setCoachMsg(txt);
+    if(Voice.has('n'+done)) sayKeys(txt,[early?'sdep_0':'sdp_0','n'+done,early?'sdet_0':'sdt_0'],true);
+    else speak(txt,true);
+  }
+  else coach(early?'setDoneEarly':'setDone',{n:done});
+  // dong ho nghi tinh theo thoi gian thuc (Date.now) — khong le nhip khi tab bi throttle/tat man hinh
+  const endAt=Date.now()+S.ex.rest*1000;
+  document.getElementById('restNum').textContent=S.ex.rest;
+  after(4500,()=>{ if(S.phase==='rest') coach('restStart',{t:S.ex.rest}); });
+  let saidReady=false;
+  const tick=()=>{
+    if(S.phase!=='rest') return;
+    const remain=Math.max(0,Math.ceil((endAt-Date.now())/1000));
+    document.getElementById('restNum').textContent=remain;
+    updatePocket();
+    if(remain<=10&&remain>0&&!saidReady){ saidReady=true; coach('restReady'); }
+    if(remain<=0){ clearTimers(); S.setIdx++; startCountdown(); }
+  };
+  S._tick=tick;
+  every(500,tick);
+}
+document.getElementById('btnSkipRest').addEventListener('click',()=>{
+  clearTimers();
+  if(S.freeRest){ // dang nghi tu do sau khi xong bai -> ve man chon bai
+    S.freeRest=false;
+    sayKeys('OK! Chọn bài tiếp theo đi, tôi chờ!',['p_picknext_0'],true);
+    renderSetup(true); show('scr-setup');
+    return;
+  }
+  S.setIdx++; startCountdown();
+});
+
+/* ---- finish exercise ---- */
+function finishExercise(early,done){
+  const cur=S.session.exercises[S.session.exercises.length-1];
+  const tot=cur.sets.reduce((a,s)=>a+s.reps,0);
+  if(tot>0) coach('exDone',{ex:S.ex.name, exid:S.ex.id});
+  else coach('skipSet'); // ca bai 0 rep: dong vien nhe thay vi khen "xuat sac"
+  document.getElementById('mnTitle').textContent=`Xong bài ${S.ex.name}! 🎉`;
+  document.getElementById('mnSub').textContent=`${cur.sets.length} set · ${tot} rep tổng. Bạn muốn làm gì tiếp?`;
+  pocketOff(); // can tuong tac -> mo man hinh
+  openModal('modalNext',true); // mo ngay, khong qua timer (timer tu chuoi sau bi throttle khi tab an)
+}
+document.getElementById('mnNew').addEventListener('click',()=>{
+  openModal('modalNext',false);
+  sayKeys('OK! Chọn bài tiếp theo đi, tôi chờ!',['p_picknext_0'],true);
+  renderSetup(true); show('scr-setup');
+});
+document.getElementById('mnRest').addEventListener('click',()=>{
+  openModal('modalNext',false);
+  S.freeRest=true;
+  show('scr-rest');
+  document.getElementById('restLabel').textContent='Nghỉ tự do · chọn bài mới khi hết giờ';
+  setCoachMsg('OK, nghỉ 2 phút nhé. Thở đều, uống nước đi!');
+  sayKeys('OK, nghỉ 2 phút nhé. Thở đều, uống nước đi!',['p_rest2m_0'],true);
+  const endAt=Date.now()+120000;
+  document.getElementById('restNum').textContent=120;
+  const frTick=()=>{
+    if(!S.freeRest) return;
+    const remain=Math.max(0,Math.ceil((endAt-Date.now())/1000));
+    document.getElementById('restNum').textContent=remain;
+    if(remain<=0){ clearTimers(); S.freeRest=false; sayKeys('Hết giờ nghỉ! Chọn bài tiếp nào!',['p_restover_0'],true); renderSetup(true); show('scr-setup'); }
+  };
+  S._tick=frTick;
+  every(500,frTick);
+  document.getElementById('btnSkipRest').textContent='Xong — chọn bài mới 💪';
+});
+document.getElementById('mnEnd').addEventListener('click',()=>{ openModal('modalNext',false); endSession(); });
+
+/* ---- pause ---- */
+document.getElementById('btnPause').addEventListener('click',()=>{
+  if(S.phase!=='active') return;
+  S.phase='paused'; S.pausedAt=Date.now();
+  clearTimers(); Demo.stop(); Sensor.stop();
+  coach('pause'); openModal('modalPause',true);
+});
+document.getElementById('mpResume').addEventListener('click',()=>{
+  openModal('modalPause',false);
+  // dich moi moc thoi gian tien len dung bang thoi gian pause:
+  // nhip tap, dong ho stall va thoi luong set deu giu nguyen y nghia
+  const d = Date.now()-S.pausedAt;
+  S.setStartAt += d;
+  S.repTimes = S.repTimes.map(t=>t+d);
+  S.phase='active';
+  coach('resume');
+  if(S.mode==='sensor') Sensor.start();
+  if(S.mode==='demo') Demo.start();
+  every(1000,watchdog);
+});
+document.getElementById('mpQuit').addEventListener('click',()=>{
+  openModal('modalPause',false);
+  // record partial set
+  if(S.reps>0){ S.session.exercises[S.session.exercises.length-1].sets.push({reps:S.reps,dur:Math.round((S.pausedAt-S.setStartAt)/1000),kg:S.ex.kg||0}); }
+  endSession();
+});
+document.getElementById('btnEndSet').addEventListener('click',()=>{ if(S.phase==='active') finishSet(true); });
+
+/* ---- end session ---- */
+function endSession(){
+  clearTimers(); Demo.stop(); Sensor.stop(); pocketOff();
+  S.phase='idle'; S.freeRest=false; S._tick=null;
+  const sess=S.session;
+  const exs=sess.exercises.filter(e=>e.sets.length);
+  const totalReps=exs.filter(e=>!isTimeEx(e.id)).reduce((a,e)=>a+e.sets.reduce((x,y)=>x+y.reps,0),0);
+  const totalSecs=exs.filter(e=>isTimeEx(e.id)).reduce((a,e)=>a+e.sets.reduce((x,y)=>x+y.reps,0),0);
+  const mins=Math.max(1,Math.round((Date.now()-sess.startedAt)/60000));
+  const kcal=calcKcal({exercises:exs});
+  const vol=calcVol({exercises:exs});
+  const pfName=(getProfile()||{}).name;
+  document.getElementById('sumSub').textContent=`${pfName?'Quá đỉnh, '+pfName+'! ':''}${exs.length} bài · ${totalReps} rep${totalSecs?' · '+totalSecs+'s giữ':''} · ${mins} phút · ~${kcal} kcal`;
+  document.getElementById('sumStats').innerHTML =
+    exs.map(e=>`<div class="stat"><span>${e.name}</span><b>${e.sets.map(s=>s.reps).join(' + ')} ${isTimeEx(e.id)?'giây':'rep'}${e.kg>0?' @ '+fmtKg(e.kg)+'kg':''}</b></div>`).join('')
+    + (vol>0?`<div class="stat"><span>Khối lượng tập</span><b>${vol>=1000?(vol/1000).toFixed(1)+' tấn':vol+' kg'}</b></div>`:'')
+    + `<div class="stat"><span>Calo tiêu hao (ước tính)</span><b style="color:var(--accent)">~${kcal} kcal</b></div>`
+    + `<div class="stat"><span>Tổng cộng</span><b style="color:var(--accent)">${totalReps} rep${totalSecs?' + '+totalSecs+'s':''} · ${mins} phút</b></div>`;
+  // save history
+  if(exs.length){
+    const h=JSON.parse(localStorage.getItem('gpt_history')||'[]');
+    h.push({startedAt:sess.startedAt, exercises:exs, kcal, vol});
+    localStorage.setItem('gpt_history',JSON.stringify(h.slice(-50)));
+  }
+  show('scr-sum');
+  coach('sessionEnd');
+  S.session=null;
+}
+document.getElementById('btnHome').addEventListener('click',()=>{ renderHistory(); show('scr-home'); });
+
+/* =================== REP SOURCES =================== */
+/* Tap */
+document.getElementById('tapZone').addEventListener('pointerdown',e=>{ e.preventDefault(); onRep(); });
+
+/* Demo simulator */
+const Demo={
+  t:null,
+  start(){
+    this.stop();
+    const step=()=>{
+      if(S.phase!=='active') return;
+      let iv=2000+Math.random()*800;
+      const left=S.ex.reps-S.reps;
+      if(left===3) iv=5200;          // mô phỏng đuối để nghe HLV động viên
+      if(left===2) iv=3400;
+      this.t=setTimeout(()=>{ onRep(); step(); },iv);
+      S.timers.push(this.t);
+    };
+    this.t=setTimeout(step,1500);
+    S.timers.push(this.t);
+  },
+  stop(){ if(this.t){clearTimeout(this.t);this.t=null;} }
+};
+
+/* Nhat ky cam bien: ghi lai moi chuyen dong duoc danh gia (dem/loai + ly do)
+   de tinh chinh nguong bang du lieu tap that. Luu 400 dong gan nhat. */
+const SLOG={
+  arr: JSON.parse(localStorage.getItem('gpt_senslog')||'[]'),
+  push(e){
+    this.arr.push(e);
+    if(this.arr.length>400) this.arr=this.arr.slice(-400);
+  },
+  save(){ try{ localStorage.setItem('gpt_senslog',JSON.stringify(this.arr)); }catch(e){} },
+  export(){
+    const data={exportedAt:new Date().toISOString(), profile:getProfile(), sens:Sensor.sens, log:this.arr};
+    const blob=new Blob([JSON.stringify(data,null,1)],{type:'application/json'});
+    const a=document.createElement('a');
+    a.href=URL.createObjectURL(blob);
+    a.download='aigympt-sensorlog-'+new Date().toISOString().slice(0,10)+'.json';
+    a.click(); setTimeout(()=>URL.revokeObjectURL(a.href),2000);
+  }
+};
+
+/* Phone motion sensor — phat hien rep bang peak detector co hieu chinh nen */
+/* Nguong VAO (ENTRY) thap chi de bat dau xet 1 chuyen dong; quyet dinh DEM dua tren 3 yeu to
+   scale theo do nhay: amp=bien do dinh toi thieu tren nen, sustain=thoi gian toi thieu (ms) loai spike,
+   period=khoang cach toi thieu giua 2 rep (ms). Nhay=de dem, Chac=kho dem hon. */
+const ENTRY=1.2, EXIT=0.5;  // offset tren nen (m/s^2)
+const SENS = {
+  soft:{amp:1.2, sustain:55, period:550},
+  mid: {amp:2.0, sustain:85, period:700},
+  hard:{amp:2.7, sustain:110, period:820},
+};
+const Sensor={
+  on:false, sm:0, noise:0.3, state:'idle', peakVal:0, aboveSince:0,
+  lastRep:0, startAt:0, gBase:9.81,
+  sig:null, bootCount:0, _first:null, rejBuf:[], // chu ky chuyen dong hoc tu 2 rep that dau + bo dem tu chua
+  sens: localStorage.getItem('gpt_sens') || 'mid',
+  async requestPermission(){
+    try{
+      if(typeof DeviceMotionEvent!=='undefined'&&typeof DeviceMotionEvent.requestPermission==='function'){
+        const r=await DeviceMotionEvent.requestPermission();
+        if(r!=='granted') alert('Cần cho phép truy cập cảm biến chuyển động để đếm rep.');
+      }
+    }catch(e){}
+  },
+  start(){
+    this.on=true; this.sm=0; this.noise=0.3; this.state='idle';
+    this.peakVal=0; this.aboveSince=0; this.lastRep=0;
+    this.sig=null; this.bootCount=0; this._first=null; this.rejBuf=[];
+    this.startAt=performance.now(); this.gBase=9.81;
+    window.addEventListener('devicemotion',this.handler);
+    const st=document.getElementById('sensorState'); if(st) st.textContent='đang chỉnh… giữ yên 1 giây';
+  },
+  stop(){ this.on=false; window.removeEventListener('devicemotion',this.handler); },
+  handler:(e)=>{ Sensor.onMotion(e); },
+  onMotion(e){
+    if(!this.on) return;
+    if(S.phase!=='active' && S.phase!=='countdown') return; // countdown: chi do nen, chua dem
+    // Uu tien gia toc da tru trong luc (mien nhiem voi xoay cham); fallback tru nen trong luc
+    let mag;
+    const a=e.acceleration;
+    if(a && a.x!==null && (Math.abs(a.x||0)+Math.abs(a.y||0)+Math.abs(a.z||0))>0.001){
+      mag=Math.hypot(a.x||0,a.y||0,a.z||0);
+    } else {
+      const g=e.accelerationIncludingGravity; if(!g||g.x===null) return;
+      const gm=Math.hypot(g.x||0,g.y||0,g.z||0);
+      this.gBase=this.gBase*0.995+gm*0.005; // bam theo do lon trong luc that
+      mag=Math.abs(gm-this.gBase);
+    }
+    this.sm=this.sm*0.8+mag*0.2;                 // lam muot manh de bo jitter
+    const now=performance.now();
+    const cfg=SENS[this.sens]||SENS.mid;
+    // hieu chinh: 1.2s dau HOAC con dang dem nguoc (nguoi tap dang dung yen cho)
+    const calibrating = (now-this.startAt < 1200) || S.phase!=='active';
+    // cap nhat nen chi khi dang nghi va tin hieu thap (khong de rep lam phong nen)
+    if(this.state==='idle' && (calibrating || this.sm < this.noise+ENTRY*0.8)){
+      this.noise = this.noise*0.98 + this.sm*0.02;
+    }
+    const thrHigh=this.noise+ENTRY, thrLow=this.noise+EXIT;
+    const f=document.getElementById('sigFill');
+    if(f) f.style.width=Math.min(100,Math.max(0,(this.sm-this.noise)/(cfg.amp*1.1)*100))+'%';
+    if(calibrating){ return; }
+    if(this.state==='idle'){
+      if(this.sm>thrHigh && now-this.lastRep>cfg.period){
+        this.state='up'; this.peakVal=this.sm; this.aboveSince=now; this.peakAt=now;
+      }
+    } else { // dang trong 1 lan chuyen dong
+      if(this.sm>this.peakVal){ this.peakVal=this.sm; this.peakAt=now; }
+      if(this.sm<thrLow){
+        const dur=now-this.aboveSince, amp=this.peakVal-this.noise, since=now-this.lastRep;
+        const rise=this.peakAt-this.aboveSince; // thoi gian doc len dinh: rep that ~150-300ms, rung giat ~20-50ms
+        const st=document.getElementById('sensorState');
+        let ok=false, msg='… bỏ qua rung nhẹ';
+        // buoc 1: dat nguong co ban (bien do + thoi gian chuyen dong + gian cach)
+        const baseOk = dur>=cfg.sustain && amp>=cfg.amp && since>=cfg.period;
+        // chat luong "giong 1 rep that": du dai + doc len dinh tu nhien (loai giat manh)
+        const repQuality = dur>=250 && dur<=3000 && rise>=80;
+        const similar=(a,b)=>{const ra=a.amp/b.amp, rd=a.dur/b.dur; return ra>=0.45&&ra<=2.2&&rd>=0.45&&rd<=2.2;};
+        if(baseOk && !this.sig){
+          // buoc 2a: hoc mau tu 2 rep dau — PHAI giong nhau moi khoa (1 cai la nhieu thi hoc lai)
+          if(repQuality){
+            ok=true; this.bootCount++;
+            if(this.bootCount===1){ this._first={dur,amp,rise}; msg='đang học nhịp của bạn (1/2)…'; }
+            else if(similar({amp,dur},this._first)){
+              this.sig={amp:(this._first.amp+amp)/2, dur:(this._first.dur+dur)/2, rise:(this._first.rise+rise)/2, period:since};
+              msg='✓ đã khoá nhịp — đếm chuẩn';
+            } else { // 2 lan khac nhau qua -> 1 trong 2 la nhieu, lay cai moi lam mau hoc lai
+              this._first={dur,amp,rise}; this.bootCount=1;
+              msg='nhịp chưa đều — đang học lại (1/2)…';
+            }
+          }
+        } else if(baseOk && this.sig){
+          // buoc 2b: chi dem chuyen dong GIONG rep that (bien do/thoi gian/doc len dinh/chu ky)
+          const s=this.sig;
+          const ampOk  = amp>=Math.max(cfg.amp*0.8, s.amp*0.4) && amp<=s.amp*3;
+          const durOk  = dur>=Math.max(cfg.sustain*0.8, s.dur*0.5) && dur<=s.dur*2.5;
+          const riseOk = rise>=Math.max(50, s.rise*0.35);
+          const gapOk  = since>=Math.max(cfg.period*0.8, s.period*0.55);
+          if(ampOk&&durOk&&riseOk&&gapOk){
+            ok=true;
+            // rep hop le -> cap nhat chu ky theo trung binh truot (thich nghi khi moi dan);
+            // khoang nghi dai bat thuong (vd dung sua ta) KHONG duoc keo dai chu ky chuan
+            s.amp=s.amp*0.7+amp*0.3; s.dur=s.dur*0.7+dur*0.3; s.rise=s.rise*0.7+rise*0.3;
+            // chi hoc chu ky tu gap "co nhip" (<=1.8x) — ngat quang giua chung khong lam phong chu ky chuan
+            if(since<=s.period*1.8) s.period=s.period*0.7+since*0.3;
+            this.rejBuf=[];
+            msg='✓ đếm nhịp tốt';
+          } else {
+            msg='… bỏ qua chuyển động lạ';
+            // TU CHUA: neu mau hoc bi sai (vd 2 rep dau la lac tay), rep that se bi tu choi lien tuc
+            // nhung chung GIONG NHAU va nhip nhang -> 3 lan lien tiep nhu vay thi hoc lai tu chinh chung
+            if(repQuality){
+              this.rejBuf.push({amp,dur,rise,t:now});
+              if(this.rejBuf.length>3) this.rejBuf.shift();
+              const rb=this.rejBuf;
+              if(rb.length===3
+                && similar(rb[0],rb[1]) && similar(rb[1],rb[2])
+                && rb[1].t-rb[0].t<=8000 && rb[2].t-rb[1].t<=8000){
+                this.sig={amp:rb[1].amp, dur:rb[1].dur, rise:rb[1].rise, period:(rb[2].t-rb[0].t)/2};
+                this.rejBuf=[];
+                ok=true; // dem rep hien tai; 2 cai truoc bi lo, nguoi dung bam +1 neu can
+                msg='✓ đã học lại nhịp của bạn — đếm tiếp';
+              }
+            } else this.rejBuf=[]; // chuyen dong kem chat luong chen giua -> reset chuoi
+          }
+        }
+        if(ok){ this.lastRep=now; onRep(); }
+        if(st) st.textContent=msg;
+        // ghi nhat ky de tinh chinh bang du lieu that
+        SLOG.push({t:Date.now(), ex:S.ex?S.ex.id:'', set:S.setIdx+1, rep:S.reps,
+          amp:+amp.toFixed(2), dur:Math.round(dur), rise:Math.round(rise), since:Math.round(since),
+          noise:+this.noise.toFixed(2), sens:this.sens, boot:this.bootCount, hasSig:!!this.sig, ok, msg});
+        this.state='idle';
+      }
+    }
+  }
+};
+function renderSens(){
+  document.querySelectorAll('#sensSeg button').forEach(b=>b.classList.toggle('sel',b.dataset.s===Sensor.sens));
+}
+document.getElementById('sensSeg').addEventListener('click',e=>{
+  const b=e.target.closest('button'); if(!b) return;
+  Sensor.sens=b.dataset.s; localStorage.setItem('gpt_sens',Sensor.sens); renderSens();
+  // doi do nhay = xoa mau da hoc, hoc lai tu 2 rep ke tiep (loi thoat khi mau bi hoc sai)
+  Sensor.sig=null; Sensor.bootCount=0; Sensor._first=null; Sensor.rejBuf=[];
+  const st=document.getElementById('sensorState'); if(st) st.textContent='đổi độ nhạy: '+b.textContent.trim()+' — học lại nhịp từ 2 rep tới…';
+});
+function correctRep(delta){
+  if(S.phase!=='active') return;
+  if(delta>0){ onRep(); return; }
+  if(S.reps>0){
+    S.reps--; if(S.repTimes.length) S.repTimes.pop();
+    document.getElementById('repNum').textContent=S.reps;
+    document.getElementById('ringFg').style.strokeDashoffset=754*(1-Math.min(1,S.reps/S.ex.reps));
+    if(Sensor.on) Sensor.lastRep=performance.now();
+  }
+}
+document.getElementById('repCorrMinus').addEventListener('click',()=>correctRep(-1));
+document.getElementById('repCorrPlus').addEventListener('click',()=>correctRep(1));
+
+/* ===== che do bo tui: man den + wake lock, cam bien van chay ===== */
+const pocketEl=document.getElementById('pocketOverlay');
+let pocketTap=0;
+function pocketOn(){
+  pocketEl.classList.add('on');
+  updatePocket();
+  requestWakeLock();
+}
+function pocketOff(){ pocketEl.classList.remove('on'); }
+function updatePocket(){
+  if(!pocketEl.classList.contains('on')) return;
+  const n=document.getElementById('poNum'), s=document.getElementById('poSub');
+  if(S.phase==='active'&&S.ex){ n.textContent=S.reps; s.textContent=`/ ${S.ex.reps} rep · set ${S.setIdx+1}/${S.ex.sets}`; }
+  else if(S.phase==='rest'){ n.textContent=document.getElementById('restNum').textContent; s.textContent='đang nghỉ (giây)'; }
+  else if(S.phase==='countdown'){ n.textContent=document.getElementById('cdNum').textContent; s.textContent='chuẩn bị…'; }
+  else pocketOff();
+}
+document.getElementById('btnPocket').addEventListener('click',pocketOn);
+document.getElementById('slogExport').addEventListener('click',()=>{ SLOG.save(); SLOG.export(); });
+pocketEl.addEventListener('pointerdown',()=>{
+  const now=Date.now();
+  if(now-pocketTap<450) pocketOff();
+  pocketTap=now;
+});
+
+/* wake lock — xin lai khi quay ve app (iOS/Android tu nha khi chuyen tab) */
+let wakeLock=null;
+async function requestWakeLock(){
+  try{ if('wakeLock' in navigator) wakeLock=await navigator.wakeLock.request('screen'); }catch(e){}
+}
+let hiddenAt=0;
+document.addEventListener('visibilitychange',()=>{
+  if(document.visibilityState==='hidden'){
+    if(S.phase==='active') hiddenAt=Date.now(); // bi treo giua set (chuyen app / tat man hinh)
+    return;
+  }
+  // quay lai app
+  if(S.session) requestWakeLock();
+  if(typeof S._tick==='function') S._tick(); // dong ho nghi/dem nguoc cap nhat ngay
+  if(S.phase==='active' && hiddenAt){
+    const d=Date.now()-hiddenAt; hiddenAt=0;
+    if(d>3000){
+      // dich moc thoi gian de nhip/thoi luong set khong tinh khoang bi treo + coach chao lai
+      S.setStartAt+=d;
+      S.repTimes=S.repTimes.map(t=>t+d);
+      coach('resume');
+    }
+  }
+});
+
+/* =================== HISTORY SCREEN: bieu do tien bo + xoa buoi + backup =================== */
+let histSelEx=null;
+function getHist(){ return JSON.parse(localStorage.getItem('gpt_history')||'[]'); }
+function setHist(h){ localStorage.setItem('gpt_history',JSON.stringify(h)); }
+function renderHistScreen(){
+  const h=getHist();
+  // chips: cac bai da tung tap (moi nhat truoc)
+  const seen=new Map();
+  for(let i=h.length-1;i>=0;i--) for(const e of h[i].exercises) if(e.id&&!seen.has(e.id)) seen.set(e.id,e.name);
+  const ids=[...seen.keys()];
+  if(!histSelEx||!seen.has(histSelEx)) histSelEx=ids[0]||null;
+  document.getElementById('histExChips').innerHTML = ids.length
+    ? ids.map(id=>`<button class="chip ${id===histSelEx?'sel':''}" data-h="${id}">${seen.get(id)}</button>`).join('')
+    : '<div class="sub">Chưa có dữ liệu — tập vài buổi là có biểu đồ ngay!</div>';
+  renderHistChart(h);
+  // danh sach tat ca buoi (moi nhat truoc)
+  const all=document.getElementById('histAll');
+  if(!h.length){ all.innerHTML='<div class="sub" style="margin-top:8px">Chưa có buổi tập nào.</div>'; return; }
+  all.innerHTML=[...h].reverse().map(s=>{
+    const d=new Date(s.startedAt);
+    const reps=s.exercises.filter(e=>!isTimeEx(e.id)).reduce((a,e)=>a+e.sets.reduce((x,y)=>x+y.reps,0),0);
+    const secs=s.exercises.filter(e=>isTimeEx(e.id)).reduce((a,e)=>a+e.sets.reduce((x,y)=>x+y.reps,0),0);
+    const meta=[`${reps} rep${secs?' + '+secs+'s':''}`]; if(s.vol) meta.push(s.vol>=1000?(s.vol/1000).toFixed(1)+' tấn':s.vol+' kg'); if(s.kcal) meta.push('~'+s.kcal+' kcal');
+    return `<div class="histrow"><div class="hinfo">
+      <div class="hd">📅 ${d.getDate()}/${d.getMonth()+1}/${d.getFullYear()} · ${meta.join(' · ')}</div>
+      <div class="hs">${s.exercises.map(e=>e.name).join(', ')}</div>
+    </div><button class="hdel" data-del="${s.startedAt}">🗑</button></div>`;
+  }).join('');
+}
+function renderHistChart(h){
+  const box=document.getElementById('histChart'), note=document.getElementById('histChartNote');
+  if(!histSelEx){ box.innerHTML=''; note.textContent=''; return; }
+  // moi buoi co bai nay -> 1 diem: volume (kg>0) hoac tong rep (bodyweight)
+  const pts=[];
+  for(const s of h){
+    const e=s.exercises.find(x=>x.id===histSelEx); if(!e||!e.sets.length) continue;
+    const reps=e.sets.reduce((a,x)=>a+x.reps,0);
+    const vol=e.sets.reduce((a,x)=>a+(x.kg||0)*x.reps,0);
+    pts.push({d:new Date(s.startedAt), v: vol>0?vol:reps, isVol: vol>0, kg:e.sets[0].kg||0, reps});
+  }
+  if(!pts.length){ box.innerHTML=''; note.textContent='Chưa có buổi nào với bài này.'; return; }
+  const isVol=pts.some(p=>p.isVol);
+  const vals=pts.map(p=>p.v);
+  const W=330,H=150,P=26;
+  const vmax=Math.max(...vals)*1.15, vmin=Math.min(0,Math.min(...vals));
+  const X=i=>pts.length===1?W/2:P+(W-2*P)*i/(pts.length-1);
+  const Y=v=>H-P-(H-2*P)*((v-vmin)/((vmax-vmin)||1));
+  const line=pts.map((p,i)=>`${X(i).toFixed(1)},${Y(p.v).toFixed(1)}`).join(' ');
+  box.innerHTML=`<svg viewBox="0 0 ${W} ${H}" xmlns="http://www.w3.org/2000/svg">
+    <line x1="${P}" y1="${H-P}" x2="${W-P}" y2="${H-P}" stroke="#26313f" stroke-width="1.5"/>
+    ${pts.length>1?`<polyline points="${line}" fill="none" stroke="#c9f653" stroke-width="2.5" stroke-linejoin="round"/>`:''}
+    ${pts.map((p,i)=>`<circle cx="${X(i).toFixed(1)}" cy="${Y(p.v).toFixed(1)}" r="4" fill="#c9f653"/>
+      <text x="${X(i).toFixed(1)}" y="${(Y(p.v)-9).toFixed(1)}" text-anchor="middle" font-size="10" fill="#93a1b4">${p.v}</text>
+      <text x="${X(i).toFixed(1)}" y="${H-P+14}" text-anchor="middle" font-size="9" fill="#5b6879">${p.d.getDate()}/${p.d.getMonth()+1}</text>`).join('')}
+  </svg>`;
+  const last=pts[pts.length-1];
+  note.textContent = isVol
+    ? `Khối lượng mỗi buổi (kg × rep). Gần nhất: ${last.v}kg khối lượng @ ${fmtKg(last.kg)}kg tạ.`
+    : isTimeEx(histSelEx)
+      ? `Số giây giữ mỗi buổi. Gần nhất: ${last.v} giây.`
+      : `Tổng rep mỗi buổi (bài không tạ). Gần nhất: ${last.v} rep.`;
+}
+document.getElementById('histExChips').addEventListener('click',e=>{
+  const b=e.target.closest('.chip'); if(!b) return;
+  histSelEx=b.dataset.h; renderHistScreen();
+});
+document.getElementById('histAll').addEventListener('click',e=>{
+  const b=e.target.closest('.hdel'); if(!b) return;
+  const id=+b.dataset.del;
+  const s=getHist().find(x=>x.startedAt===id);
+  const d=s?new Date(s.startedAt):null;
+  if(!confirm(`Xoá buổi tập ngày ${d?d.getDate()+'/'+(d.getMonth()+1):''}? Không hoàn tác được.`)) return;
+  setHist(getHist().filter(x=>x.startedAt!==id));
+  renderHistScreen(); renderHistory();
+});
+document.getElementById('btnHistAll').addEventListener('click',()=>{ renderHistScreen(); show('scr-hist'); });
+document.getElementById('btnHistBack').addEventListener('click',()=>{ renderHistory(); show('scr-home'); });
+
+/* ===== sao luu / khoi phuc ===== */
+const BK_KEYS=['gpt_history','gpt_profile','gpt_lastkg','gpt_mode','gpt_sens','gpt_bw'];
+document.getElementById('btnBackup').addEventListener('click',()=>{
+  const data={app:'AI Gym PT', version:1, exportedAt:new Date().toISOString()};
+  BK_KEYS.forEach(k=>{ const v=localStorage.getItem(k); if(v!==null) data[k]=v; });
+  const blob=new Blob([JSON.stringify(data,null,1)],{type:'application/json'});
+  const a=document.createElement('a');
+  a.href=URL.createObjectURL(blob);
+  a.download='aigympt-saoluu-'+new Date().toISOString().slice(0,10)+'.json';
+  a.click(); setTimeout(()=>URL.revokeObjectURL(a.href),2000);
+});
+document.getElementById('btnRestore').addEventListener('click',()=>document.getElementById('restoreFile').click());
+document.getElementById('restoreFile').addEventListener('change',e=>{
+  const f=e.target.files[0]; if(!f) return;
+  const rd=new FileReader();
+  rd.onload=()=>{
+    try{
+      const data=JSON.parse(rd.result);
+      if(data.app!=='AI Gym PT') throw new Error('File không phải bản sao lưu AI Gym PT');
+      let n=0;
+      BK_KEYS.forEach(k=>{ if(typeof data[k]==='string'){ JSON.parse(k==='gpt_mode'||k==='gpt_sens'||k==='gpt_bw'?'"x"':data[k]); localStorage.setItem(k,data[k]); n++; } });
+      alert('Đã khôi phục '+n+' mục dữ liệu. App sẽ tải lại.');
+      location.reload();
+    }catch(err){ alert('File sao lưu không hợp lệ: '+err.message); }
+  };
+  rd.readAsText(f);
+  e.target.value='';
+});
+
+/* =================== INIT =================== */
+S.selKg = lastKg[S.selEx]!==undefined ? +lastKg[S.selEx] : 0;
+renderMode(); renderHistory(); renderProfile(); Voice.init();
+if(!getProfile()) setTimeout(()=>openProfileModal(true),600); // lan dau vao: hoi ho so
+// PWA: dang ky service worker (that bai em tren cert tu ky/iOS cu — app van chay binh thuong)
+if('serviceWorker' in navigator){ try{ navigator.serviceWorker.register('sw.js').catch(()=>{}); }catch(e){} }
+</script>
+</body>
+</html>

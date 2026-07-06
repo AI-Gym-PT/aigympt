@@ -1,0 +1,8 @@
+# chi deploy file web tinh — loai script build, chung chi, file he thong
+*.py
+*.cmd
+*.vbs
+*.pem
+__pycache__/
+Thumbs.db
+desktop.ini
