@@ -1,5 +1,5 @@
 /* AI Gym PT service worker — cache de mo nhanh + chay offline */
-const CACHE = 'aigympt-v1';
+const CACHE = 'aigympt-v2';
 const CORE = ['./', './index.html', './manifest.json', './icon-192.png', './icon-512.png'];
 
 self.addEventListener('install', e => {
@@ -7,11 +7,26 @@ self.addEventListener('install', e => {
 });
 
 self.addEventListener('activate', e => {
-  e.waitUntil(
-    caches.keys()
-      .then(keys => Promise.all(keys.filter(k => k !== CACHE).map(k => caches.delete(k))))
-      .then(() => self.clients.claim())
-  );
+  e.waitUntil((async () => {
+    const keys = await caches.keys();
+    const cur = await caches.open(CACHE);
+    for (const k of keys) {
+      if (k === CACHE) continue;
+      // di tru media BAT BIEN (mp3/jpg/png) tu cache cu sang cache moi
+      // -> nang version khong bat user tai lai ca bo giong tren 4G
+      try {
+        const old = await caches.open(k);
+        for (const req of await old.keys()) {
+          if (/\.(mp3|jpe?g|png)$/.test(new URL(req.url).pathname) && !(await cur.match(req))) {
+            const res = await old.match(req);
+            if (res) await cur.put(req, res);
+          }
+        }
+      } catch (err) {}
+      await caches.delete(k);
+    }
+    await self.clients.claim();
+  })());
 });
 
 self.addEventListener('fetch', e => {
@@ -27,8 +42,9 @@ self.addEventListener('fetch', e => {
     );
     return;
   }
-  // giong noi + hinh anh: bat bien -> cache truoc, mang sau
-  if (url.pathname.includes('/voice/') || url.pathname.includes('/img/') || url.pathname.includes('icon-')) {
+  // CHI file media bat bien (mp3/jpg/png) moi cache-first;
+  // manifest.json cua voice PHAI network-first, khong thi user cu khong bao gio thay giong moi
+  if (/\.(mp3|jpe?g|png)$/.test(url.pathname)) {
     e.respondWith(
       caches.match(e.request).then(hit => hit || fetch(e.request).then(r => {
         if (r.ok) { const cp = r.clone(); caches.open(CACHE).then(c => c.put(e.request, cp)); }
@@ -37,6 +53,12 @@ self.addEventListener('fetch', e => {
     );
     return;
   }
-  // con lai: mang truoc, cache du phong
-  e.respondWith(fetch(e.request).catch(() => caches.match(e.request)));
+  // con lai (gom voice/manifest.json): mang truoc + LUU BAN SAO vao cache lam du phong offline
+  // -> mat mang van doc duoc manifest, 314 mp3 da cache khong bi "chet"
+  e.respondWith(
+    fetch(e.request).then(r => {
+      if (r.ok) { const cp = r.clone(); caches.open(CACHE).then(c => c.put(e.request, cp)); }
+      return r;
+    }).catch(() => caches.match(e.request))
+  );
 });

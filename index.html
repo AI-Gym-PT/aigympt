@@ -597,8 +597,8 @@ function pick(key, vars={}){
 /* =================== VOICE ENGINE =================== */
 /* Uu tien file mp3 thu san (voice/) — fallback TTS trinh duyet */
 const Voice = {
-  ok:false, files:null, base:'voice/', ctx:null, bufs:new Map(),
-  cur:null, curSrc:null, token:0, criticalPlaying:false,
+  ok:false, files:null, base:'voice/', ctx:null, bufs:new Map(), MAX_BUFS:140,
+  cur:null, curSrcs:[], token:0, criticalPlaying:false,
   async init(){
     try{
       const r = await fetch(this.base+'manifest.json', {cache:'no-cache'});
@@ -611,45 +611,106 @@ const Voice = {
       const AC = window.AudioContext||window.webkitAudioContext;
       if(AC){ try{ this.ctx=new AC(); }catch(e){} }
     }
-    if(this.ctx && this.ctx.state==='suspended') this.ctx.resume().catch(()=>{});
+    // iOS dung state phi chuan 'interrupted' sau cuoc goi/khoa may/Siri —
+    // check !== 'running' de moi truong hop deu duoc resume (nhu howler/Tone.js)
+    if(this.ctx && this.ctx.state!=='running') this.ctx.resume().catch(()=>{});
   },
   has(k){ return this.ok && this.files.has(k+'.mp3'); },
+  /* CAT KHOANG LANG: clip TTS co ~0.5-1s im lang o dau/duoi lam cau ghep bi keo le.
+     Quet bien do tim doan co tieng, phat dung doan do (+dem 40/80ms cho tu nhien). */
+  trimBounds(b){
+    const d=b.getChannelData(0), n=d.length, sr=b.sampleRate, TH=0.012, STRIDE=16;
+    let first=0, last=n-1;
+    for(let i=0;i<n;i+=STRIDE){ if(Math.abs(d[i])>TH){ first=i; break; } }
+    for(let i=n-1;i>=0;i-=STRIDE){ if(Math.abs(d[i])>TH){ last=i; break; } }
+    if(last<=first) return {b, off:0, dur:b.duration}; // clip im hoan toan: giu nguyen
+    const off=Math.max(0, first/sr-0.04);
+    const end=Math.min(b.duration, last/sr+0.08);
+    return {b, off, dur:Math.max(0.05, end-off)};
+  },
   buffer(k){
-    if(!this.bufs.has(k)){
-      this.bufs.set(k, fetch(this.base+k+'.mp3')
-        .then(r=>r.arrayBuffer())
-        .then(b=>new Promise((res,rej)=>this.ctx.decodeAudioData(b,res,rej))));
+    if(this.bufs.has(k)){ // LRU: cham lai -> day len cuoi danh sach
+      const v=this.bufs.get(k); this.bufs.delete(k); this.bufs.set(k,v); return v;
     }
-    return this.bufs.get(k);
+    const p = fetch(this.base+k+'.mp3')
+      .then(r=>{ if(!r.ok) throw new Error('http '+r.status); return r.arrayBuffer(); })
+      .then(b=>new Promise((res,rej)=>this.ctx.decodeAudioData(b,res,rej)))
+      .then(b=>this.trimBounds(b));
+    p.catch(()=>{ if(this.bufs.get(k)===p) this.bufs.delete(k); }); // loi mang: khong ghim loi vao cache
+    this.bufs.set(k,p);
+    while(this.bufs.size>this.MAX_BUFS){ this.bufs.delete(this.bufs.keys().next().value); }
+    return p;
   },
   warm(keys){ if(this.ctx) keys.filter(k=>this.has(k)).forEach(k=>this.buffer(k).catch(()=>{})); },
+  /* tai ngam TOAN BO file giong ve cache trinh duyet/service-worker (khong giai ma — nhe RAM)
+     -> mo app lan dau o noi co mang la tu du offline muot vinh vien */
+  prefetchAll(){
+    if(!this.ok || this._prefetching || this._prefetchDone) return;
+    this._prefetching=true;
+    const names=[...this.files];
+    let i=0, alive=2, fails=0;
+    const step=()=>{
+      if(i>=names.length){
+        if(--alive===0){
+          this._prefetching=false;
+          this._prefetchDone = fails<10; // fail hang loat (offline) -> chua xong, su kien 'online' se tai lai
+        }
+        return;
+      }
+      // timeout 12s/request: mang gym chap chon khong duoc treo ca chuoi
+      const ac=('AbortController' in window)?new AbortController():null;
+      const tm=ac?setTimeout(()=>ac.abort(),12000):null;
+      fetch(this.base+names[i++], ac?{signal:ac.signal}:{})
+        .then(r=>{ if(!r.ok) fails++; })
+        .catch(()=>{ fails++; })
+        .finally(()=>{ if(tm)clearTimeout(tm); setTimeout(step,120); });
+    };
+    step(); setTimeout(step,60); // 2 luong cham rai, khong tranh bang thong voi phat giong
+  },
+  /* "dang noi cau quan trong" co HAN CHOT theo dong ho that:
+     neu onended/timer bi nuot (iOS suspend, tab an) thi trang thai tu het han,
+     khong bao gio nuot so dem vinh vien */
+  criticalUntil:0,
+  criticalActive(){ return this.criticalPlaying && Date.now()<this.criticalUntil; },
   stop(){
-    this.token++; this.criticalPlaying=false;
-    if(this.curSrc){ try{this.curSrc.stop()}catch(e){} this.curSrc=null; }
+    this.token++; this.criticalPlaying=false; this.criticalUntil=0;
+    for(const s of this.curSrcs){ try{s.onended=null;s.stop();}catch(e){} }
+    this.curSrcs=[];
     if(this.cur){ try{this.cur.pause()}catch(e){} this.cur=null; }
   },
   play(keys, critical=false){
     if(!voiceOn) return true;
     keys = keys.filter(k=>this.has(k));
     if(!keys.length) return false;
-    if(!critical && this.criticalPlaying) return true; // so dem khong chen ngang cau co vu
+    if(!critical && this.criticalActive()) return true; // so dem khong chen ngang cau co vu
     this.unlock();
     try{ if('speechSynthesis' in window) speechSynthesis.cancel(); }catch(e){}
     this.stop();
     const t = ++this.token;
     this.criticalPlaying = critical;
-    const stepWA = async i => {
-      if(t!==this.token) return;
-      if(i>=keys.length){ this.criticalPlaying=false; this.curSrc=null; return; }
-      try{
-        const b = await this.buffer(keys[i]);
+    this.criticalUntil = Date.now()+8000; // tam tinh khi con dang tai; se tinh lai chinh xac sau
+    if(this.ctx){
+      // FIX GIAT: tai + giai ma XONG CA CAU (song song, 1 vong mang) roi moi phat,
+      // cac manh ghep noi nhau tren timeline am thanh -> lien mach tuyet doi
+      Promise.all(keys.map(k=>this.buffer(k))).then(clips=>{
         if(t!==this.token) return;
-        const src = this.ctx.createBufferSource();
-        src.buffer=b; src.connect(this.ctx.destination);
-        this.curSrc=src; src.onended=()=>stepWA(i+1);
-        src.start();
-      }catch(e){ stepWA(i+1); }
-    };
+        this.unlock(); // ctx co the vua bi suspend (iOS) trong luc tai
+        const GAP=0.05; // khoang lang tu nhien giua cac manh ghep
+        let at=this.ctx.currentTime+0.03, total=0;
+        clips.forEach((c,i)=>{
+          const src=this.ctx.createBufferSource();
+          src.buffer=c.b; src.connect(this.ctx.destination);
+          if(i===clips.length-1) src.onended=()=>{ if(t===this.token){ this.criticalPlaying=false; this.curSrcs=[]; } };
+          src.start(at, c.off, c.dur); // chi phat doan co tieng (da cat im lang)
+          at+=c.dur+GAP; total+=c.dur+GAP;
+          this.curSrcs.push(src);
+        });
+        this.criticalUntil = Date.now()+total*1000+1200; // han chot chinh xac theo tong thoi luong cau
+        // day an toan phu: neu onended khong ban (ctx suspend/tab an) thi tu mo trang thai
+        setTimeout(()=>{ if(t===this.token){ this.criticalPlaying=false; this.curSrcs=[]; } }, total*1000+1500);
+      }).catch(()=>{ if(t===this.token) this.criticalPlaying=false; });
+      return true;
+    }
     const stepHA = i => {
       if(t!==this.token) return;
       if(i>=keys.length){ this.criticalPlaying=false; this.cur=null; return; }
@@ -657,7 +718,7 @@ const Voice = {
       this.cur=a; a.onended=()=>stepHA(i+1); a.onerror=()=>stepHA(i+1);
       a.play().catch(()=>{ if(t===this.token) this.criticalPlaying=false; });
     };
-    if(this.ctx) stepWA(0); else stepHA(0);
+    stepHA(0);
     return true;
   }
 };
@@ -670,7 +731,7 @@ function loadVoices(){
 if('speechSynthesis' in window){ loadVoices(); speechSynthesis.onvoiceschanged = loadVoices; }
 function speak(text, critical=false){
   if(!voiceOn || !('speechSynthesis' in window)) return;
-  if(Voice.criticalPlaying && !critical) return;
+  if(Voice.criticalActive() && !critical) return;
   if(critical) Voice.stop();
   if(!critical && speakingCritical) return;
   if(critical) speechSynthesis.cancel();
@@ -1075,10 +1136,19 @@ document.getElementById('btnGo').addEventListener('click',async ()=>{
     lastKg[S.selEx]=S.selKg; localStorage.setItem('gpt_lastkg',JSON.stringify(lastKg));
     S.session.exercises.push({id:S.selEx, name:S.ex.name, targetSets:S.selSets, targetReps:S.selReps, kg:S.selKg, rest:S.selRest, sets:[]});
     S.setIdx=0;
-    // nap truoc audio hay dung cho set nay (khong bat buoc, chi cho muot)
+    // nap truoc (giai ma san) toan bo cau se dung trong bai nay -> phat khong tre
     const warmKeys=[`ex_${S.ex.id}`,'cb'];
     for(let i=1;i<=Math.min(S.ex.reps,50);i++) warmKeys.push('n'+i);
     for(let s=1;s<=Math.min(S.ex.sets,10);s++) for(let i=0;i<4;i++) warmKeys.push(`setstart_s${s}_${i}`);
+    // milestone + khen + dong vien + ket set + nghi
+    ['half_0','half_1','half_2','three_0','three_1','two_0','two_1',
+     'p_lastOne_0','p_lastOne_1','p_praise_0','p_praise_1','p_praise_2','p_praise_3',
+     'p_slowing_0','p_slowing_1','p_slowing_2','p_stall1_0','p_stall1_1','p_stall1_2',
+     'st2p_0','st2p_1','st2p_2','st2s_0','st2s_1','st2s_2',
+     'sdp_0','sdp_1','sdp_2','sds_0','sds_1','sds_2','sdep_0','sdep_1','sdes_0','sdes_1',
+     'sdt_0','sdet_0','p_restReady_0','p_restReady_1','p_safety_0','p_safety_1',
+     `resto_${S.selRest}_0`,`resto_${S.selRest}_1`,
+     `exdone_${S.ex.id}_0`,`exdone_${S.ex.id}_1`].forEach(k=>warmKeys.push(k));
     Voice.warm(warmKeys);
     if(S.mode==='sensor') await Sensor.requestPermission();
     startCountdown();
@@ -1642,6 +1712,7 @@ document.addEventListener('visibilitychange',()=>{
   }
   // quay lai app
   if(S.session) requestWakeLock();
+  Voice.unlock(); // hoi sinh AudioContext neu bi iOS 'interrupted' khi khoa may/cuoc goi
   if(typeof S._tick==='function') S._tick(); // dong ho nghi/dem nguoc cap nhat ngay
   if(S.phase==='active' && hiddenAt){
     const d=Date.now()-hiddenAt; hiddenAt=0;
@@ -1763,7 +1834,12 @@ document.getElementById('restoreFile').addEventListener('change',e=>{
 
 /* =================== INIT =================== */
 S.selKg = lastKg[S.selEx]!==undefined ? +lastKg[S.selEx] : 0;
-renderMode(); renderHistory(); renderProfile(); Voice.init();
+renderMode(); renderHistory(); renderProfile();
+Voice.init().then(()=>{ setTimeout(()=>Voice.prefetchAll(),4000); }); // tai ngam bo giong sau 4s
+window.addEventListener('online',()=>{ // mat mang giua chung -> co mang lai thi tai tiep (SW cache hit = re)
+  if(!Voice.ok) Voice.init().then(()=>Voice.prefetchAll());
+  else Voice.prefetchAll();
+});
 if(!getProfile()) setTimeout(()=>openProfileModal(true),600); // lan dau vao: hoi ho so
 // PWA: dang ky service worker (that bai em tren cert tu ky/iOS cu — app van chay binh thuong)
 if('serviceWorker' in navigator){ try{ navigator.serviceWorker.register('sw.js').catch(()=>{}); }catch(e){} }
