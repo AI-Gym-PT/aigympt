@@ -1516,20 +1516,26 @@ const SLOG={
   }
 };
 
-/* Phone motion sensor — phat hien rep bang peak detector co hieu chinh nen */
-/* Nguong VAO (ENTRY) thap chi de bat dau xet 1 chuyen dong; quyet dinh DEM dua tren 3 yeu to
-   scale theo do nhay: amp=bien do dinh toi thieu tren nen, sustain=thoi gian toi thieu (ms) loai spike,
-   period=khoang cach toi thieu giua 2 rep (ms). Nhay=de dem, Chac=kho dem hon. */
+/* Phone motion sensor v6 — dem theo CHU KY nhu nguoi that:
+   1 rep = di + VE (keo vao + tha ra / xuong + len). Moi pha tao 1 "cu bung luc" (burst).
+   Dem theo burst don thuan se DEM DOI. Giai phap: dung HUONG cua vector gia toc —
+   pha di va pha ve nguoc huong nhau. App tu hoc trong 2 rep dau xem bai nay la:
+   - 'pair': 2 burst nguoc huong = 1 rep (dem khi nguoi tap VE vi tri xuat phat)
+   - 'mono': tap nhanh lien mach, 2 pha dinh vao nhau thanh 1 burst = 1 rep
+   va tu chuyen che do neu nguoi tap doi nhip giua chung. */
 const ENTRY=1.2, EXIT=0.5;  // offset tren nen (m/s^2)
 const SENS = {
   soft:{amp:1.2, sustain:55, period:550},
   mid: {amp:2.0, sustain:85, period:700},
   hard:{amp:2.7, sustain:110, period:820},
-};
+}; // period = khoang cach toi thieu giua 2 REP TRON VEN (chu ky day du)
 const Sensor={
-  on:false, sm:0, noise:0.3, state:'idle', peakVal:0, aboveSince:0,
-  lastRep:0, startAt:0, gBase:9.81,
-  sig:null, bootCount:0, _first:null, rejBuf:[], // chu ky chuyen dong hoc tu 2 rep that dau + bo dem tu chua
+  on:false, sm:0, noise:0.3, state:'idle', peakVal:0, peakAt:0, aboveSince:0,
+  vx:0, vy:0, vz:0, nAcc:0,
+  lastBurst:0, lastCount:0, startAt:0, gBase:9.81,
+  sigB:null, _first:null, rejBuf:[],          // chu ky "1 cu bung luc" hoc tu 2 burst dau
+  mode:null, pending:null, pairGap:0, cyc:0,  // che do chu ky + burst mo dang cho + chu ky rep
+  boot:[], lastVec:null, sameDir:0, altDir:0, // hoc che do + tu chuyen che do
   sens: localStorage.getItem('gpt_sens') || 'mid',
   async requestPermission(){
     try{
@@ -1541,22 +1547,115 @@ const Sensor={
   },
   start(){
     this.on=true; this.sm=0; this.noise=0.3; this.state='idle';
-    this.peakVal=0; this.aboveSince=0; this.lastRep=0;
-    this.sig=null; this.bootCount=0; this._first=null; this.rejBuf=[];
+    this.peakVal=0; this.peakAt=0; this.aboveSince=0;
+    this.vx=0; this.vy=0; this.vz=0; this.nAcc=0;
+    this.lastBurst=0; this.lastCount=0;
+    this.sigB=null; this._first=null; this.rejBuf=[];
+    this.mode=null; this.pending=null; this.pairGap=0; this.cyc=0;
+    this.boot=[]; this.lastVec=null; this.sameDir=0; this.altDir=0;
     this.startAt=performance.now(); this.gBase=9.81;
     window.addEventListener('devicemotion',this.handler);
     const st=document.getElementById('sensorState'); if(st) st.textContent='đang chỉnh… giữ yên 1 giây';
   },
   stop(){ this.on=false; window.removeEventListener('devicemotion',this.handler); },
   handler:(e)=>{ Sensor.onMotion(e); },
+  cos(u,v){ if(!u||!v) return null; return u.x*v.x+u.y*v.y+u.z*v.z; }, // vec da chuan hoa
+  maxIntra(){ return Math.min(2400, Math.max(1000, (this.pairGap||800)*2.2)); },
+  msg(t){ const st=document.getElementById('sensorState'); if(st) st.textContent=t; },
+  log(B,extra){
+    SLOG.push(Object.assign({t:Date.now(), ex:S.ex?S.ex.id:'', set:S.setIdx+1, rep:S.reps,
+      amp:+B.amp.toFixed(2), dur:Math.round(B.dur), rise:Math.round(B.rise),
+      noise:+this.noise.toFixed(2), sens:this.sens, mode:this.mode, hasSig:!!this.sigB}, extra));
+  },
+  /* dem 1 REP TRON VEN (co chan chu ky de nhieu khong tao rep sat nhau) */
+  finishRep(tNow,why){
+    const cfg=SENS[this.sens]||SENS.mid;
+    const since=this.lastCount? tNow-this.lastCount : 0;
+    if(this.lastCount && since < Math.max(cfg.period*0.8, this.cyc*0.5)){
+      this.log({amp:0,dur:0,rise:0},{ok:false,msg:'rep quá sát — bỏ ('+why+')'});
+      return false;
+    }
+    if(this.lastCount && since<=((this.cyc||since)*1.8)) this.cyc = this.cyc? this.cyc*0.7+since*0.3 : since;
+    this.lastCount=tNow;
+    onRep();
+    this.msg('✓ đếm nhịp tốt');
+    return true;
+  },
+  /* burst dat chuan -> logic chu ky: hoc che do / ghep cap / dem */
+  onBurst(B,now){
+    let counted=false, phase='';
+    if(!this.mode){
+      this.boot.push(B); if(this.boot.length>4) this.boot.shift();
+      const bb=this.boot;
+      if(bb.length>=2){
+        const b1=bb[bb.length-2], b2=bb[bb.length-1];
+        const gap=b2.t-b1.t, c=this.cos(b1.vec,b2.vec);
+        if(c!==null && c<-0.3 && gap<=2400){
+          // 2 pha nguoc huong = 1 rep tron ven -> dem khi VE vi tri cu
+          this.mode='pair'; this.pairGap=gap;
+          counted=this.finishRep(now,'learn-pair'); phase='close';
+          this.msg('✓ đã hiểu nhịp: 1 rep = đi + về');
+        } else if(c!==null && c>0.3){
+          // 2 burst cung huong = moi burst la 1 chu ky tron
+          this.mode='mono';
+          this.finishRep(b1.t,'learn-mono'); counted=this.finishRep(now,'learn-mono'); phase='mono';
+          this.msg('✓ đã hiểu nhịp: mỗi cú là 1 rep');
+        } else if(bb.length>=3){
+          // khong doc duoc huong (fallback trong luc): dung ty le khoang cach
+          const g12=bb[1].t-bb[0].t, g23=bb[2].t-bb[1].t;
+          if(g23>g12*1.55){ this.mode='pair'; this.pairGap=g12; this.finishRep(bb[1].t,'learn-gap'); this.pending=B; phase='open'; }
+          else if(g12>g23*1.55){ this.mode='pair'; this.pairGap=g23; this.finishRep(bb[0].t,'learn-gap'); counted=this.finishRep(now,'learn-gap'); phase='close'; }
+          else { this.mode='mono'; bb.forEach(b=>this.finishRep(b.t,'learn-gap')); counted=true; phase='mono'; }
+        } else this.msg('đang học nhịp của bạn…');
+      } else this.msg('đang học nhịp của bạn (1/2)…');
+    }
+    else if(this.mode==='pair'){
+      if(!this.pending){ this.pending=B; phase='open'; this.msg('… đang giữa rep'); }
+      else{
+        const gap=B.t-this.pending.t, c=this.cos(this.pending.vec,B.vec);
+        if(gap<=this.maxIntra() && (c===null || c<0.2)){
+          // pha VE — rep tron ven
+          this.pairGap=this.pairGap? this.pairGap*0.7+gap*0.3 : gap;
+          counted=this.finishRep(now,'pair'); phase='close';
+          this.pending=null; this.sameDir=0;
+        } else if(c!==null && c>0.35){
+          // cung huong: pha ve cua rep truoc bi "nuot" (tap nhanh) -> rep truoc van tinh,
+          // dem bang THOI DIEM THAT cua no de rep ke khong bi che "qua sat"
+          this.finishRep(this.pending.t,'merged-return'); phase='lone';
+          this.pending=B;
+          if(++this.sameDir>=3){ this.mode='mono'; counted=this.finishRep(now,'switch-mono'); this.pending=null; this.sameDir=0; }
+        } else {
+          // gap qua dai + huong mo ho: rep truoc tinh la tron, burst nay mo rep moi
+          this.finishRep(this.pending.t,'late-lone'); phase='lone';
+          this.pending=B;
+        }
+      }
+    }
+    else{ // mono
+      const c=this.cos(this.lastVec,B.vec);
+      if(c!==null && c<-0.3){
+        // nguoc huong = nghi la "pha ve" cua rep vua dem -> KHONG dem (chong dem doi)
+        this.altDir++;
+        if(this.altDir>=2){
+          // 2 lan lien tiep dao huong: nguoi tap dang tap kieu 2 pha -> chuyen che do,
+          // burst nay la pha DI cua rep moi
+          this.mode='pair'; this.pending=B; this.altDir=0; phase='switch-pair-open';
+          this.msg('đã chỉnh lại: 1 rep = đi + về');
+        } else phase='suspect-return';
+      } else { this.altDir=0; counted=this.finishRep(now,'mono'); phase='mono'; }
+    }
+    this.lastVec=B.vec||this.lastVec;
+    this.log(B,{ok:true,counted,phase,msg:phase});
+  },
   onMotion(e){
     if(!this.on) return;
     if(S.phase!=='active' && S.phase!=='countdown') return; // countdown: chi do nen, chua dem
     // Uu tien gia toc da tru trong luc (mien nhiem voi xoay cham); fallback tru nen trong luc
-    let mag;
+    let mag, ax=0, ay=0, az=0, raw=false;
     const a=e.acceleration;
     if(a && a.x!==null && (Math.abs(a.x||0)+Math.abs(a.y||0)+Math.abs(a.z||0))>0.001){
-      mag=Math.hypot(a.x||0,a.y||0,a.z||0);
+      ax=a.x||0; ay=a.y||0; az=a.z||0;
+      mag=Math.hypot(ax,ay,az); raw=true;
     } else {
       const g=e.accelerationIncludingGravity; if(!g||g.x===null) return;
       const gm=Math.hypot(g.x||0,g.y||0,g.z||0);
@@ -1576,77 +1675,71 @@ const Sensor={
     const f=document.getElementById('sigFill');
     if(f) f.style.width=Math.min(100,Math.max(0,(this.sm-this.noise)/(cfg.amp*1.1)*100))+'%';
     if(calibrating){ return; }
+    // pha VE im lang qua lau (dung nghi giua rep): burst dang mo tu tinh la 1 rep tron
+    if(this.mode==='pair' && this.pending && now-this.pending.t>this.maxIntra()){
+      this.finishRep(this.pending.t,'timeout-lone'); // dem theo thoi diem that cua rep
+      this.pending=null;
+    }
     if(this.state==='idle'){
-      if(this.sm>thrHigh && now-this.lastRep>cfg.period){
+      if(this.sm>thrHigh && now-this.lastBurst>280){ // refractory nho giua 2 burst
         this.state='up'; this.peakVal=this.sm; this.aboveSince=now; this.peakAt=now;
+        this.vx=0; this.vy=0; this.vz=0; this.nAcc=0;
       }
-    } else { // dang trong 1 lan chuyen dong
+    } else { // dang trong 1 cu bung luc
+      if(raw){ this.vx+=ax; this.vy+=ay; this.vz+=az; this.nAcc++; }
       if(this.sm>this.peakVal){ this.peakVal=this.sm; this.peakAt=now; }
       if(this.sm<thrLow){
-        const dur=now-this.aboveSince, amp=this.peakVal-this.noise, since=now-this.lastRep;
-        const rise=this.peakAt-this.aboveSince; // thoi gian doc len dinh: rep that ~150-300ms, rung giat ~20-50ms
-        const st=document.getElementById('sensorState');
-        let ok=false, msg='… bỏ qua rung nhẹ';
-        // buoc 1: dat nguong co ban (bien do + thoi gian chuyen dong + gian cach)
-        const baseOk = dur>=cfg.sustain && amp>=cfg.amp && since>=cfg.period;
-        // chat luong "giong 1 rep that": du dai + doc len dinh tu nhien (loai giat manh)
-        const repQuality = dur>=250 && dur<=3000 && rise>=80;
-        const similar=(a,b)=>{const ra=a.amp/b.amp, rd=a.dur/b.dur; return ra>=0.45&&ra<=2.2&&rd>=0.45&&rd<=2.2;};
-        if(baseOk && !this.sig){
-          // buoc 2a: hoc mau tu 2 rep dau — PHAI giong nhau moi khoa (1 cai la nhieu thi hoc lai)
-          if(repQuality){
-            ok=true; this.bootCount++;
-            if(this.bootCount===1){ this._first={dur,amp,rise}; msg='đang học nhịp của bạn (1/2)…'; }
+        this.state='idle'; this.lastBurst=now;
+        const dur=now-this.aboveSince, amp=this.peakVal-this.noise;
+        const rise=this.peakAt-this.aboveSince; // rep that doc len dinh ~150-300ms, giat ~20-50ms
+        // huong trung binh cua burst (chuan hoa); qua yeu -> khong tin
+        let vec=null;
+        if(this.nAcc>3){
+          const n=Math.hypot(this.vx,this.vy,this.vz);
+          if(n>this.nAcc*0.15) vec={x:this.vx/n, y:this.vy/n, z:this.vz/n};
+        }
+        const B={t:now, amp, dur, rise, vec};
+        const baseOk = dur>=cfg.sustain && amp>=cfg.amp;
+        const quality = dur>=250 && dur<=3000 && rise>=80;
+        const similar=(p,q)=>{const ra=p.amp/q.amp, rd=p.dur/q.dur; return ra>=0.45&&ra<=2.2&&rd>=0.45&&rd<=2.2;};
+        if(baseOk && !this.sigB){
+          if(quality){
+            if(!this._first){ this._first={dur,amp,rise}; this.msg('đang học nhịp của bạn (1/2)…'); this.boot.push(B); }
             else if(similar({amp,dur},this._first)){
-              this.sig={amp:(this._first.amp+amp)/2, dur:(this._first.dur+dur)/2, rise:(this._first.rise+rise)/2, period:since};
-              msg='✓ đã khoá nhịp — đếm chuẩn';
-            } else { // 2 lan khac nhau qua -> 1 trong 2 la nhieu, lay cai moi lam mau hoc lai
-              this._first={dur,amp,rise}; this.bootCount=1;
-              msg='nhịp chưa đều — đang học lại (1/2)…';
+              this.sigB={amp:(this._first.amp+amp)/2, dur:(this._first.dur+dur)/2, rise:(this._first.rise+rise)/2};
+              this.onBurst(B,now); // burst dat chuan dau tien sau khi khoa mau
+            } else {
+              this._first={dur,amp,rise}; this.boot=[B];
+              this.msg('nhịp chưa đều — đang học lại (1/2)…');
             }
-          }
-        } else if(baseOk && this.sig){
-          // buoc 2b: chi dem chuyen dong GIONG rep that (bien do/thoi gian/doc len dinh/chu ky)
-          const s=this.sig;
+          } else this.log(B,{ok:false,msg:'… bỏ qua rung nhẹ'});
+        } else if(baseOk && this.sigB){
+          const s=this.sigB;
           const ampOk  = amp>=Math.max(cfg.amp*0.8, s.amp*0.4) && amp<=s.amp*3;
           const durOk  = dur>=Math.max(cfg.sustain*0.8, s.dur*0.5) && dur<=s.dur*2.5;
           const riseOk = rise>=Math.max(50, s.rise*0.35);
-          const gapOk  = since>=Math.max(cfg.period*0.8, s.period*0.55);
-          if(ampOk&&durOk&&riseOk&&gapOk){
-            ok=true;
-            // rep hop le -> cap nhat chu ky theo trung binh truot (thich nghi khi moi dan);
-            // khoang nghi dai bat thuong (vd dung sua ta) KHONG duoc keo dai chu ky chuan
+          if(ampOk&&durOk&&riseOk){
             s.amp=s.amp*0.7+amp*0.3; s.dur=s.dur*0.7+dur*0.3; s.rise=s.rise*0.7+rise*0.3;
-            // chi hoc chu ky tu gap "co nhip" (<=1.8x) — ngat quang giua chung khong lam phong chu ky chuan
-            if(since<=s.period*1.8) s.period=s.period*0.7+since*0.3;
             this.rejBuf=[];
-            msg='✓ đếm nhịp tốt';
+            this.onBurst(B,now);
           } else {
-            msg='… bỏ qua chuyển động lạ';
-            // TU CHUA: neu mau hoc bi sai (vd 2 rep dau la lac tay), rep that se bi tu choi lien tuc
-            // nhung chung GIONG NHAU va nhip nhang -> 3 lan lien tiep nhu vay thi hoc lai tu chinh chung
-            if(repQuality){
-              this.rejBuf.push({amp,dur,rise,t:now});
+            this.msg('… bỏ qua chuyển động lạ');
+            // TU CHUA: mau hoc sai -> burst that bi tu choi lien tuc nhung GIONG NHAU va nhip nhang
+            if(quality){
+              this.rejBuf.push({amp,dur,rise,t:now,vec});
               if(this.rejBuf.length>3) this.rejBuf.shift();
               const rb=this.rejBuf;
-              if(rb.length===3
-                && similar(rb[0],rb[1]) && similar(rb[1],rb[2])
+              if(rb.length===3 && similar(rb[0],rb[1]) && similar(rb[1],rb[2])
                 && rb[1].t-rb[0].t<=8000 && rb[2].t-rb[1].t<=8000){
-                this.sig={amp:rb[1].amp, dur:rb[1].dur, rise:rb[1].rise, period:(rb[2].t-rb[0].t)/2};
+                this.sigB={amp:rb[1].amp, dur:rb[1].dur, rise:rb[1].rise};
+                this.mode=null; this.pending=null; this.boot=[]; this.cyc=0; this.pairGap=0; // hoc lai ca che do
                 this.rejBuf=[];
-                ok=true; // dem rep hien tai; 2 cai truoc bi lo, nguoi dung bam +1 neu can
-                msg='✓ đã học lại nhịp của bạn — đếm tiếp';
-              }
-            } else this.rejBuf=[]; // chuyen dong kem chat luong chen giua -> reset chuoi
+                this.onBurst(B,now);
+                this.msg('✓ đã học lại nhịp của bạn — đếm tiếp');
+              } else this.log(B,{ok:false,msg:'lạ so với mẫu'});
+            } else { this.rejBuf=[]; this.log(B,{ok:false,msg:'… bỏ qua rung nhẹ'}); }
           }
-        }
-        if(ok){ this.lastRep=now; onRep(); }
-        if(st) st.textContent=msg;
-        // ghi nhat ky de tinh chinh bang du lieu that
-        SLOG.push({t:Date.now(), ex:S.ex?S.ex.id:'', set:S.setIdx+1, rep:S.reps,
-          amp:+amp.toFixed(2), dur:Math.round(dur), rise:Math.round(rise), since:Math.round(since),
-          noise:+this.noise.toFixed(2), sens:this.sens, boot:this.bootCount, hasSig:!!this.sig, ok, msg});
-        this.state='idle';
+        } else this.log(B,{ok:false,msg:'… bỏ qua rung nhẹ'});
       }
     }
   }
@@ -1658,7 +1751,9 @@ document.getElementById('sensSeg').addEventListener('click',e=>{
   const b=e.target.closest('button'); if(!b) return;
   Sensor.sens=b.dataset.s; localStorage.setItem('gpt_sens',Sensor.sens); renderSens();
   // doi do nhay = xoa mau da hoc, hoc lai tu 2 rep ke tiep (loi thoat khi mau bi hoc sai)
-  Sensor.sig=null; Sensor.bootCount=0; Sensor._first=null; Sensor.rejBuf=[];
+  Sensor.sigB=null; Sensor._first=null; Sensor.rejBuf=[];
+  Sensor.mode=null; Sensor.pending=null; Sensor.boot=[]; Sensor.cyc=0; Sensor.pairGap=0;
+  Sensor.lastVec=null; Sensor.sameDir=0; Sensor.altDir=0;
   const st=document.getElementById('sensorState'); if(st) st.textContent='đổi độ nhạy: '+b.textContent.trim()+' — học lại nhịp từ 2 rep tới…';
 });
 function correctRep(delta){
@@ -1668,7 +1763,7 @@ function correctRep(delta){
     S.reps--; if(S.repTimes.length) S.repTimes.pop();
     document.getElementById('repNum').textContent=S.reps;
     document.getElementById('ringFg').style.strokeDashoffset=754*(1-Math.min(1,S.reps/S.ex.reps));
-    if(Sensor.on) Sensor.lastRep=performance.now();
+    if(Sensor.on) Sensor.lastCount=performance.now();
   }
 }
 document.getElementById('repCorrMinus').addEventListener('click',()=>correctRep(-1));
