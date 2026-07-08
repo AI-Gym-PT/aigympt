@@ -87,6 +87,15 @@ label.f{display:block;margin-top:20px;font-size:13px;font-weight:700;color:var(-
 .cat.open .chev{transform:rotate(180deg)}
 .cat-body{display:none;padding:2px 12px 12px}
 .cat.open .cat-body{display:block}
+/* danh sach bai 2 dong: ten Anh dam + ten Viet + dung cu */
+.exlist{display:flex;flex-direction:column;gap:6px}
+.exch{display:flex;flex-direction:column;align-items:flex-start;gap:1px;text-align:left;width:100%;border:1px solid var(--line);background:var(--card);border-radius:12px;padding:9px 12px;cursor:pointer;font-family:inherit;transition:border-color .15s}
+.exch b{font-size:13.5px;font-weight:700;color:var(--txt);line-height:1.25}
+.exch .ex-vn{font-size:11.5px;color:var(--sub);font-weight:500}
+.exch .ex-eq{font-size:10.5px;color:var(--accent);font-weight:600;margin-top:1px}
+.exch.sel{background:var(--grad);border-color:transparent}
+.exch.sel b{color:var(--on-accent)}
+.exch.sel .ex-vn,.exch.sel .ex-eq{color:rgba(12,18,7,.72)}
 /* the huong dan bai tap */
 .guide{background:var(--card);border:1px solid var(--line);border-radius:16px;padding:14px;margin-top:12px;box-shadow:0 6px 22px rgba(0,0,0,.22)}
 .gimgs{display:flex;gap:8px;margin-bottom:11px}
@@ -435,121 +444,125 @@ label.f{display:block;margin-top:20px;font-size:13px;font-weight:700;color:var(-
 <script>
 /* =================== DATA =================== */
 const CATS = [
-  {id:'chest', name:'Ngực',      icon:'🏋️'},
-  {id:'back',  name:'Lưng',      icon:'🚣'},
-  {id:'shoulder', name:'Vai',    icon:'🤸'},
-  {id:'arm',   name:'Tay',       icon:'💪'},
-  {id:'leg',   name:'Chân',      icon:'🦵'},
-  {id:'glute', name:'Mông',      icon:'🍑'},
-  {id:'core',  name:'Bụng',      icon:'🔥'},
-  {id:'full',  name:'Toàn thân', icon:'⚡'},
+  {id:'chest',    name:'Ngực',                       icon:'🏋️'},
+  {id:'back',     name:'Lưng',                       icon:'🚣'},
+  {id:'shoulder', name:'Vai',                        icon:'🤸'},
+  {id:'glute',    name:'Mông · Đùi',                 icon:'🦵'},
+  {id:'bicep',    name:'Tay trước',                  icon:'💪'},
+  {id:'tricep',   name:'Tay sau',                    icon:'🦾'},
+  {id:'core',     name:'Bụng · Core',                icon:'🔥'},
+  {id:'cardio',   name:'Cardio · Khởi động',         icon:'⚡'},
 ];
 /* name: Việt trước — Anh trong ngoặc. mus: nhóm cơ. cues: 2-3 điểm form cho người mới. */
 const EXERCISES = [
-  // Ngực
-  {id:'bench', cat:'chest', name:'Đẩy ngực tạ đòn (Bench Press)', alias:['bench','đẩy ngực','ben trét'],
-   mus:'Ngực · vai trước · tay sau', cues:['Nằm ghế phẳng, chân đạp chắc sàn, hạ tạ chậm chạm giữa ngực','Đẩy tạ lên thẳng tay, không khoá khuỷu gắt','Giữ 2 bả vai ép chặt ghế suốt bài']},
-  {id:'incline', cat:'chest', name:'Đẩy ngực trên (Incline Press)', alias:['incline','đẩy ngực trên','ngực trên'],
-   mus:'Ngực trên · vai trước', cues:['Ghế nghiêng 30-45 độ, hạ tạ về phía xương đòn','Đẩy lên theo phương thẳng đứng, không vồng lưng','Khuỷu tay xuôi ~45 độ so với thân']},
-  {id:'dbpress', cat:'chest', name:'Đẩy ngực tạ đơn (DB Press)', alias:['ngực tạ đơn','dumbbell press'],
+  // 1. Ngực
+  {id:'machinechest', cat:'chest', name:'Machine Chest Press (Đẩy ngực bằng máy)', equip:'Máy', alias:['machine chest press','đẩy ngực bằng máy','đẩy ngực máy','máy đẩy ngực'],
+   mus:'Ngực · vai trước · tay sau', cues:['Chỉnh ghế sao cho tay cầm ngang giữa ngực','Đẩy ra thẳng tay, không khoá khuỷu gắt','Về chậm tới khi căng ngực, giữ lưng tựa đệm']},
+  {id:'dbpress', cat:'chest', name:'Dumbbell Bench Press (Đẩy ngực tạ đơn)', equip:'Tạ đơn', alias:['dumbbell bench press','đẩy ngực tạ đơn','ngực tạ đơn'],
    mus:'Ngực · vai trước · tay sau', cues:['Mỗi tay 1 tạ, hạ sâu hơn tạ đòn một chút để căng ngực','Đẩy 2 tạ lên chụm nhẹ vào nhau ở đỉnh','Cổ tay thẳng, không bẻ ngửa']},
-  {id:'fly', cat:'chest', name:'Ép ngực (Chest Fly)', alias:['fly','ép ngực','bay ngực'],
-   mus:'Ngực (kéo giãn)', cues:['Tay hơi cong cố định, mở rộng vòng cung tới khi căng ngực','Khép tay lại như ôm cây, siết ngực ở đỉnh','Dùng tạ nhẹ — bài này để cảm nhận cơ, không phải tạ nặng']},
-  {id:'pushup', cat:'chest', name:'Hít đất (Push-up)', alias:['hít đất','hit dat','push up','chống đẩy'],
-   mus:'Ngực · vai · tay sau · core', cues:['Thân thẳng như tấm ván từ đầu tới gót','Hạ ngực gần chạm sàn, khuỷu xuôi ~45 độ','Đẩy lên hết tay, siết bụng suốt bài']},
-  {id:'dips', cat:'chest', name:'Nhúng xà kép (Dips)', alias:['dips','díp','xà kép'],
-   mus:'Ngực dưới · tay sau · vai', cues:['Chống thẳng tay trên xà, người hơi ngả trước để vào ngực','Hạ xuống tới khi khuỷu ~90 độ, không sâu hơn nếu đau vai','Đẩy lên bằng lực ngực + tay sau, không đánh đà']},
-  // Lưng
-  {id:'pullup', cat:'back', name:'Kéo xà (Pull-up)', alias:['kéo xà','pull up','xà đơn'],
-   mus:'Xô · tay trước · cầu vai', cues:['Nắm xà rộng hơn vai, treo người thả lỏng hết cỡ','Kéo ngực về phía xà, khuỷu tay hướng xuống đất','Hạ xuống chậm, kiểm soát — không rơi tự do']},
-  {id:'latpull', cat:'back', name:'Kéo cáp xuống (Lat Pulldown)', alias:['lat','kéo cáp xuống','pulldown'],
+  {id:'bench', cat:'chest', name:'Barbell Bench Press (Đẩy ngực tạ đòn)', equip:'Tạ đòn', alias:['barbell bench press','đẩy ngực tạ đòn','ben trét','bench'],
+   mus:'Ngực · vai trước · tay sau', cues:['Nằm ghế phẳng, chân đạp chắc sàn, hạ tạ chậm chạm giữa ngực','Đẩy tạ lên thẳng tay, không khoá khuỷu gắt','Giữ 2 bả vai ép chặt ghế suốt bài']},
+  {id:'incline', cat:'chest', name:'Incline Dumbbell Press (Đẩy ngực trên ghế dốc)', equip:'Tạ đơn + ghế dốc', alias:['incline dumbbell press','đẩy ngực trên','ngực trên','incline'],
+   mus:'Ngực trên · vai trước · tay sau', cues:['Ghế nghiêng 30-45 độ, hạ tạ về phía xương đòn','Đẩy lên theo phương thẳng đứng, không vồng lưng','Khuỷu tay xuôi ~45 độ so với thân']},
+  {id:'pecdeck', cat:'chest', name:'Pec Deck Fly (Ép ngực bằng máy)', equip:'Máy ép ngực', alias:['pec deck','ép ngực bằng máy','ép ngực máy','máy ép ngực'],
+   mus:'Ngực (co ép)', cues:['Lưng tựa sát, khuỷu đặt lên đệm ngang vai','Ép 2 tay lại phía trước, siết ngực 1 nhịp ở giữa','Mở ra chậm, không để tạ giật vai ra sau']},
+  {id:'fly', cat:'chest', name:'Cable Chest Fly (Ép ngực bằng cáp)', equip:'Cáp', alias:['cable chest fly','ép ngực bằng cáp','ép ngực cáp','ép ngực','cable fly'],
+   mus:'Ngực (kéo giãn)', cues:['Tay hơi cong cố định, mở rộng vòng cung tới khi căng ngực','Khép tay lại như ôm cây, siết ngực ở đỉnh','Dùng lực vừa — bài này để cảm nhận cơ, không phải nặng']},
+  // 2. Lưng
+  {id:'latpull', cat:'back', name:'Lat Pulldown (Kéo xô)', equip:'Máy kéo xô', alias:['lat pulldown','kéo xô','kéo cáp xuống','lat','pulldown'],
    mus:'Xô · tay trước', cues:['Ngồi chắc, ngực ưỡn nhẹ, kéo thanh về phía trên ngực','Kéo bằng khuỷu tay (nghĩ "khuỷu đâm xuống đất")','Trả thanh lên chậm, không để tạ giật tay']},
-  {id:'bbrow', cat:'back', name:'Chèo tạ đòn (Barbell Row)', alias:['barbell row','chèo tạ đòn','bent over'],
-   mus:'Lưng giữa · xô · tay trước', cues:['Gập người ~45 độ, lưng thẳng tuyệt đối, gối hơi chùng','Kéo tạ về phía bụng dưới, siết 2 bả vai','Hạ tạ chậm, không nhún người tạo đà']},
-  {id:'dbrow', cat:'back', name:'Chèo tạ đơn 1 tay (DB Row)', alias:['row','chèo tạ đơn','kéo lưng'],
-   mus:'Xô · lưng giữa', cues:['1 tay + 1 gối chống lên ghế, lưng song song sàn','Kéo tạ lên sát hông, khuỷu sát người','Hạ chậm hết tầm để căng xô']},
-  {id:'cablerow', cat:'back', name:'Chèo cáp ngồi (Seated Row)', alias:['chèo cáp','seated row','cáp ngồi'],
+  {id:'cablerow', cat:'back', name:'Seated Cable Row (Chèo cáp ngồi)', equip:'Cáp', alias:['seated cable row','chèo cáp ngồi','chèo cáp','cáp ngồi'],
    mus:'Lưng giữa · xô', cues:['Ngồi thẳng lưng, gối hơi chùng, kéo tay cầm về bụng','Siết bả vai ở cuối, ngực ưỡn','Không ngả người ra sau lấy đà']},
-  {id:'deadlift', cat:'back', name:'Kéo đất (Deadlift)', alias:['deadlift','đét lift','kéo đất'],
-   mus:'Toàn lưng · mông · đùi sau', cues:['Tạ sát ống chân, lưng thẳng, ngực ưỡn trước khi kéo','Đứng lên bằng lực chân + hông, tạ trượt sát người','Không cong lưng dưới — sai là chấn thương nặng']},
-  // Vai
-  {id:'ohp', cat:'shoulder', name:'Đẩy vai tạ đòn (OHP)', alias:['ohp','đẩy vai tạ đòn','overhead'],
-   mus:'Vai · tay sau · core', cues:['Đứng thẳng, tạ đặt ngang xương đòn, siết bụng + mông','Đẩy tạ lên qua đầu thẳng tay, đầu hơi lách về trước ở đỉnh','Không vồng lưng dưới — hạ tạ nhẹ hơn nếu phải vồng']},
-  {id:'dbshoulder', cat:'shoulder', name:'Đẩy vai tạ đơn (DB Press)', alias:['đẩy vai','shoulder press','vai tạ đơn'],
+  {id:'chestrow', cat:'back', name:'Chest Supported Row (Chèo tựa ngực)', equip:'Máy / ghế dốc', alias:['chest supported row','chèo tựa ngực','chèo ngực','tựa ngực'],
+   mus:'Lưng giữa · xô · vai sau', cues:['Nằm sấp tựa ngực vào đệm ghế dốc','Kéo tạ lên sát hông, siết 2 bả vai ở đỉnh','Ngực luôn áp đệm — không nhấc lên lấy đà']},
+  {id:'dbrow', cat:'back', name:'One-arm Dumbbell Row (Chèo tạ đơn một tay)', equip:'Tạ đơn', alias:['one arm dumbbell row','chèo tạ đơn một tay','chèo tạ đơn','kéo lưng','row'],
+   mus:'Xô · lưng giữa', cues:['1 tay + 1 gối chống lên ghế, lưng song song sàn','Kéo tạ lên sát hông, khuỷu sát người','Hạ chậm hết tầm để căng xô']},
+  {id:'machinerow', cat:'back', name:'Machine Row (Chèo bằng máy)', equip:'Máy', alias:['machine row','chèo bằng máy','chèo máy','máy chèo lưng'],
+   mus:'Lưng giữa · xô', cues:['Ngực tựa đệm, chỉnh tay cầm ngang ngực dưới','Kéo về phía sườn, siết bả vai, khuỷu men theo thân','Về chậm hết tầm, giữ ngực áp đệm']},
+  {id:'straightarm', cat:'back', name:'Straight Arm Pulldown (Kéo tay thẳng)', equip:'Cáp', alias:['straight arm pulldown','kéo tay thẳng','tay thẳng'],
+   mus:'Xô (cô lập)', cues:['Đứng hơi gập hông, 2 tay thẳng cầm thanh cao','Kéo thanh xuống tới đùi bằng cách hạ vai, giữ tay thẳng','Cảm nhận xô căng, không gập khuỷu']},
+  {id:'assistpullup', cat:'back', name:'Assisted Pull-up (Kéo xà có hỗ trợ)', equip:'Máy hỗ trợ', img:'pullup', alias:['assisted pull up','kéo xà có hỗ trợ','kéo xà hỗ trợ','kéo xà','pull up'],
+   mus:'Xô · tay trước', cues:['Quỳ/đứng lên đệm hỗ trợ, nắm xà rộng hơn vai','Kéo ngực về phía xà, khuỷu hướng xuống đất','Hạ xuống chậm có kiểm soát, duỗi hết tay']},
+  {id:'backext', cat:'back', name:'Back Extension (Duỗi lưng dưới)', equip:'Ghế lưng dưới', alias:['back extension','duỗi lưng dưới','duỗi lưng','lưng dưới','hyperextension'],
+   mus:'Lưng dưới · mông · đùi sau', cues:['Kê đệm ngay dưới hông, gập người xuống ~90 độ','Nâng thân lên thẳng hàng với chân, siết mông','Không ưỡn ngửa quá mức ở đỉnh — dừng ở thẳng hàng']},
+  // 3. Vai
+  {id:'machineshoulder', cat:'shoulder', name:'Machine Shoulder Press (Đẩy vai bằng máy)', equip:'Máy', alias:['machine shoulder press','đẩy vai bằng máy','đẩy vai máy','máy đẩy vai'],
+   mus:'Vai · tay sau', cues:['Chỉnh ghế sao cho tay cầm ngang tai','Đẩy lên thẳng tay qua đầu, không nhún vai','Về chậm tới ngang tai, lưng tựa đệm']},
+  {id:'dbshoulder', cat:'shoulder', name:'Dumbbell Shoulder Press (Đẩy vai tạ đơn)', equip:'Tạ đơn', alias:['dumbbell shoulder press','đẩy vai tạ đơn','đẩy vai','vai tạ đơn'],
    mus:'Vai · tay sau', cues:['Ngồi hoặc đứng, 2 tạ ngang tai, lòng bàn tay hướng trước','Đẩy lên chụm nhẹ 2 tạ trên đỉnh đầu','Hạ về ngang tai, không hạ quá sâu']},
-  {id:'latraise', cat:'shoulder', name:'Bay vai ngang (Lateral Raise)', alias:['bay vai','lateral','nâng tạ ngang'],
+  {id:'latraise', cat:'shoulder', name:'Dumbbell Lateral Raise (Nâng tạ ngang)', equip:'Tạ đơn', alias:['dumbbell lateral raise','nâng tạ ngang','bay vai','lateral'],
    mus:'Vai giữa', cues:['Tạ nhẹ, nâng 2 tay sang ngang tới ngang vai','Khuỷu hơi cong cố định, cổ tay không cao hơn khuỷu','Hạ chậm 2-3 giây — nửa hạ mới là nửa ăn cơ']},
-  {id:'frontraise', cat:'shoulder', name:'Nâng tạ trước (Front Raise)', alias:['nâng tạ trước','front raise','vai trước'],
-   mus:'Vai trước', cues:['Nâng tạ thẳng ra trước tới ngang vai','Không nhún người tạo đà','Hạ chậm, kiểm soát']},
-  {id:'reardelt', cat:'shoulder', name:'Bay vai sau (Rear Delt Fly)', alias:['vai sau','rear delt','bay sau'],
+  {id:'cablelatraise', cat:'shoulder', name:'Cable Lateral Raise (Nâng ngang bằng cáp)', equip:'Cáp', img:'latraise', alias:['cable lateral raise','nâng ngang bằng cáp','nâng ngang cáp','bay vai cáp'],
+   mus:'Vai giữa', cues:['Cáp thấp bên hông đối diện, nâng tay sang ngang tới ngang vai','Giữ căng đều suốt tầm nhờ cáp','Hạ chậm, thân giữ thẳng không nhún']},
+  {id:'reardelt', cat:'shoulder', name:'Rear Delt Fly (Bay vai sau)', equip:'Máy / tạ đơn', alias:['rear delt fly','bay vai sau','vai sau','rear delt'],
    mus:'Vai sau · lưng trên', cues:['Gập người ~45 độ hoặc tì ngực lên ghế nghiêng','Mở 2 tay sang ngang như dang cánh, siết bả vai','Tạ nhẹ thôi — vai sau là cơ nhỏ']},
-  {id:'facepull', cat:'shoulder', name:'Kéo cáp mặt (Face Pull)', alias:['face pull','phây pun','kéo cáp mặt'],
+  {id:'facepull', cat:'shoulder', name:'Face Pull (Kéo cáp ngang mặt)', equip:'Cáp', alias:['face pull','kéo cáp ngang mặt','kéo cáp mặt','phây pun'],
    mus:'Vai sau · cầu vai', cues:['Cáp ngang mặt, kéo dây về phía trán, khuỷu mở cao','Cuối động tác: 2 nắm tay ngang tai, siết bả vai','Kéo chậm, cảm nhận vai sau làm việc']},
-  // Tay
-  {id:'curl', cat:'arm', name:'Cuốn tạ tay trước (Bicep Curl)', alias:['curl','cuốn tạ','tay trước','bắp tay'],
+  // 5. Tay trước
+  {id:'curl', cat:'bicep', name:'Dumbbell Biceps Curl (Cuốn tạ đơn tay trước)', equip:'Tạ đơn', alias:['dumbbell biceps curl','cuốn tạ đơn tay trước','cuốn tạ','tay trước','bắp tay','curl'],
    mus:'Tay trước', cues:['Khuỷu tay ghim sát sườn, chỉ cẳng tay chuyển động','Cuốn lên siết bắp tay 1 nhịp ở đỉnh','Hạ chậm hết tầm, không đánh hông']},
-  {id:'bbcurl', cat:'arm', name:'Cuốn tạ đòn (Barbell Curl)', alias:['cuốn tạ đòn','barbell curl'],
+  {id:'bbcurl', cat:'bicep', name:'Barbell Curl (Cuốn tạ đòn)', equip:'Tạ đòn', alias:['barbell curl','cuốn tạ đòn'],
    mus:'Tay trước', cues:['Nắm thanh rộng bằng vai, khuỷu cố định sát sườn','Cuốn lên tới ngang ngực, không văng người','Hạ chậm 2-3 giây']},
-  {id:'hammer', cat:'arm', name:'Cuốn tạ búa (Hammer Curl)', alias:['hammer','búa','cuốn búa'],
+  {id:'hammer', cat:'bicep', name:'Hammer Curl (Cuốn tạ búa)', equip:'Tạ đơn', alias:['hammer curl','cuốn tạ búa','cuốn búa','búa'],
    mus:'Tay trước · cẳng tay', cues:['Cầm tạ dọc như cầm búa (lòng bàn tay hướng vào nhau)','Cuốn lên giữ nguyên hướng tạ','Khuỷu ghim sát sườn suốt bài']},
-  {id:'pushdown', cat:'arm', name:'Đẩy cáp tay sau (Pushdown)', alias:['pushdown','đẩy cáp','tay sau'],
-   mus:'Tay sau', cues:['Khuỷu ghim sát sườn, đẩy dây xuống thẳng tay','Siết tay sau 1 nhịp ở dưới cùng','Trả lên chậm, khuỷu không rời sườn']},
-  {id:'triext', cat:'arm', name:'Duỗi tay sau qua đầu (Extension)', alias:['duỗi tay','extension','tay sau qua đầu'],
-   mus:'Tay sau (đầu dài)', cues:['Giữ tạ sau gáy, 2 khuỷu hướng trần nhà','Duỗi thẳng tay lên cao, chỉ cẳng tay chuyển động','Hạ chậm sau đầu, cảm nhận căng tay sau']},
-  {id:'skull', cat:'arm', name:'Đập trán (Skull Crusher)', alias:['skull','đập trán'],
-   mus:'Tay sau', cues:['Nằm ghế, tạ trên trán, khuỷu cố định hướng trần','Duỗi tay đẩy tạ lên, không mở khuỷu sang ngang','Hạ chậm về trán — vì thế mới gọi là "đập trán"']},
-  // Chân
-  {id:'squat', cat:'leg', name:'Squat (gánh tạ)', alias:['squat','sờ quát','gánh đùi','gánh tạ'],
-   mus:'Đùi trước · mông · core', cues:['Chân rộng bằng vai, mũi chân hơi mở, lưng thẳng','Hạ xuống như ngồi ghế tới khi đùi song song sàn','Đẩy gót chân đứng lên, gối không sụp vào trong']},
-  {id:'legpress', cat:'leg', name:'Đạp đùi (Leg Press)', alias:['leg press','đạp đùi'],
+  {id:'cablecurl', cat:'bicep', name:'Cable Curl (Cuốn cáp tay trước)', equip:'Cáp', img:'curl', alias:['cable curl','cuốn cáp tay trước','cuốn cáp'],
+   mus:'Tay trước', cues:['Cáp thấp, khuỷu ghim sát sườn, cuốn tay cầm lên','Giữ căng đều suốt tầm nhờ cáp, siết ở đỉnh','Hạ chậm, khuỷu không rời sườn']},
+  // 6. Tay sau
+  {id:'pushdown', cat:'tricep', name:'Triceps Rope Pushdown (Đẩy cáp dây thừng tay sau)', equip:'Cáp', alias:['triceps rope pushdown','đẩy cáp dây thừng tay sau','đẩy cáp tay sau','đẩy cáp','tay sau','pushdown'],
+   mus:'Tay sau', cues:['Khuỷu ghim sát sườn, đẩy dây xuống thẳng tay','Xoè dây ra 2 bên ở dưới cùng, siết tay sau','Trả lên chậm, khuỷu không rời sườn']},
+  {id:'triext', cat:'tricep', name:'Overhead Triceps Extension (Duỗi tay sau qua đầu)', equip:'Tạ đơn / cáp', alias:['overhead triceps extension','duỗi tay sau qua đầu','duỗi tay','tay sau qua đầu'],
+   mus:'Tay sau (đầu dài)', cues:['Giữ tạ/dây sau gáy, 2 khuỷu hướng trần nhà','Duỗi thẳng tay lên cao, chỉ cẳng tay chuyển động','Hạ chậm sau đầu, cảm nhận căng tay sau']},
+  {id:'assistdip', cat:'tricep', name:'Assisted Dip (Nhúng xà có hỗ trợ)', equip:'Máy hỗ trợ', img:'dips', alias:['assisted dip','nhúng xà có hỗ trợ','nhúng xà','xà kép','dip'],
+   mus:'Tay sau · ngực dưới', cues:['Quỳ lên đệm hỗ trợ, chống thẳng tay trên 2 thanh','Giữ thân thẳng đứng để dồn vào tay sau','Hạ tới khuỷu ~90 độ rồi đẩy lên, không đánh đà']},
+  {id:'closegrip', cat:'tricep', name:'Close-grip Machine Press (Đẩy máy tay hẹp)', equip:'Máy', alias:['close grip machine press','đẩy máy tay hẹp','tay hẹp','đẩy tay hẹp'],
+   mus:'Tay sau · ngực', cues:['Nắm tay cầm hẹp, khuỷu men sát thân','Đẩy ra thẳng tay, dồn lực vào tay sau','Về chậm, không mở khuỷu bung ra ngoài']},
+  // 4. Mông · Đùi
+  {id:'legpress', cat:'glute', name:'Leg Press (Đạp đùi)', equip:'Máy', alias:['leg press','đạp đùi'],
    mus:'Đùi trước · mông', cues:['Chân đặt giữa bàn đạp, rộng bằng vai','Hạ tới khi gối ~90 độ, lưng dưới không rời đệm','Đạp lên gần thẳng chân nhưng không khoá gối']},
-  {id:'lunge', cat:'leg', name:'Chùng chân (Lunge)', alias:['lunge','chùng chân'],
-   mus:'Đùi · mông', cues:['Bước 1 chân dài về trước, hạ gối sau gần chạm sàn','Thân thẳng đứng, gối trước không vượt quá mũi chân','Đạp gót chân trước để về vị trí']},
-  {id:'legext', cat:'leg', name:'Đá đùi trước (Leg Extension)', alias:['đá đùi','leg extension','đùi trước'],
-   mus:'Đùi trước', cues:['Chỉnh đệm sát cổ chân, lưng tựa chắc','Đá thẳng chân lên, siết đùi 1 nhịp ở đỉnh','Hạ chậm — không để tạ rơi tự do']},
-  {id:'legcurl', cat:'leg', name:'Móc đùi sau (Leg Curl)', alias:['móc đùi','leg curl','đùi sau'],
-   mus:'Đùi sau', cues:['Nằm sấp (hoặc ngồi), đệm sát gót chân','Móc gót về phía mông hết tầm','Trả chậm, hông không nhấc khỏi đệm']},
-  {id:'wallsit', cat:'leg', name:'Ngồi tựa tường (Wall Sit)', time:1, alias:['wall sit','ngồi tường','tựa tường'],
-   mus:'Đùi trước · sức bền', cues:['Lưng tựa phẳng vào tường, trượt xuống tới khi đùi song song sàn','Gối vuông 90 độ, không vượt quá mũi chân','Tay không chống lên đùi — thả dọc thân hoặc khoanh trước ngực']},
-  {id:'calf', cat:'leg', name:'Nhón bắp chuối (Calf Raise)', alias:['bắp chuối','calf','nhón gót'],
-   mus:'Bắp chuối', cues:['Đứng mũi chân trên bậc, gót thả tự do','Nhón lên cao nhất có thể, siết 1 nhịp','Hạ gót xuống sâu dưới bậc để căng cơ']},
-  // Mông
-  {id:'hipthrust', cat:'glute', name:'Đẩy hông (Hip Thrust)', alias:['hip thrust','đẩy hông','híp trớt'],
-   mus:'Mông · đùi sau', cues:['Lưng trên tựa ghế, tạ đặt trên hông, chân rộng bằng vai','Đẩy hông lên tới khi thân song song sàn, siết mông mạnh ở đỉnh','Cằm hơi gập, không ưỡn cổ nhìn trần']},
-  {id:'glutebridge', cat:'glute', name:'Nâng hông (Glute Bridge)', alias:['glute bridge','nâng hông','cầu mông'],
-   mus:'Mông · core', cues:['Nằm ngửa, gối gập, gót gần mông','Đẩy hông lên thành đường thẳng vai-gối','Siết mông 1-2 nhịp ở đỉnh rồi hạ chậm']},
-  {id:'rdl', cat:'glute', name:'Kéo đất Rumani (RDL)', alias:['rdl','romanian','rumani','kéo đất rumani','kéo đất ru ma ni'],
+  {id:'goblet', cat:'glute', name:'Goblet Squat (Squat ôm tạ)', equip:'Tạ đơn / kettlebell', alias:['goblet squat','squat ôm tạ','ôm tạ'],
+   mus:'Đùi trước · mông · core', cues:['Ôm 1 tạ đơn/kettlebell trước ngực, khuỷu hướng xuống','Hạ mông xuống sâu, lưng thẳng, gối mở theo mũi chân','Đẩy gót đứng lên, siết mông ở đỉnh']},
+  {id:'smithsquat', cat:'glute', name:'Smith Machine Squat (Squat máy Smith)', equip:'Máy Smith', img:'squat', alias:['smith machine squat','squat máy smith','máy smith','smith','squat','gánh tạ'],
+   mus:'Đùi trước · mông', cues:['Thanh đòn tựa trên cầu vai, chân hơi bước ra trước','Hạ xuống tới khi đùi song song sàn, lưng thẳng','Đẩy gót đứng lên, không khoá gối gắt']},
+  {id:'rdl', cat:'glute', name:'Romanian Deadlift (Kéo đất Rumani)', equip:'Tạ đơn / tạ đòn', alias:['romanian deadlift','kéo đất rumani','kéo đất ru ma ni','rdl','rumani'],
    mus:'Đùi sau · mông', cues:['Gối chỉ hơi chùng, đẩy hông ra sau, tạ trượt sát chân','Hạ tới khi căng đùi sau (khoảng giữa ống chân)','Siết mông đứng thẳng lên, lưng thẳng suốt bài']},
-  {id:'bulgarian', cat:'glute', name:'Squat 1 chân (Bulgarian Split)', alias:['bulgarian','bun ga ri','split squat'],
-   mus:'Mông · đùi', cues:['Mu bàn chân sau đặt lên ghế, chân trước bước xa','Hạ thẳng xuống tới khi đùi trước song song sàn','Đạp gót chân trước đứng lên, thân giữ thẳng']},
-  {id:'kickback', cat:'glute', name:'Đá mông cáp (Kickback)', alias:['kickback','đá mông'],
+  {id:'hipthrust', cat:'glute', name:'Hip Thrust (Đẩy hông)', equip:'Tạ đòn / máy', alias:['hip thrust','đẩy hông','híp trớt'],
+   mus:'Mông · đùi sau', cues:['Lưng trên tựa ghế, tạ đặt trên hông, chân rộng bằng vai','Đẩy hông lên tới khi thân song song sàn, siết mông mạnh ở đỉnh','Cằm hơi gập, không ưỡn cổ nhìn trần']},
+  {id:'glutebridge', cat:'glute', name:'Glute Bridge (Nâng hông)', equip:'Bodyweight / tạ', alias:['glute bridge','nâng hông','cầu mông'],
+   mus:'Mông · core', cues:['Nằm ngửa, gối gập, gót gần mông','Đẩy hông lên thành đường thẳng vai-gối','Siết mông 1-2 nhịp ở đỉnh rồi hạ chậm']},
+  {id:'legext', cat:'glute', name:'Leg Extension (Đá đùi trước)', equip:'Máy đá đùi trước', alias:['leg extension','đá đùi trước','đá đùi','đùi trước'],
+   mus:'Đùi trước', cues:['Chỉnh đệm sát cổ chân, lưng tựa chắc','Đá thẳng chân lên, siết đùi 1 nhịp ở đỉnh','Hạ chậm — không để tạ rơi tự do']},
+  {id:'legcurl', cat:'glute', name:'Seated / Lying Leg Curl (Cuốn đùi sau)', equip:'Máy đùi sau', alias:['leg curl','cuốn đùi sau','móc đùi sau','móc đùi','đùi sau'],
+   mus:'Đùi sau', cues:['Ngồi hoặc nằm sấp, đệm sát gót chân','Móc gót về phía mông hết tầm','Trả chậm, hông không nhấc khỏi đệm']},
+  {id:'kickback', cat:'glute', name:'Cable Kickback (Đá mông bằng cáp)', equip:'Cáp', alias:['cable kickback','đá mông bằng cáp','đá mông cáp','đá mông','kickback'],
    mus:'Mông', cues:['Móc cáp vào cổ chân, chống tay giữ thân cố định','Đá chân thẳng ra sau-lên cao, siết mông ở đỉnh','Không vồng lưng dưới để đá cao hơn']},
-  {id:'sumo', cat:'glute', name:'Squat chân rộng (Sumo Squat)', alias:['sumo squat','sumo','su mô','squat chân rộng','chân rộng'],
-   mus:'Mông · đùi trong', cues:['Chân rộng hơn vai nhiều, mũi chân mở 45 độ','Hạ thẳng xuống giữa 2 chân, gối mở theo hướng mũi chân','Đẩy gót đứng lên, siết mông']},
-  // Bụng
-  {id:'plank', cat:'core', name:'Plank (giữ tấm ván)', time:1, alias:['plank','tấm ván','plang'],
+  {id:'lunge', cat:'glute', name:'Walking Lunge (Chùng chân bước đi)', equip:'Bodyweight / tạ đơn', alias:['walking lunge','chùng chân bước đi','chùng chân','lunge'],
+   mus:'Đùi · mông', cues:['Bước 1 chân dài về trước, hạ gối sau gần chạm sàn','Thân thẳng đứng, gối trước không vượt quá mũi chân','Đạp gót chân trước bước tiếp sang chân kia']},
+  // 7. Bụng · Core
+  {id:'plank', cat:'core', name:'Plank (Giữ tấm ván)', equip:'Bodyweight', time:1, alias:['plank','giữ tấm ván','tấm ván','plang'],
    mus:'Core toàn diện · vai', cues:['Chống khuỷu tay, thân thẳng như tấm ván từ đầu tới gót','Siết bụng + mông, không võng lưng, không nhổm mông','Thở đều — nín thở là hỏng']},
-  {id:'sideplank', cat:'core', name:'Plank nghiêng (Side Plank)', time:1, alias:['side plank','plank nghiêng','nghiêng'],
-   mus:'Bụng chéo · core', cues:['Nằm nghiêng, chống 1 khuỷu tay, nhấc hông lên','Thân thẳng từ đầu tới chân, hông không võng xuống','Đổi bên ở set tiếp theo']},
-  {id:'situp', cat:'core', name:'Gập bụng (Sit-up)', alias:['gập bụng','sit up','crunch','bụng'],
-   mus:'Bụng trên', cues:['Nằm ngửa, gối gập, tay chéo trước ngực','Gập thân lên bằng cơ bụng, không kéo cổ','Hạ xuống chậm, lưng chạm sàn từng đốt']},
-  {id:'legraise', cat:'core', name:'Nâng chân (Leg Raise)', alias:['nâng chân','leg raise'],
-   mus:'Bụng dưới', cues:['Nằm ngửa, 2 tay đặt dưới hông đỡ lưng','Nâng 2 chân thẳng lên 90 độ','Hạ chậm gần chạm sàn, lưng dưới không nhấc lên']},
-  {id:'russian', cat:'core', name:'Xoay bụng (Russian Twist)', alias:['russian','xoay bụng','twist'],
-   mus:'Bụng chéo', cues:['Ngồi ngả sau ~45 độ, chân nhấc khỏi sàn (hoặc chạm nhẹ)','Xoay thân sang 2 bên, tay chạm sàn mỗi bên','Xoay bằng thân, không chỉ vung tay (đếm 1 rep = 2 bên)']},
-  {id:'mountain', cat:'core', name:'Leo núi (Mountain Climber)', alias:['mountain','leo núi'],
-   mus:'Core · tim mạch', cues:['Tư thế chống đẩy, thân thẳng','Kéo gối luân phiên về phía ngực nhanh và đều','Hông giữ thấp, không nhổm mông (1 rep = 2 chân)']},
-  {id:'bicycle', cat:'core', name:'Gập bụng đạp xe (Bicycle Crunch)', alias:['gập bụng đạp xe','đạp xe','bicycle'],
-   mus:'Bụng chéo · bụng trên', cues:['Nằm ngửa, tay sau đầu, chân đạp như đạp xe','Khuỷu tay chạm gối chéo bên kia','Xoay bằng thân, không kéo cổ (1 rep = 2 bên)']},
-  // Toàn thân
-  {id:'burpee', cat:'full', name:'Burpee (chống đẩy bật nhảy)', alias:['burpee','bơ pi'],
-   mus:'Toàn thân · tim mạch', cues:['Ngồi xổm chống tay → bật chân ra sau → hít đất 1 cái','Thu chân về → bật nhảy vỗ tay qua đầu','Giữ nhịp đều, thở theo từng nhịp']},
-  {id:'kbswing', cat:'full', name:'Vung tạ ấm (Kettlebell Swing)', alias:['kettlebell','vung tạ ấm','swing'],
-   mus:'Mông · đùi sau · core', cues:['Đẩy hông ra sau, tạ vung qua giữa 2 chân','Bật hông mạnh để vung tạ lên ngang ngực — lực từ hông, không phải tay','Lưng thẳng tuyệt đối suốt bài']},
-  {id:'jumpsquat', cat:'full', name:'Squat bật nhảy (Jump Squat)', alias:['bật nhảy','jump squat'],
-   mus:'Đùi · mông · tim mạch', cues:['Squat xuống rồi bật nhảy hết sức lên cao','Tiếp đất mềm bằng mũi chân, hạ ngay vào rep sau','Gối luôn hướng theo mũi chân khi tiếp đất']},
-  {id:'jumpjack', cat:'full', name:'Nhảy dang tay (Jumping Jack)', alias:['jumping jack','nhảy dang tay'],
-   mus:'Toàn thân · tim mạch', cues:['Bật nhảy dang 2 chân + vỗ tay qua đầu','Bật về khép chân, tay xuôi thân','Nhảy bằng mũi chân, nhịp đều']},
+  {id:'deadbug', cat:'core', name:'Dead Bug (Con bọ chết)', equip:'Bodyweight', alias:['dead bug','con bọ chết','bọ chết'],
+   mus:'Core sâu · bụng dưới', cues:['Nằm ngửa, 2 tay đưa thẳng lên trần, gối gập 90 độ','Duỗi tay + chân ĐỐI bên xuống thấp, ép lưng dưới sát sàn','Về giữa rồi đổi bên (1 rep = 2 bên), thở đều']},
+  {id:'crunch', cat:'core', name:'Crunch (Gập bụng)', equip:'Bodyweight', img:'situp', alias:['crunch','gập bụng','bụng'],
+   mus:'Bụng trên', cues:['Nằm ngửa, gối gập, tay chạm nhẹ 2 bên đầu','Cuộn vai lên khỏi sàn bằng cơ bụng, không kéo cổ','Hạ vai xuống chậm, giữ căng bụng']},
+  {id:'cablecrunch', cat:'core', name:'Cable Crunch (Gập bụng cáp)', equip:'Cáp', alias:['cable crunch','gập bụng cáp'],
+   mus:'Bụng trên', cues:['Quỳ dưới cáp cao, giữ dây 2 bên đầu','Cuộn thân xuống bằng cơ bụng (khuỷu về phía đùi)','Hông cố định — gập bằng bụng, không kéo bằng tay']},
+  {id:'hangingknee', cat:'core', name:'Hanging Knee Raise (Nâng gối treo xà)', equip:'Xà / máy', img:'legraise', alias:['hanging knee raise','nâng gối treo xà','nâng gối','treo xà'],
+   mus:'Bụng dưới', cues:['Treo người trên xà, vai giữ chắc không đung đưa','Nâng 2 gối lên phía ngực bằng cơ bụng dưới','Hạ chậm, không lấy đà lắc người']},
+  {id:'russian', cat:'core', name:'Russian Twist (Xoay bụng)', equip:'Bodyweight / tạ', alias:['russian twist','xoay bụng','twist','russian'],
+   mus:'Bụng chéo', cues:['Ngồi ngả sau ~45 độ, chân nhấc khỏi sàn (hoặc chạm nhẹ)','Xoay thân sang 2 bên, tay chạm sàn mỗi bên','Xoay bằng thân, không chỉ vung tay (1 rep = 2 bên)']},
+  {id:'pallof', cat:'core', name:'Pallof Press (Đẩy Pallof chống xoay)', equip:'Cáp', alias:['pallof press','đẩy pallof chống xoay','pallof','chống xoay'],
+   mus:'Core chống xoay · bụng chéo', cues:['Đứng nghiêng với cáp ngang ngực, nắm tay cầm trước bụng','Đẩy thẳng tay ra trước, GIỮ thân không cho cáp kéo xoay','Về chậm, siết bụng suốt bài (đổi bên ở set sau)']},
+  // 8. Cardio · Khởi động · Functional
+  {id:'treadmill', cat:'cardio', name:'Treadmill Walk (Đi bộ máy chạy)', equip:'Máy chạy', time:1, alias:['treadmill walk','đi bộ máy chạy','máy chạy','treadmill'],
+   mus:'Tim mạch · toàn thân', cues:['Đi thẳng lưng, đánh tay tự nhiên, không bám tay vịn','Dốc nhẹ 3-6% để tăng đốt calo mà không cần chạy','Bước dài vừa phải, tiếp gót rồi đẩy mũi chân']},
+  {id:'bike', cat:'cardio', name:'Stationary Bike (Đạp xe tại chỗ)', equip:'Xe đạp', time:1, alias:['stationary bike','đạp xe tại chỗ','xe đạp','bike'],
+   mus:'Tim mạch · đùi', cues:['Chỉnh yên sao cho gối hơi cong khi bàn đạp ở đáy','Giữ lưng thoải mái, đạp tròn đều cả vòng','Tăng kháng lực để thấy nặng vừa, không lắc hông']},
+  {id:'elliptical', cat:'cardio', name:'Elliptical (Máy elliptical)', equip:'Máy elliptical', time:1, alias:['elliptical','máy elliptical','eo lip ti cồ'],
+   mus:'Tim mạch · toàn thân', cues:['Đứng thẳng, đẩy cả tay và chân theo nhịp','Đặt cả bàn chân, không kiễng gót','Giữ nhịp đều, thở sâu']},
+  {id:'farmer', cat:'cardio', name:"Farmer's Carry (Vác tạ đi bộ)", equip:'Tạ đơn / kettlebell', time:1, alias:['farmer carry','farmers carry','vác tạ đi bộ','vác tạ','farmer'],
+   mus:'Toàn thân · core · lực nắm', cues:['Cầm 2 tạ nặng 2 bên, vai kéo ra sau, ngực ưỡn','Đi bước ngắn chắc, thân giữ thẳng không nghiêng','Siết bụng suốt quãng đi, thở đều']},
+  {id:'battlerope', cat:'cardio', name:'Battle Rope (Dây thừng chiến)', equip:'Dây thừng', time:1, alias:['battle rope','dây thừng chiến','dây thừng','battle'],
+   mus:'Tim mạch · vai · core', cues:['Gối hơi chùng, hạ trọng tâm, nắm chắc 2 đầu dây','Quật dây liên tục bằng vai và tay, tạo sóng đều','Siết core, thở theo nhịp quật']},
 ];
 const REST_OPTS = [30,45,60,90,120];
 
@@ -801,7 +814,7 @@ const S = {
   setStartAt: 0,
   pausedAt: 0,
   freeRest: false,
-  selEx: 'squat', selSets: 3, selReps: 12, selRest: 60, selKg: 0,
+  selEx: 'bench', selSets: 3, selReps: 12, selRest: 60, selKg: 0,
 };
 /* muc ta lan truoc theo tung bai */
 const lastKg = JSON.parse(localStorage.getItem('gpt_lastkg')||'{}');
@@ -809,19 +822,20 @@ const lastKg = JSON.parse(localStorage.getItem('gpt_lastkg')||'{}');
 function getProfile(){ try{ return JSON.parse(localStorage.getItem('gpt_profile')||'null'); }catch(e){ return null; } }
 function bodyWeight(){ const p=getProfile(); return (p&&+p.weight)||+(localStorage.getItem('gpt_bw')||65); }
 /* Vi tri dat dien thoai de cam bien doc duoc chuyen dong cua bai */
-const POS_WRIST=new Set(['bench','incline','dbpress','fly','latpull','bbrow','dbrow','cablerow','ohp','dbshoulder','latraise','frontraise','reardelt','facepull','curl','bbcurl','hammer','pushdown','triext','skull','russian']);
-const POS_SHIN=new Set(['legext','legcurl']);
+const POS_WRIST=new Set(['machinechest','dbpress','bench','incline','pecdeck','fly','latpull','cablerow','chestrow','dbrow','machinerow','straightarm','assistpullup','machineshoulder','dbshoulder','latraise','cablelatraise','reardelt','facepull','curl','bbcurl','hammer','cablecurl','pushdown','triext','closegrip','pallof']);
+const POS_SHIN=new Set(['legext','legcurl','kickback']);
 function posOf(id){ return POS_WRIST.has(id)?'wrist':POS_SHIN.has(id)?'shin':'pocket'; }
 function isTimeEx(id){ const e=EXERCISES.find(x=>x.id===id); return !!(e&&e.time); }
+const CARDIO_IDS=new Set(['treadmill','bike','elliptical','farmer','battlerope']);
+function isCardio(id){ return CARDIO_IDS.has(id); }
 const POS_TEXT={
   pocket:'📍 Đặt điện thoại: túi quần là được — bài này thân dưới/cả người chuyển động.',
   wrist:'📍 Đặt điện thoại: buộc vào cổ tay/cẳng tay (dây đeo). Bài này tay chuyển động là chính — để túi quần sẽ đếm thiếu. Chưa có dây đeo thì dùng chế độ 👆 Chạm tay.',
   shin:'📍 Đặt điện thoại: kẹp vào ống chân/vớ cao (chân chuyển động, hông đứng yên). Không tiện thì dùng chế độ 👆 Chạm tay.',
 };
 /* MET theo bai: cardio/toan than > compound > isolation */
-const MET_CARDIO=new Set(['burpee','kbswing','jumpsquat','jumpjack','mountain']);
-const MET_COMPOUND=new Set(['squat','deadlift','bench','incline','dbpress','ohp','bbrow','legpress','lunge','hipthrust','rdl','bulgarian','sumo','pullup','dips','cablerow','latpull','dbrow','dbshoulder']);
-function METof(id){ return isTimeEx(id)?4:MET_CARDIO.has(id)?8:MET_COMPOUND.has(id)?6:5; }
+const MET_COMPOUND=new Set(['machinechest','dbpress','bench','incline','latpull','cablerow','chestrow','dbrow','machinerow','assistpullup','backext','machineshoulder','dbshoulder','legpress','goblet','smithsquat','rdl','hipthrust','glutebridge','lunge','closegrip','assistdip']);
+function METof(id){ return isCardio(id)?7 : isTimeEx(id)?4 : MET_COMPOUND.has(id)?6 : 5; }
 /* kcal = MET × cân nặng(kg) × giờ — set tập MET theo bài, nghỉ giữa set MET 2 */
 function calcKcal(sess){
   const bw=bodyWeight(); let kcal=0;
@@ -838,7 +852,10 @@ function calcKcal(sess){
 }
 function calcVol(sess){
   let v=0;
-  for(const e of sess.exercises) for(const s of (e.sets||[])) v+=(s.kg||0)*(s.reps||0);
+  for(const e of sess.exercises){
+    if(isTimeEx(e.id)) continue; // bài theo giây: kg×giây vô nghĩa, bỏ qua
+    for(const s of (e.sets||[])) v+=(s.kg||0)*(s.reps||0);
+  }
   return Math.round(v);
 }
 /* lich su gan nhat cua 1 bai -> {kg, reps[], target} */
@@ -988,9 +1005,9 @@ function renderSetup(isNext=false){
     const isOpen=c.id===openCat;
     return `<div class="cat ${isOpen?'open':''} ${picked?'haspick':''}" data-cat="${c.id}">
       <div class="cat-h"><span class="ico">${c.icon}</span>${c.name}
-        ${picked?`<span class="picked">✓ ${picked.name}</span>`:`<span class="cnt">${exs.length} bài</span>`}
+        ${picked?`<span class="picked">✓ ${engName(picked)}</span>`:`<span class="cnt">${exs.length} bài</span>`}
         <span class="chev">▼</span></div>
-      <div class="cat-body"><div class="chips">${exs.map(e=>`<button class="chip ${e.id===S.selEx?'sel':''}" data-id="${e.id}">${e.name}</button>`).join('')}</div></div>
+      <div class="cat-body"><div class="exlist">${exs.map(e=>`<button class="exch ${e.id===S.selEx?'sel':''}" data-id="${e.id}"><b>${engName(e)}</b><span class="ex-vn">${vietName(e)}</span><span class="ex-eq">🔧 ${e.equip||'—'}${e.time?' · ⏱ theo giây':''}</span></button>`).join('')}</div></div>
     </div>`;
   }).join('');
   renderGuide();
@@ -1029,17 +1046,22 @@ function renderKg(){
 document.getElementById('kgMinus').onclick=()=>{S.selKg=Math.max(0,S.selKg-2.5);renderKg()};
 document.getElementById('kgPlus').onclick=()=>{S.selKg=Math.min(500,S.selKg+2.5);renderKg()};
 /* the huong dan: hinh 2 tu the + cach lam + nhom co + link video */
-function vietName(ex){ return ex.name.replace(/\s*\(.*\)$/,''); }
+/* name = "English (Tiếng Việt)". vietName = phần tiếng Việt (hô + hiển thị pill/lịch sử);
+   engName = phần tiếng Anh (hiển thị đậm trong danh sách chọn bài). */
+function vietName(ex){ const m=(ex.name||'').match(/\(([^)]+)\)\s*$/); return m?m[1].trim():ex.name; }
+function engName(ex){ return (ex.name||'').replace(/\s*\([^)]*\)\s*$/,'').trim(); }
 let lastGuideId=null;
 function renderGuide(){
   const ex=EXERCISES.find(e=>e.id===S.selEx); if(!ex) return;
   if(ex.id===lastGuideId) return; // cung bai -> khong re-render (tranh hinh nhap nhay khi bam +/-)
   lastGuideId=ex.id;
   document.getElementById('gName').textContent=ex.name;
-  document.getElementById('gMus').textContent='🎯 '+ex.mus;
+  document.getElementById('gMus').innerHTML='🎯 '+ex.mus+(ex.equip?'  <span style="color:var(--sub)">·  🔧 '+ex.equip+'</span>':'');
   document.getElementById('gCues').innerHTML=ex.cues.map(c=>`<li>${c}</li>`).join('');
   document.getElementById('gPos').textContent = ex.time
-    ? '⏱ Bài giữ tư thế — app đếm giây tự động, không cần cảm biến. Đặt điện thoại đâu cũng được.'
+    ? (isCardio(ex.id)
+        ? '⏱ Bài tính theo thời gian — app đếm giây và cổ vũ, không cần cảm biến. Cầm/đặt điện thoại tuỳ ý.'
+        : '⏱ Bài giữ tư thế — app đếm giây tự động, không cần cảm biến. Đặt điện thoại đâu cũng được.')
     : POS_TEXT[posOf(ex.id)];
   document.getElementById('gVideo').href='https://www.youtube.com/results?search_query='+encodeURIComponent('cách tập '+vietName(ex)+' đúng kỹ thuật');
   const wrap=document.getElementById('gImgs');
@@ -1053,18 +1075,19 @@ function renderGuide(){
       if(other.classList.contains('hide')) wrap.style.display='none';
       else other.classList.add('solo');
     };
-    img.src=`img/${ex.id}_${i}.jpg`;
+    img.src=`img/${ex.img||ex.id}_${i}.jpg`;
   });
 }
 document.getElementById('exCats').addEventListener('click',e=>{
   const isNext=S.session!==null&&S.session.exercises.length>0;
-  const chip=e.target.closest('.chip');
+  const chip=e.target.closest('.exch');
   if(chip){
     const wasTime=isTimeEx(S.selEx);
     S.selEx=chip.dataset.id; S.selKg=lastKg[S.selEx]!==undefined?+lastKg[S.selEx]:0;
     const nowTime=isTimeEx(S.selEx);
-    if(nowTime&&!wasTime) S.selReps=30;      // mac dinh giu 30 giay
-    else if(!nowTime&&wasTime) S.selReps=12; // quay ve mac dinh 12 rep
+    if(nowTime&&!wasTime) S.selReps=isCardio(S.selEx)?60:30; // cardio 60s, giữ tư thế 30s
+    else if(nowTime&&wasTime && isCardio(S.selEx)&&S.selReps<40) S.selReps=60; // chuyển sang cardio
+    else if(!nowTime&&wasTime) S.selReps=12;  // quay về mặc định 12 rep
     renderSetup(isNext); return;
   }
   const h=e.target.closest('.cat-h');
@@ -1076,8 +1099,10 @@ document.getElementById('restChips').addEventListener('click',e=>{
 });
 document.getElementById('setMinus').onclick=()=>{S.selSets=Math.max(1,S.selSets-1);renderSetup(true)};
 document.getElementById('setPlus').onclick=()=>{S.selSets=Math.min(10,S.selSets+1);renderSetup(true)};
-document.getElementById('repMinus').onclick=()=>{const st=isTimeEx(S.selEx)?5:1;S.selReps=Math.max(st,S.selReps-st);renderSetup(true)};
-document.getElementById('repPlus').onclick=()=>{const st=isTimeEx(S.selEx)?5:1,mx=isTimeEx(S.selEx)?300:50;S.selReps=Math.min(mx,S.selReps+st);renderSetup(true)};
+function repStep(){ return isCardio(S.selEx)?30:isTimeEx(S.selEx)?5:1; }
+function repMax(){ return isCardio(S.selEx)?1800:isTimeEx(S.selEx)?300:50; }
+document.getElementById('repMinus').onclick=()=>{const st=repStep();S.selReps=Math.max(st,S.selReps-st);renderSetup(true)};
+document.getElementById('repPlus').onclick=()=>{const st=repStep();S.selReps=Math.min(repMax(),S.selReps+st);renderSetup(true)};
 
 /* voice input */
 const SR = window.SpeechRecognition||window.webkitSpeechRecognition;
