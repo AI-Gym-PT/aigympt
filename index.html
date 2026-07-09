@@ -591,6 +591,8 @@ const EXERCISES = [
    mus:'Tim mạch · vai · core', cues:['Gối hơi chùng, hạ trọng tâm, nắm chắc 2 đầu dây','Quật dây liên tục bằng vai và tay, tạo sóng đều','Siết core, thở theo nhịp quật']},
 ];
 const REST_OPTS = [30,45,60,90,120];
+/* PT bark: id -> slug dong tu ho (khop v_<slug>.mp3). Bark form: bk_<id>_0/1/2. Hoi tho: br_<id>. */
+const PTVERB={machinechest:'day',dbpress:'day',bench:'day',incline:'day',pecdeck:'epvao',fly:'epvao',latpull:'keo',cablerow:'keo',chestrow:'keo',dbrow:'keo',machinerow:'keo',straightarm:'keo',assistpullup:'keo',backext:'nang',machineshoulder:'day',dbshoulder:'day',latraise:'nang',cablelatraise:'nang',reardelt:'siet',facepull:'keo',legpress:'dap',goblet:'xuonglen',smithsquat:'xuonglen',rdl:'siet',hipthrust:'bathong',glutebridge:'bathong',legext:'dalen',legcurl:'mocvao',kickback:'dalen',lunge:'xuonglen',curl:'cuon',bbcurl:'cuon',hammer:'cuon',cablecurl:'cuon',pushdown:'day',triext:'day',assistdip:'day',closegrip:'day',plank:'siet',deadbug:'siet',crunch:'cuon',cablecrunch:'siet',hangingknee:'nang',russian:'siet',pallof:'day',treadmill:'buocchac',bike:'dap',elliptical:'giudeu',farmer:'buocchac',battlerope:'quatday'};
 
 /* =================== COACH PHRASES =================== */
 const PH = {
@@ -789,7 +791,8 @@ function speakNum(n){
   if(Voice.play(['n'+n], false)) return; // co file thi phat, khong thi TTS
   speak(String(n), false);
 }
-function coach(key, vars={}, {show=true, critical=true}={}){
+function coach(key, vars={}, {show=true, critical=true, prefix=null}={}){
+  const pre = (prefix && Voice.has(prefix)) ? [prefix] : []; // vd dong tu ho "Đẩy!" ghep truoc cau hype
   // cau ghep prefix + so + suffix
   if(PARTS[key]){
     const i = pickIdx(key, PARTS[key].length);
@@ -798,7 +801,7 @@ function coach(key, vars={}, {show=true, critical=true}={}){
     const t = `${p} ${n} ${sfx}`;
     if(show) setCoachMsg(t);
     const [fp,fs] = PARTS_FILES[key];
-    if(n>=1 && n<=50) sayKeys(t, [fp+i, 'n'+n, fs+i], critical);
+    if(n>=1 && n<=50) sayKeys(t, [...pre, fp+i, 'n'+n, fs+i], critical);
     else speak(t, critical);
     return t;
   }
@@ -814,8 +817,21 @@ function coach(key, vars={}, {show=true, critical=true}={}){
   else if(key==='restStart') keys=[`resto_${vars.t}_${i}`];
   else if(key==='exDone' && vars.exid) keys=[`exdone_${vars.exid}_${i}`];
   else keys=[`p_${key}_${i}`];
-  sayKeys(t, keys, critical);
+  sayKeys(t, [...pre, ...keys], critical);
   return t;
+}
+/* ===== lop PT: dong tu ho + bark form + hoi tho theo tung bai ===== */
+function verbKey(){ const s=S.ex&&PTVERB[S.ex.id]; const k=s&&('v_'+s); return (k&&Voice.has(k))?k:null; }
+function barkKey(){ // xoay vong 3 bark cua bai
+  const id=S.ex&&S.ex.id; if(!id) return null;
+  S._barkI=((S._barkI==null?-1:S._barkI)+1)%3;
+  const k='bk_'+id+'_'+S._barkI;
+  return Voice.has(k)?k:null;
+}
+function sayVerbNum(n){ // "Đẩy! Ba!" — ho dong tu roi so
+  const v=verbKey();
+  if(v && Voice.play([v,'n'+n], true)) return;
+  speakNum(n);
 }
 function setCoachMsg(t){
   document.getElementById('coachMsg').textContent = t;
@@ -1202,6 +1218,9 @@ document.getElementById('btnGo').addEventListener('click',async ()=>{
      'sdt_0','sdet_0','p_restReady_0','p_restReady_1','p_safety_0','p_safety_1',
      `resto_${S.selRest}_0`,`resto_${S.selRest}_1`,
      `exdone_${S.ex.id}_0`,`exdone_${S.ex.id}_1`].forEach(k=>warmKeys.push(k));
+    // lop PT: dong tu ho + 3 bark form + hoi tho cua bai nay
+    if(PTVERB[S.selEx]) warmKeys.push('v_'+PTVERB[S.selEx]);
+    warmKeys.push(`bk_${S.selEx}_0`,`bk_${S.selEx}_1`,`bk_${S.selEx}_2`,`br_${S.selEx}`);
     Voice.warm(warmKeys);
     if(S.mode==='sensor') await Sensor.requestPermission();
     startCountdown();
@@ -1232,6 +1251,7 @@ function startCountdown(){
 function startSet(){
   clearTimers(); S._tick=null;
   S.phase='active'; S.reps=0; S.repTimes=[]; S.lastStallLevel=0; S.slowWarned=0; S.safetyWarned=false;
+  S._barkI=null; // xoay vong bark tu dau moi set
   S.setStartAt=Date.now();
   show('scr-work');
   document.getElementById('wEx').textContent=S.ex.name;
@@ -1251,7 +1271,7 @@ function startSet(){
     mb2.style.display='block'; mb2.textContent='⏱ Giữ tư thế'; mb2.style.color='var(--sub)';
     coach('setStart',{s:S.setIdx+1});
     const target=S.ex.reps, t0=Date.now();
-    let saidHalf=false, lastSpoken=0;
+    let saidHalf=false, lastSpoken=0, lastBark=0;
     const tt=()=>{
       if(S.phase!=='active') return;
       const el=Math.min(target,Math.floor((Date.now()-t0)/1000));
@@ -1261,8 +1281,10 @@ function startSet(){
         document.getElementById('ringFg').style.strokeDashoffset=754*(1-Math.min(1,el/target));
         updatePocket();
         const remain=target-el;
-        if(!saidHalf&&el>=Math.ceil(target/2)&&remain>6){ saidHalf=true; coach('half',{n:el}); }
+        if(el===3 && Voice.has('br_'+S.ex.id)) Voice.play(['br_'+S.ex.id],false); // nhac tho som
+        else if(!saidHalf&&el>=Math.ceil(target/2)&&remain>6){ saidHalf=true; coach('half',{n:el}); }
         else if(remain<=5&&remain>=1&&remain!==lastSpoken){ lastSpoken=remain; speakNum(remain); }
+        else if(el-lastBark>=9 && remain>6 && !Voice.criticalActive()){ lastBark=el; const bk=barkKey(); if(bk) Voice.play([bk],false); } // bark form moi ~9 giay
       }
       if(el>=target){ clearTimers(); S.reps=target; finishSet(false); }
     };
@@ -1308,14 +1330,19 @@ function onRep(){
   document.getElementById('ringFg').style.strokeDashoffset = 754*(1-Math.min(1,n/total));
   updateTempoUI(); updatePocket();
   if(n>=total){ finishSet(false); return; }
-  // milestone speech
-  if(left===1) coach('lastOne',{},{critical:true});
-  else if(left===2) coach('two',{n},{critical:true});
-  else if(left===3&&total>=8) coach('three',{n},{critical:true});
+  // milestone speech — 3 rep cuoi ghep dong tu ho ("Đẩy! Cái cuối!") de punchy
+  if(left===1) coach('lastOne',{},{critical:true, prefix:verbKey()});
+  else if(left===2) coach('two',{n},{critical:true, prefix:verbKey()});
+  else if(left===3&&total>=8) coach('three',{n},{critical:true, prefix:verbKey()});
   else if(n===Math.ceil(total/2)&&total>=6) coach('half',{n},{critical:true});
   else{
-    speakNum(n);
-    if(n%4===0 && Math.random()<0.45 && tempoStable()) after(650,()=>coach('praise',{},{critical:false}));
+    // rep 2: nhac hoi tho 1 lan (dung nhu anh 3 day)
+    if(n===2 && Voice.has('br_'+S.ex.id)){ speakNum(n); after(600,()=>Voice.play(['br_'+S.ex.id],false)); }
+    // dinh ky (cong tan suat cu): thay khen chung bang BARK FORM dung bai
+    else if(n%4===0 && Math.random()<0.5 && tempoStable() && barkKey!=null){ speakNum(n); const bk=barkKey(); if(bk) after(600,()=>Voice.play([bk],false)); else after(600,()=>coach('praise',{},{critical:false})); }
+    // thi thoang ho dong tu ngay truoc so ("Đẩy! Năm!") — thua thoi, khong them luot
+    else if(n>=3 && n%5===3 && Math.random()<0.5) sayVerbNum(n);
+    else speakNum(n);
   }
 }
 
