@@ -598,9 +598,9 @@ const PTVERB={machinechest:'day',dbpress:'day',bench:'day',incline:'day',pecdeck
 const PH = {
   sessionStart: ['Buổi tập bắt đầu! Hôm nay phá kỷ lục nhé!','Lên đồ rồi thì chiến thôi! Bắt đầu nào!','Tinh thần thép! Vào buổi tập nào!'],
   setStart: ['Set {s} bắt đầu! Lên nào!','Vào set {s}! Kiểm soát từng nhịp nhé!','Set {s}! Làm đẹp từng cái một!','Chiến set {s} thôi! Thở đều nha!'],
-  half: ['{n}! Được nửa đường rồi, giữ nhịp này!','{n}! Nửa set rồi đó, đều lắm!','{n}! Quá nửa rồi, không lùi bước!'],
-  three: ['{n}! Còn 3 cái nữa thôi, bung sức đi!','{n}! Ba cái cuối, gồng lên nào!'],
-  two: ['{n}! Còn 2 cái! Cố lên!','{n}! Hai cái nữa là xong, chiến!'],
+  half: ['Được nửa đường rồi, giữ nhịp này!','Nửa set rồi đó, đều lắm!','Quá nửa rồi, không lùi bước!'],
+  three: ['Còn 3 cái nữa thôi, bung sức đi!','Ba cái cuối, gồng lên nào!'],
+  two: ['Còn 2 cái! Cố lên!','Hai cái nữa là xong, chiến!'],
   lastOne: ['Còn 1 cái cuối! Tất cả cho cái này!','Cái cuối cùng! Bung hết đi!!'],
   praise: ['Đẹp lắm, nhịp đều tăm tắp!','Form chuẩn đấy, giữ vậy nhé!','Quá mượt! Tiếp tục nào!','Nhịp này đỉnh đấy!'],
   slowing: ['Chậm lại rồi đó, hít sâu, giữ nhịp nhé!','Đuối chưa? Thở đều, từng cái một thôi!','Mỏi là đang lớn đó! Giữ nhịp, cố lên!'],
@@ -736,7 +736,7 @@ const Voice = {
       Promise.all(keys.map(k=>this.buffer(k))).then(clips=>{
         if(t!==this.token) return;
         this.unlock(); // ctx co the vua bi suspend (iOS) trong luc tai
-        const GAP=0.05; // khoang lang tu nhien giua cac manh ghep
+        const GAP=0.02; // khe ho toi thieu giua cac manh ghep con lai (dong tu+so)
         let at=this.ctx.currentTime+0.03, total=0;
         clips.forEach((c,i)=>{
           const src=this.ctx.createBufferSource();
@@ -791,6 +791,7 @@ function speakNum(n){
   if(Voice.play(['n'+n], false)) return; // co file thi phat, khong thi TTS
   speak(String(n), false);
 }
+const FULL_KEY = {setDone:'sdf', setDoneEarly:'sdef', stall2:'st2f'}; // clip tron cau co so
 function coach(key, vars={}, {show=true, critical=true, prefix=null}={}){
   const pre = (prefix && Voice.has(prefix)) ? [prefix] : []; // vd dong tu ho "Đẩy!" ghep truoc cau hype
   // cau ghep prefix + so + suffix
@@ -800,8 +801,9 @@ function coach(key, vars={}, {show=true, critical=true, prefix=null}={}){
     const n = vars.n!==undefined ? vars.n : vars.left;
     const t = `${p} ${n} ${sfx}`;
     if(show) setCoachMsg(t);
-    const [fp,fs] = PARTS_FILES[key];
-    if(n>=1 && n<=50) sayKeys(t, [...pre, fp+i, 'n'+n, fs+i], critical);
+    const full = FULL_KEY[key] && `${FULL_KEY[key]}_${i}_${n}`;
+    if(full && Voice.has(full)) sayKeys(t, [...pre, full], critical); // 1 file tron cau -> ngu dieu tu nhien
+    else if(n>=1 && n<=50){ const [fp,fs]=PARTS_FILES[key]; sayKeys(t, [...pre, fp+i, 'n'+n, fs+i], critical); }
     else speak(t, critical);
     return t;
   }
@@ -813,7 +815,7 @@ function coach(key, vars={}, {show=true, critical=true, prefix=null}={}){
   // chon file audio theo ngu canh
   let keys;
   if(key==='setStart' && vars.s>=1 && vars.s<=10) keys=[`setstart_s${vars.s}_${i}`];
-  else if((key==='half'||key==='three'||key==='two') && vars.n>=1 && vars.n<=50) keys=[`n${vars.n}`, `${key}_${i}`];
+  else if(key==='half'||key==='three'||key==='two') keys=[`${key}_${i}`]; // clip da la cau tron, bo so ghep dau
   else if(key==='restStart') keys=[`resto_${vars.t}_${i}`];
   else if(key==='exDone' && vars.exid) keys=[`exdone_${vars.exid}_${i}`];
   else keys=[`p_${key}_${i}`];
@@ -1221,6 +1223,8 @@ document.getElementById('btnGo').addEventListener('click',async ()=>{
     // lop PT: dong tu ho + 3 bark form + hoi tho cua bai nay
     if(PTVERB[S.selEx]) warmKeys.push('v_'+PTVERB[S.selEx]);
     warmKeys.push(`bk_${S.selEx}_0`,`bk_${S.selEx}_1`,`bk_${S.selEx}_2`,`br_${S.selEx}`);
+    // clip tron cau setDone cho so rep muc tieu (phat cuoi set, nap truoc cho muot)
+    if(!S.ex.timeEx && S.selReps>=1 && S.selReps<=50){ for(let v=0;v<3;v++) warmKeys.push(`sdf_${v}_${S.selReps}`); for(let v=0;v<2;v++) warmKeys.push(`sdef_${v}_${S.selReps}`); }
     Voice.warm(warmKeys);
     if(S.mode==='sensor') await Sensor.requestPermission();
     startCountdown();

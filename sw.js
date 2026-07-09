@@ -1,5 +1,5 @@
 /* AI Gym PT service worker — cache de mo nhanh + chay offline */
-const CACHE = 'aigympt-v2';
+const CACHE = 'aigympt-v3';   // v3: giong doc lai (noi dung mp3 doi) -> khong di tru mp3 cu
 const CORE = ['./', './index.html', './manifest.json', './icon-192.png', './icon-512.png'];
 
 self.addEventListener('install', e => {
@@ -12,12 +12,12 @@ self.addEventListener('activate', e => {
     const cur = await caches.open(CACHE);
     for (const k of keys) {
       if (k === CACHE) continue;
-      // di tru media BAT BIEN (mp3/jpg/png) tu cache cu sang cache moi
-      // -> nang version khong bat user tai lai ca bo giong tren 4G
+      // di tru HINH bat bien (jpg/png) tu cache cu sang cache moi (khong doi).
+      // KHONG di tru mp3: giong da doc lai o v3 -> de tai moi cho khoi nghe giong cu.
       try {
         const old = await caches.open(k);
         for (const req of await old.keys()) {
-          if (/\.(mp3|jpe?g|png)$/.test(new URL(req.url).pathname) && !(await cur.match(req))) {
+          if (/\.(jpe?g|png)$/.test(new URL(req.url).pathname) && !(await cur.match(req))) {
             const res = await old.match(req);
             if (res) await cur.put(req, res);
           }
