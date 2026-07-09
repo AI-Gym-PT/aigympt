@@ -8,3 +8,7 @@ Thumbs.db
 desktop.ini
 *.ps1
 img_map.json
+
+# backup files
+*.bak_sparc
+*.bak

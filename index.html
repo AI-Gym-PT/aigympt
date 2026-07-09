@@ -1613,14 +1613,39 @@ const SENS = {
   mid: {amp:2.0, sustain:85, period:700},
   hard:{amp:2.7, sustain:110, period:820},
 }; // period = khoang cach toi thieu giua 2 REP TRON VEN (chu ky day du)
+/* ===== Helpers cho SPARC (xu ly tin hieu, khong thu vien) ===== */
+function _clamp(x,lo,hi){ return x<lo?lo:x>hi?hi:x; }
+function _ratio(x,y,lo,hi){ if(y<=0) return false; const r=x/y; return r>=lo&&r<=hi; }
+function _median(arr){ const a=[...arr].sort((p,q)=>p-q); const n=a.length; return n?(n%2?a[(n-1)/2]:(a[n/2-1]+a[n/2])/2):0; }
+function _vang(u,v){ const du=Math.hypot(u[0],u[1],u[2])||1, dv=Math.hypot(v[0],v[1],v[2])||1;
+  let c=(u[0]*v[0]+u[1]*v[1]+u[2]*v[2])/(du*dv); c=c<-1?-1:c>1?1:c; return Math.acos(c); }
+function _norm3(v){ const n=Math.hypot(v[0],v[1],v[2])||1; return [v[0]/n,v[1]/n,v[2]/n]; }
+function _dot3(a,b){ return a[0]*b[0]+a[1]*b[1]+a[2]*b[2]; }
+function _mv3(C,v){ return [C[0]*v[0]+C[1]*v[1]+C[2]*v[2], C[3]*v[0]+C[4]*v[1]+C[5]*v[2], C[6]*v[0]+C[7]*v[1]+C[8]*v[2]]; }
+function _quad(C,v){ const w=_mv3(C,v); return _dot3(v,w); }
+function _vmean(arr){ let x=0,y=0,z=0; for(const a of arr){ x+=a[0];y+=a[1];z+=a[2]; } const n=arr.length||1; return [x/n,y/n,z/n]; }
+function _cov3(arr,m){ let a=0,b=0,c=0,d=0,e=0,f=0; for(const p of arr){ const x=p[0]-m[0],y=p[1]-m[1],z=p[2]-m[2];
+  a+=x*x;b+=x*y;c+=x*z;d+=y*y;e+=y*z;f+=z*z; } const n=arr.length||1;
+  return [a/n,b/n,c/n, b/n,d/n,e/n, c/n,e/n,f/n]; }
+/* Bai nhe/bien do thap/cham -> ha nguong + gieo chu ky dai (prior tung bai) */
+const GENTLE_EX=new Set(['hipthrust','glutebridge','rdl','kickback','backext','legext','legcurl','latraise','cablelatraise','reardelt','facepull','pecdeck','fly','pallof','deadbug','cablecrunch','straightarm','frontraise']);
+
+/* ===== SPARC — Signed Principal-Axis Rep Counter =====
+   Dem theo CHU KY (khong dem peak): chieu gia toc len truc chuyen dong chinh CO DAU,
+   1 rep = 1 chu ky +/- tron ven. Autocorrelation khoa chu ky (co van), may trang thai
+   diem-cat-khong quyet dinh dem. Duong timeout cho rep 1-go (hip thrust). Xac nhan rep dau. */
 const Sensor={
-  on:false, sm:0, noise:0.3, state:'idle', peakVal:0, peakAt:0, aboveSince:0,
-  vx:0, vy:0, vz:0, nAcc:0,
-  lastBurst:0, lastCount:0, startAt:0, gBase:9.81,
-  sigB:null, _first:null, rejBuf:[],          // chu ky "1 cu bung luc" hoc tu 2 burst dau
-  mode:null, pending:null, pairGap:0, cyc:0,  // che do chu ky + burst mo dang cho + chu ky rep
-  boot:[], lastVec:null, sameDir:0, altDir:0, // hoc che do + tu chuyen che do
-  sens: localStorage.getItem('gpt_sens') || 'mid',
+  on:false, sens: localStorage.getItem('gpt_sens') || 'mid',
+  W:300, DT:0.02,
+  ringA:null, ringT:null, head:0, filled:0,
+  gvec:[0,0,9.81], gPrev:[0,0,9.81], u:[0,0,1], meanVec:[0,0,0], axisSeed:false,
+  acc:0, tNow:0, lastT:0, kHeavy:0, orientHold:0,
+  sm:0, rms2:0, ampEMA:0.6, noiseFloor:0.05,
+  Plock:1.6, locked:false, lockCnt:0, jumpCnt:0, conf:0,
+  intervals:[], lastCount:-1e9, lastCommit:-1e9,
+  cycleActive:false, sawPos:false, sawNeg:false, leadSign:0, cyclePeak:0, cycleStart:0, lobeSign:0, lastAboveT:0,
+  bstate:'EMPTY', provIv:0, provLead:0, provPeak:0,
+  floorScale:1, warnedRest:0,
   async requestPermission(){
     try{
       if(typeof DeviceMotionEvent!=='undefined'&&typeof DeviceMotionEvent.requestPermission==='function'){
@@ -1630,203 +1655,130 @@ const Sensor={
     }catch(e){}
   },
   start(){
-    this.on=true; this.sm=0; this.noise=0.3; this.state='idle';
-    this.peakVal=0; this.peakAt=0; this.aboveSince=0;
-    this.vx=0; this.vy=0; this.vz=0; this.nAcc=0;
-    this.lastBurst=0; this.lastCount=0;
-    this.sigB=null; this._first=null; this.rejBuf=[];
-    this.mode=null; this.pending=null; this.pairGap=0; this.cyc=0;
-    this.boot=[]; this.lastVec=null; this.sameDir=0; this.altDir=0;
-    this.startAt=performance.now(); this.gBase=9.81;
+    this.on=true;
+    this.ringA=new Array(this.W); this.ringT=new Float64Array(this.W); this.head=0; this.filled=0;
+    this.gvec=[0,0,9.81]; this.gPrev=[0,0,9.81]; this.u=[0,0,1]; this.meanVec=[0,0,0]; this.axisSeed=false;
+    this.acc=0; this.tNow=0; this.lastT=performance.now(); this.kHeavy=0; this.orientHold=0;
+    this.sm=0; this.rms2=0; this.ampEMA=0.6; this.noiseFloor=0.05;
+    this.locked=false; this.lockCnt=0; this.jumpCnt=0; this.conf=0;
+    this.intervals=[]; this.lastCount=-1e9; this.lastCommit=-1e9;
+    this.cycleActive=false; this.sawPos=false; this.sawNeg=false; this.leadSign=0; this.cyclePeak=0; this.cycleStart=0; this.lobeSign=0;
+    this.bstate='EMPTY';
+    const id=S.ex&&S.ex.id, gentle=id&&GENTLE_EX.has(id);
+    this.floorScale = gentle?0.5:1.0;
+    this.Plock = gentle?2.6:1.6;
     window.addEventListener('devicemotion',this.handler);
     const st=document.getElementById('sensorState'); if(st) st.textContent='đang chỉnh… giữ yên 1 giây';
   },
   stop(){ this.on=false; window.removeEventListener('devicemotion',this.handler); },
   handler:(e)=>{ Sensor.onMotion(e); },
-  cos(u,v){ if(!u||!v) return null; return u.x*v.x+u.y*v.y+u.z*v.z; }, // vec da chuan hoa
-  maxIntra(){ return Math.min(2400, Math.max(1000, (this.pairGap||800)*2.2)); },
-  msg(t){ const st=document.getElementById('sensorState'); if(st) st.textContent=t; },
-  log(B,extra){
-    SLOG.push(Object.assign({t:Date.now(), ex:S.ex?S.ex.id:'', set:S.setIdx+1, rep:S.reps,
-      amp:+B.amp.toFixed(2), dur:Math.round(B.dur), rise:Math.round(B.rise),
-      noise:+this.noise.toFixed(2), sens:this.sens, mode:this.mode, hasSig:!!this.sigB}, extra));
+  reset(){ // doi do nhay: reset dem, giu buffer/truc
+    this.locked=false; this.lockCnt=0; this.conf=0; this.intervals=[];
+    this.cycleActive=false; this.sawPos=false; this.sawNeg=false; this.cyclePeak=0; this.lobeSign=0;
+    this.bstate='EMPTY';
   },
-  /* dem 1 REP TRON VEN (co chan chu ky de nhieu khong tao rep sat nhau) */
-  finishRep(tNow,why){
-    const cfg=SENS[this.sens]||SENS.mid;
-    const since=this.lastCount? tNow-this.lastCount : 0;
-    if(this.lastCount && since < Math.max(cfg.period*0.8, this.cyc*0.5)){
-      this.log({amp:0,dur:0,rise:0},{ok:false,msg:'rep quá sát — bỏ ('+why+')'});
-      return false;
-    }
-    if(this.lastCount && since<=((this.cyc||since)*1.8)) this.cyc = this.cyc? this.cyc*0.7+since*0.3 : since;
-    this.lastCount=tNow;
-    onRep();
-    this.msg('✓ đếm nhịp tốt');
-    return true;
-  },
-  /* burst dat chuan -> logic chu ky: hoc che do / ghep cap / dem */
-  onBurst(B,now){
-    let counted=false, phase='';
-    if(!this.mode){
-      this.boot.push(B); if(this.boot.length>4) this.boot.shift();
-      const bb=this.boot;
-      if(bb.length>=2){
-        const b1=bb[bb.length-2], b2=bb[bb.length-1];
-        const gap=b2.t-b1.t, c=this.cos(b1.vec,b2.vec);
-        if(c!==null && c<-0.3 && gap<=2400){
-          // 2 pha nguoc huong = 1 rep tron ven -> dem khi VE vi tri cu
-          this.mode='pair'; this.pairGap=gap;
-          counted=this.finishRep(now,'learn-pair'); phase='close';
-          this.msg('✓ đã hiểu nhịp: 1 rep = đi + về');
-        } else if(c!==null && c>0.3){
-          // 2 burst cung huong = moi burst la 1 chu ky tron
-          this.mode='mono';
-          this.finishRep(b1.t,'learn-mono'); counted=this.finishRep(now,'learn-mono'); phase='mono';
-          this.msg('✓ đã hiểu nhịp: mỗi cú là 1 rep');
-        } else if(bb.length>=3){
-          // khong doc duoc huong (fallback trong luc): dung ty le khoang cach
-          const g12=bb[1].t-bb[0].t, g23=bb[2].t-bb[1].t;
-          if(g23>g12*1.55){ this.mode='pair'; this.pairGap=g12; this.finishRep(bb[1].t,'learn-gap'); this.pending=B; phase='open'; }
-          else if(g12>g23*1.55){ this.mode='pair'; this.pairGap=g23; this.finishRep(bb[0].t,'learn-gap'); counted=this.finishRep(now,'learn-gap'); phase='close'; }
-          else { this.mode='mono'; bb.forEach(b=>this.finishRep(b.t,'learn-gap')); counted=true; phase='mono'; }
-        } else this.msg('đang học nhịp của bạn…');
-      } else this.msg('đang học nhịp của bạn (1/2)…');
-    }
-    else if(this.mode==='pair'){
-      if(!this.pending){ this.pending=B; phase='open'; this.msg('… đang giữa rep'); }
-      else{
-        const gap=B.t-this.pending.t, c=this.cos(this.pending.vec,B.vec);
-        if(gap<=this.maxIntra() && (c===null || c<0.2)){
-          // pha VE — rep tron ven
-          this.pairGap=this.pairGap? this.pairGap*0.7+gap*0.3 : gap;
-          counted=this.finishRep(now,'pair'); phase='close';
-          this.pending=null; this.sameDir=0;
-        } else if(c!==null && c>0.35){
-          // cung huong: pha ve cua rep truoc bi "nuot" (tap nhanh) -> rep truoc van tinh,
-          // dem bang THOI DIEM THAT cua no de rep ke khong bi che "qua sat"
-          this.finishRep(this.pending.t,'merged-return'); phase='lone';
-          this.pending=B;
-          if(++this.sameDir>=3){ this.mode='mono'; counted=this.finishRep(now,'switch-mono'); this.pending=null; this.sameDir=0; }
-        } else {
-          // gap qua dai + huong mo ho: rep truoc tinh la tron, burst nay mo rep moi
-          this.finishRep(this.pending.t,'late-lone'); phase='lone';
-          this.pending=B;
-        }
-      }
-    }
-    else{ // mono
-      const c=this.cos(this.lastVec,B.vec);
-      if(c!==null && c<-0.3){
-        // nguoc huong = nghi la "pha ve" cua rep vua dem -> KHONG dem (chong dem doi)
-        this.altDir++;
-        if(this.altDir>=2){
-          // 2 lan lien tiep dao huong: nguoi tap dang tap kieu 2 pha -> chuyen che do,
-          // burst nay la pha DI cua rep moi
-          this.mode='pair'; this.pending=B; this.altDir=0; phase='switch-pair-open';
-          this.msg('đã chỉnh lại: 1 rep = đi + về');
-        } else phase='suspect-return';
-      } else { this.altDir=0; counted=this.finishRep(now,'mono'); phase='mono'; }
-    }
-    this.lastVec=B.vec||this.lastVec;
-    this.log(B,{ok:true,counted,phase,msg:phase});
-  },
+  sMul(){ return this.sens==='soft'?0.72:this.sens==='hard'?1.35:1.0; },
   onMotion(e){
     if(!this.on) return;
-    if(S.phase!=='active' && S.phase!=='countdown') return; // countdown: chi do nen, chua dem
-    // Uu tien gia toc da tru trong luc (mien nhiem voi xoay cham); fallback tru nen trong luc
-    let mag, ax=0, ay=0, az=0, raw=false;
-    const a=e.acceleration;
-    if(a && a.x!==null && (Math.abs(a.x||0)+Math.abs(a.y||0)+Math.abs(a.z||0))>0.001){
-      ax=a.x||0; ay=a.y||0; az=a.z||0;
-      mag=Math.hypot(ax,ay,az); raw=true;
+    if(S.phase!=='active' && S.phase!=='countdown') return;
+    const g=e.accelerationIncludingGravity, ag=(g&&g.x!=null)?[g.x||0,g.y||0,g.z||0]:null;
+    if(ag) for(let i=0;i<3;i++) this.gvec[i]+=0.02*(ag[i]-this.gvec[i]);   // gravity/DC cham
+    let a; const la=e.acceleration;
+    if(la && la.x!=null && (Math.abs(la.x||0)+Math.abs(la.y||0)+Math.abs(la.z||0))>0.0005) a=[la.x||0,la.y||0,la.z||0];
+    else if(ag) a=[ag[0]-this.gvec[0],ag[1]-this.gvec[1],ag[2]-this.gvec[2]];  // fallback GIU DAU (vector)
+    else return;
+    // gieo truc theo phuong dung (gravity) truoc khi PCA khoa -> rep 1 khong bi mat
+    if(S.phase==='active' && !this.axisSeed){ const gm=Math.hypot(this.gvec[0],this.gvec[1],this.gvec[2]); if(gm>5){ this.u=_norm3(this.gvec); this.axisSeed=true; } }
+    const now=performance.now(); let dt=(now-this.lastT)/1000; this.lastT=now;
+    if(!(dt>0)) dt=this.DT; if(dt>0.2) dt=0.2;
+    this.acc+=dt; let guard=0;
+    while(this.acc>=this.DT && guard++<12){ this.acc-=this.DT; this.tNow+=this.DT; this.push(a); this.perSample(a); }
+  },
+  push(a){ const i=this.filled<this.W?this.filled:this.head; this.ringA[i]=[a[0],a[1],a[2]]; this.ringT[i]=this.tNow;
+    if(this.filled<this.W)this.filled++; this.head=(i+1)%this.W; },
+  chrono(){ const out=[]; if(this.filled<this.W){ for(let i=0;i<this.filled;i++) out.push(this.ringA[i]); }
+    else { for(let i=0;i<this.W;i++) out.push(this.ringA[(this.head+i)%this.W]); } return out; },
+  perSample(a){
+    const dAng=_vang(this.gvec,this.gPrev); this.gPrev=[this.gvec[0],this.gvec[1],this.gvec[2]];
+    if(dAng>0.008) this.orientHold=15; if(this.orientHold>0) this.orientHold--;
+    const s=(a[0]-this.meanVec[0])*this.u[0]+(a[1]-this.meanVec[1])*this.u[1]+(a[2]-this.meanVec[2])*this.u[2];
+    this.sm += 0.25*(s-this.sm);
+    this.rms2 += 0.02*(s*s - this.rms2); // ~1s: cong nang luong on dinh (khong tut trong pha nghi cua rep 1-go)
+    const rms=Math.sqrt(Math.max(this.rms2,0));
+    if(++this.kHeavy>=15){ this.kHeavy=0; this.heavy(); }
+    const floor=Math.max(0.35*this.ampEMA,0.15)*this.floorScale*this.sMul();
+    const f=document.getElementById('sigFill'); if(f) f.style.width=Math.min(100,Math.abs(this.sm)/(floor*1.6)*100)+'%';
+    const Eon=Math.max(0.12, 3*this.noiseFloor)*this.sMul()*this.floorScale;
+    if(S.phase!=='active'){ if(rms<0.6*Eon) this.noiseFloor=0.99*this.noiseFloor+0.01*rms; return; }
+    const active = rms>=Eon && this.orientHold===0 && (!this.locked || this.conf>=0.35);
+    if(!active){ this.softReset(rms); return; }
+    this.stepCycle(this.sm, this.tNow, floor);
+  },
+  stepCycle(s,t,floor){
+    const av=Math.abs(s), sg=s>0?1:(s<0?-1:0);
+    if(!this.cycleActive){
+      if(av>floor){ this.cycleActive=true; this.cycleStart=t; this.leadSign=sg; this.lobeSign=sg; this.cyclePeak=av;
+        if(sg>0)this.sawPos=true; else this.sawNeg=true; this.lastAboveT=t; }
     } else {
-      const g=e.accelerationIncludingGravity; if(!g||g.x===null) return;
-      const gm=Math.hypot(g.x||0,g.y||0,g.z||0);
-      this.gBase=this.gBase*0.995+gm*0.005; // bam theo do lon trong luc that
-      mag=Math.abs(gm-this.gBase);
+      if(av>this.cyclePeak) this.cyclePeak=av;
+      // pha tra ve (nguoc huong lobe dau) dung nguong THAP -> bat duoc luc ha nguoi nhe cua hip thrust; cu va 1 chieu khong co pha nay
+      const eff = (sg===this.leadSign)? floor : Math.max(0.15*this.cyclePeak, 0.5*floor);
+      if(av>eff){ if(sg>0)this.sawPos=true; else if(sg<0)this.sawNeg=true; if(sg!==0)this.lobeSign=sg; this.lastAboveT=t; }
     }
-    this.sm=this.sm*0.8+mag*0.2;                 // lam muot manh de bo jitter
-    const now=performance.now();
-    const cfg=SENS[this.sens]||SENS.mid;
-    // hieu chinh: 1.2s dau HOAC con dang dem nguoc (nguoi tap dang dung yen cho)
-    const calibrating = (now-this.startAt < 1200) || S.phase!=='active';
-    // cap nhat nen chi khi dang nghi va tin hieu thap (khong de rep lam phong nen)
-    if(this.state==='idle' && (calibrating || this.sm < this.noise+ENTRY*0.8)){
-      this.noise = this.noise*0.98 + this.sm*0.02;
-    }
-    const thrHigh=this.noise+ENTRY, thrLow=this.noise+EXIT;
-    const f=document.getElementById('sigFill');
-    if(f) f.style.width=Math.min(100,Math.max(0,(this.sm-this.noise)/(cfg.amp*1.1)*100))+'%';
-    if(calibrating){ return; }
-    // pha VE im lang qua lau (dung nghi giua rep): burst dang mo tu tinh la 1 rep tron
-    if(this.mode==='pair' && this.pending && now-this.pending.t>this.maxIntra()){
-      this.finishRep(this.pending.t,'timeout-lone'); // dem theo thoi diem that cua rep
-      this.pending=null;
-    }
-    if(this.state==='idle'){
-      if(this.sm>thrHigh && now-this.lastBurst>280){ // refractory nho giua 2 burst
-        this.state='up'; this.peakVal=this.sm; this.aboveSince=now; this.peakAt=now;
-        this.vx=0; this.vy=0; this.vz=0; this.nAcc=0;
-      }
-    } else { // dang trong 1 cu bung luc
-      if(raw){ this.vx+=ax; this.vy+=ay; this.vz+=az; this.nAcc++; }
-      if(this.sm>this.peakVal){ this.peakVal=this.sm; this.peakAt=now; }
-      if(this.sm<thrLow){
-        this.state='idle'; this.lastBurst=now;
-        const dur=now-this.aboveSince, amp=this.peakVal-this.noise;
-        const rise=this.peakAt-this.aboveSince; // rep that doc len dinh ~150-300ms, giat ~20-50ms
-        // huong trung binh cua burst (chuan hoa); qua yeu -> khong tin
-        let vec=null;
-        if(this.nAcc>3){
-          const n=Math.hypot(this.vx,this.vy,this.vz);
-          if(n>this.nAcc*0.15) vec={x:this.vx/n, y:this.vy/n, z:this.vz/n};
-        }
-        const B={t:now, amp, dur, rise, vec};
-        const baseOk = dur>=cfg.sustain && amp>=cfg.amp;
-        const quality = dur>=250 && dur<=3000 && rise>=80;
-        const similar=(p,q)=>{const ra=p.amp/q.amp, rd=p.dur/q.dur; return ra>=0.45&&ra<=2.2&&rd>=0.45&&rd<=2.2;};
-        if(baseOk && !this.sigB){
-          if(quality){
-            if(!this._first){ this._first={dur,amp,rise}; this.msg('đang học nhịp của bạn (1/2)…'); this.boot.push(B); }
-            else if(similar({amp,dur},this._first)){
-              this.sigB={amp:(this._first.amp+amp)/2, dur:(this._first.dur+dur)/2, rise:(this._first.rise+rise)/2};
-              this.onBurst(B,now); // burst dat chuan dau tien sau khi khoa mau
-            } else {
-              this._first={dur,amp,rise}; this.boot=[B];
-              this.msg('nhịp chưa đều — đang học lại (1/2)…');
-            }
-          } else this.log(B,{ok:false,msg:'… bỏ qua rung nhẹ'});
-        } else if(baseOk && this.sigB){
-          const s=this.sigB;
-          const ampOk  = amp>=Math.max(cfg.amp*0.8, s.amp*0.4) && amp<=s.amp*3;
-          const durOk  = dur>=Math.max(cfg.sustain*0.8, s.dur*0.5) && dur<=s.dur*2.5;
-          const riseOk = rise>=Math.max(50, s.rise*0.35);
-          if(ampOk&&durOk&&riseOk){
-            s.amp=s.amp*0.7+amp*0.3; s.dur=s.dur*0.7+dur*0.3; s.rise=s.rise*0.7+rise*0.3;
-            this.rejBuf=[];
-            this.onBurst(B,now);
-          } else {
-            this.msg('… bỏ qua chuyển động lạ');
-            // TU CHUA: mau hoc sai -> burst that bi tu choi lien tuc nhung GIONG NHAU va nhip nhang
-            if(quality){
-              this.rejBuf.push({amp,dur,rise,t:now,vec});
-              if(this.rejBuf.length>3) this.rejBuf.shift();
-              const rb=this.rejBuf;
-              if(rb.length===3 && similar(rb[0],rb[1]) && similar(rb[1],rb[2])
-                && rb[1].t-rb[0].t<=8000 && rb[2].t-rb[1].t<=8000){
-                this.sigB={amp:rb[1].amp, dur:rb[1].dur, rise:rb[1].rise};
-                this.mode=null; this.pending=null; this.boot=[]; this.cyc=0; this.pairGap=0; // hoc lai ca che do
-                this.rejBuf=[];
-                this.onBurst(B,now);
-                this.msg('✓ đã học lại nhịp của bạn — đếm tiếp');
-              } else this.log(B,{ok:false,msg:'lạ so với mẫu'});
-            } else { this.rejBuf=[]; this.log(B,{ok:false,msg:'… bỏ qua rung nhẹ'}); }
-          }
-        } else this.log(B,{ok:false,msg:'… bỏ qua rung nhẹ'});
-      }
-    }
-  }
+    const atBase=av < 0.40*floor, refr=this.refractory();
+    if(this.cycleActive && this.sawPos && this.sawNeg && atBase && (t-this.lastCount)>refr){ this.commit(t); return; } // (A) chu ky +/- (gom ca pha tra ve nhe)
+    const soloTO=_clamp(0.65*this.medPeriod(),0.45,3.0), lobeSpan=this.lastAboveT-this.cycleStart;
+    if(this.cycleActive && (this.sawPos!==this.sawNeg) && atBase && lobeSpan>=0.40 && (t-this.cycleStart)>soloTO && (t-this.lastCount)>refr){ this.commit(t); return; } // (B) du phong: 1-go RAT cham keo dai >=0.40s (loai cu va/gai nhon)
+    if(this.cycleActive && (t-this.cycleStart)>6.0) this.resetCycle();
+  },
+  commit(t){
+    const iv=t-this.lastCommit;
+    this.ampEMA += 0.30*(this.cyclePeak-this.ampEMA);
+    let emit=0;
+    if(this.bstate==='EMPTY'){ this.bstate='PROV'; this.provLead=this.leadSign; this.provPeak=this.cyclePeak; } // rep 1: giu tam, chua co khoang cach
+    else if(this.bstate==='PROV'){
+      // rep 2: iv = khoang cach that giua rep1-rep2; hop le + bien do ~ nhau + cung huong -> credit ca 2
+      const okP=iv>0.72&&iv<6.0, okA=_ratio(this.cyclePeak,this.provPeak,0.33,3.0);
+      if(okP&&okA&&this.leadSign===this.provLead){ emit=2; this.bstate='RUN'; this.pushIv(iv); }
+      else { this.provLead=this.leadSign; this.provPeak=this.cyclePeak; } // khong khop -> re-seed, van tam
+    } else if(iv>0.72&&iv<6.0){ emit=1; this.pushIv(iv); }
+    this.lastCommit=t; this.lastCount=t; this.resetCycle();
+    const st=document.getElementById('sensorState');
+    if(emit){ this.log(iv,emit); for(let i=0;i<emit;i++) onRep(); if(st) st.textContent='✓ đếm nhịp tốt'; }
+    else if(st) st.textContent = this.bstate==='PROV'?'… đang xác nhận nhịp':'… bỏ qua';
+  },
+  heavy(){
+    if(this.filled<50) return;
+    const ord=this.chrono();
+    this.meanVec=_vmean(ord);
+    const C=_cov3(ord,this.meanVec);
+    let v=[this.u[0],this.u[1],this.u[2]];
+    for(let it=0;it<5;it++){ v=_mv3(C,v); v=_norm3(v); }
+    const lam1=_quad(C,v), tr=C[0]+C[4]+C[8];
+    if(tr>1e-6 && lam1>=0.55*tr){ if(_dot3(v,this.u)<0) v=[-v[0],-v[1],-v[2]]; this.u=v; } // isotropy guard
+    const p=ord.map(x=>(x[0]-this.meanVec[0])*this.u[0]+(x[1]-this.meanVec[1])*this.u[1]+(x[2]-this.meanVec[2])*this.u[2]);
+    let C0=0; for(const q of p) C0+=q*q; C0+=1e-9;
+    const RMSp=Math.sqrt(C0/p.length);
+    if(RMSp<this.noiseFloor) this.noiseFloor=RMSp; else this.noiseFloor += 0.001*(RMSp-this.noiseFloor); // fast-attack slow-release min
+    if(RMSp<0.05){ this.conf=0; return; }
+    const FS=1/this.DT, lagMin=Math.max(20,Math.round(0.7*FS)), lagMax=Math.min(p.length-10,Math.round(5.0*FS));
+    let best=0; const r=new Float32Array(lagMax+1);
+    for(let L=lagMin;L<=lagMax;L++){ let sN=0; for(let n=0;n<p.length-L;n++) sN+=p[n]*p[n+L]; r[L]=sN/C0; if(r[L]>best)best=r[L]; }
+    if(best<0.30){ this.conf=0; return; }
+    let Pest=null,c=0;
+    for(let L=lagMin+1;L<lagMax;L++) if(r[L]>r[L-1]&&r[L]>=r[L+1]&&r[L]>=0.85*best){ Pest=L/FS; c=r[L]; break; }
+    if(Pest==null){ this.conf=0; return; }
+    this.conf=c;
+    if(!this.locked){ if(c>=0.5){ if(++this.lockCnt>=2) this.locked=true; } else this.lockCnt=0; this.Plock=Pest; }
+    else if(Math.abs(Pest-this.Plock)/this.Plock<0.30){ this.Plock+=0.25*(Pest-this.Plock); this.jumpCnt=0; }
+    else if(++this.jumpCnt>=2){ this.Plock=Pest; this.jumpCnt=0; }
+  },
+  refractory(){ return _clamp(0.45*(this.locked?this.Plock:this.medPeriod()),0.55,2.5); }, // san 0.55s: chan nhip di bo (~0.5s/buoc)
+  medPeriod(){ return this.intervals.length? _median(this.intervals) : this.Plock; },
+  pushIv(iv){ this.intervals.push(iv); if(this.intervals.length>5) this.intervals.shift(); },
+  resetCycle(){ this.cycleActive=false; this.sawPos=false; this.sawNeg=false; this.lobeSign=0; this.cyclePeak=0; },
+  softReset(rms){ this.resetCycle(); if(rms<this.noiseFloor) this.noiseFloor=rms; if(this.bstate==='PROV') this.bstate='EMPTY'; },
+  log(iv,emit){ SLOG.push({t:Date.now(), ex:S.ex?S.ex.id:'', set:S.setIdx+1, rep:S.reps, iv:+iv.toFixed(2), P:+this.Plock.toFixed(2), conf:+this.conf.toFixed(2), amp:+this.ampEMA.toFixed(2), locked:this.locked, emit, sens:this.sens, mode:'sparc'}); },
 };
 function renderSens(){
   document.querySelectorAll('#sensSeg button').forEach(b=>b.classList.toggle('sel',b.dataset.s===Sensor.sens));
@@ -1834,11 +1786,8 @@ function renderSens(){
 document.getElementById('sensSeg').addEventListener('click',e=>{
   const b=e.target.closest('button'); if(!b) return;
   Sensor.sens=b.dataset.s; localStorage.setItem('gpt_sens',Sensor.sens); renderSens();
-  // doi do nhay = xoa mau da hoc, hoc lai tu 2 rep ke tiep (loi thoat khi mau bi hoc sai)
-  Sensor.sigB=null; Sensor._first=null; Sensor.rejBuf=[];
-  Sensor.mode=null; Sensor.pending=null; Sensor.boot=[]; Sensor.cyc=0; Sensor.pairGap=0;
-  Sensor.lastVec=null; Sensor.sameDir=0; Sensor.altDir=0;
-  const st=document.getElementById('sensorState'); if(st) st.textContent='đổi độ nhạy: '+b.textContent.trim()+' — học lại nhịp từ 2 rep tới…';
+  if(Sensor.on) Sensor.reset(); // doi do nhay -> khoa lai chu ky tu vai rep toi
+  const st=document.getElementById('sensorState'); if(st) st.textContent='đổi độ nhạy: '+b.textContent.trim()+' — đang bắt lại nhịp…';
 });
 function correctRep(delta){
   if(S.phase!=='active') return;
@@ -1847,7 +1796,7 @@ function correctRep(delta){
     S.reps--; if(S.repTimes.length) S.repTimes.pop();
     document.getElementById('repNum').textContent=S.reps;
     document.getElementById('ringFg').style.strokeDashoffset=754*(1-Math.min(1,S.reps/S.ex.reps));
-    if(Sensor.on) Sensor.lastCount=performance.now();
+    if(Sensor.on) Sensor.lastCount=Sensor.tNow; // chan dem lai ngay sau khi bam -1
   }
 }
 document.getElementById('repCorrMinus').addEventListener('click',()=>correctRep(-1));
