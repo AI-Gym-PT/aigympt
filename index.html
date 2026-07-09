@@ -108,8 +108,8 @@ label.f{display:block;margin-top:20px;font-size:13px;font-weight:700;color:var(-
 /* lightbox toan man hinh + zoom/pan */
 #lightbox{position:fixed;inset:0;z-index:120;background:rgba(3,6,10,.96);display:none;touch-action:none;overscroll-behavior:contain}
 #lightbox.on{display:block}
-.lb-stage{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;overflow:hidden}
-#lbImg{max-width:100%;max-height:100%;transform-origin:0 0;will-change:transform;user-select:none;-webkit-user-drag:none}
+.lb-stage{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;overflow:hidden;touch-action:none;-webkit-user-select:none;user-select:none}
+#lbImg{max-width:100%;max-height:100%;transform-origin:0 0;will-change:transform;user-select:none;-webkit-user-drag:none;touch-action:none;pointer-events:none}
 .lb-cap{position:absolute;top:calc(env(safe-area-inset-top,0px) + 14px);left:0;right:0;text-align:center;color:#eef2f7;font-size:14px;font-weight:700;pointer-events:none;text-shadow:0 1px 4px #000}
 .lb-x{position:absolute;top:calc(env(safe-area-inset-top,0px) + 10px);right:12px;width:42px;height:42px;border-radius:50%;border:none;background:rgba(255,255,255,.12);color:#fff;font-size:19px;cursor:pointer}
 .lb-nav{position:absolute;top:50%;transform:translateY(-50%);width:46px;height:64px;border:none;background:rgba(255,255,255,.1);color:#fff;font-size:30px;cursor:pointer;border-radius:12px}
@@ -2047,16 +2047,17 @@ document.getElementById('gImgs').addEventListener('click',e=>{ const im=e.target
 document.getElementById('lbClose').addEventListener('click',()=>LB.close());
 document.getElementById('lbPrev').addEventListener('click',()=>LB.go(-1));
 document.getElementById('lbNext').addEventListener('click',()=>LB.go(1));
-document.getElementById('lbIn').addEventListener('click',()=>LB.zoom(1.5));
-document.getElementById('lbOut').addEventListener('click',()=>LB.zoom(1/1.5));
+function lbCenter(){ const r=LB.stage.getBoundingClientRect(); return [r.left+r.width/2, r.top+r.height/2]; }
+document.getElementById('lbIn').addEventListener('click',()=>{const c=lbCenter();LB.zoom(1.5,c[0],c[1]);});
+document.getElementById('lbOut').addEventListener('click',()=>{const c=lbCenter();LB.zoom(1/1.5,c[0],c[1]);});
 document.getElementById('lbReset').addEventListener('click',()=>{LB.scale=1;LB.tx=0;LB.ty=0;LB.apply();});
 LB.stage.addEventListener('wheel',e=>{ e.preventDefault(); LB.zoom(e.deltaY<0?1.15:1/1.15, e.clientX, e.clientY); },{passive:false});
-LB._downX=0; LB._downY=0; LB._moved=false;
+LB._downX=0; LB._downY=0; LB._moved=false; LB._multi=false;
 LB.stage.addEventListener('pointerdown',e=>{
-  LB.stage.setPointerCapture(e.pointerId);
+  try{ LB.stage.setPointerCapture(e.pointerId); }catch(_){}
+  if(LB.ptrs.size===0){ LB._downX=e.clientX; LB._downY=e.clientY; LB._moved=false; LB._multi=false; } // ngon dau
   LB.ptrs.set(e.pointerId,{x:e.clientX,y:e.clientY});
-  LB._downX=e.clientX; LB._downY=e.clientY; LB._moved=false;
-  if(LB.ptrs.size===2){ const p=[...LB.ptrs.values()]; LB.pinch0=Math.hypot(p[0].x-p[1].x,p[0].y-p[1].y); LB.sc0=LB.scale; }
+  if(LB.ptrs.size===2){ LB._multi=true; const p=[...LB.ptrs.values()]; LB.pinch0=Math.hypot(p[0].x-p[1].x,p[0].y-p[1].y); LB.sc0=LB.scale; }
 });
 LB.stage.addEventListener('pointermove',e=>{
   if(!LB.ptrs.has(e.pointerId)) return;
@@ -2068,7 +2069,16 @@ LB.stage.addEventListener('pointermove',e=>{
     if(LB.pinch0){ const mx=(p[0].x+p[1].x)/2, my=(p[0].y+p[1].y)/2; LB.scale=LB.sc0; LB.zoom(d/LB.pinch0, mx, my); }
   } else if(LB.scale>1){ LB.tx+=dx; LB.ty+=dy; LB.apply(); } // pan khi da phong to
 });
-function lbUp(e){ LB.ptrs.delete(e.pointerId); if(LB.ptrs.size<2) LB.pinch0=0; }
+function lbUp(e){
+  LB.ptrs.delete(e.pointerId);
+  if(LB.ptrs.size<2) LB.pinch0=0;
+  if(LB.ptrs.size===0 && !LB._multi && LB.scale<=1.02 && LB._moved){
+    // cu chi 1 ngon khi chua zoom: vuot ngang -> chuyen anh; vuot xuong manh -> dong
+    const dx=e.clientX-LB._downX, dy=e.clientY-LB._downY;
+    if(Math.abs(dx)>50 && Math.abs(dx)>Math.abs(dy)){ LB.go(dx<0?1:-1); }
+    else if(dy>90 && Math.abs(dy)>Math.abs(dx)){ LB.close(); }
+  }
+}
 LB.stage.addEventListener('pointerup',lbUp);
 LB.stage.addEventListener('pointercancel',lbUp);
 LB.stage.addEventListener('click',e=>{
