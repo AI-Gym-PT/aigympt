@@ -98,10 +98,25 @@ label.f{display:block;margin-top:20px;font-size:13px;font-weight:700;color:var(-
 .exch.sel .ex-vn,.exch.sel .ex-eq{color:rgba(12,18,7,.72)}
 /* the huong dan bai tap */
 .guide{background:var(--card);border:1px solid var(--line);border-radius:16px;padding:14px;margin-top:12px;box-shadow:0 6px 22px rgba(0,0,0,.22)}
-.gimgs{display:flex;gap:8px;margin-bottom:11px}
-.gimgs img{width:calc(50% - 4px);aspect-ratio:4/3;object-fit:contain;background:#fff;border-radius:12px;border:1px solid var(--line)}
-.gimgs img.hide{display:none}
-.gimgs img:only-child,.gimgs img.solo{width:100%}
+/* 3 anh minh hoa 1 hang (thumbnail), cham de xem to */
+.gimgs{display:flex;gap:6px;margin-bottom:6px}
+.gimgs figure{flex:1;min-width:0;margin:0;display:flex;flex-direction:column;gap:3px}
+.gimgs img{width:100%;aspect-ratio:3/4;object-fit:cover;object-position:top center;background:#0f141b;border-radius:10px;border:1px solid var(--line);cursor:zoom-in;display:block}
+.gimgs figcaption{font-size:10px;color:var(--sub);font-weight:600;text-align:center}
+.gimgs figure.hide{display:none}
+.gimgnote{font-size:11px;color:var(--faint);text-align:center;margin-bottom:10px}
+/* lightbox toan man hinh + zoom/pan */
+#lightbox{position:fixed;inset:0;z-index:120;background:rgba(3,6,10,.96);display:none;touch-action:none;overscroll-behavior:contain}
+#lightbox.on{display:block}
+.lb-stage{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;overflow:hidden}
+#lbImg{max-width:100%;max-height:100%;transform-origin:0 0;will-change:transform;user-select:none;-webkit-user-drag:none}
+.lb-cap{position:absolute;top:calc(env(safe-area-inset-top,0px) + 14px);left:0;right:0;text-align:center;color:#eef2f7;font-size:14px;font-weight:700;pointer-events:none;text-shadow:0 1px 4px #000}
+.lb-x{position:absolute;top:calc(env(safe-area-inset-top,0px) + 10px);right:12px;width:42px;height:42px;border-radius:50%;border:none;background:rgba(255,255,255,.12);color:#fff;font-size:19px;cursor:pointer}
+.lb-nav{position:absolute;top:50%;transform:translateY(-50%);width:46px;height:64px;border:none;background:rgba(255,255,255,.1);color:#fff;font-size:30px;cursor:pointer;border-radius:12px}
+.lb-prev{left:8px} .lb-next{right:8px}
+.lb-zoom{position:absolute;bottom:calc(env(safe-area-inset-bottom,0px) + 16px);left:50%;transform:translateX(-50%);display:flex;gap:8px}
+.lb-zoom button{width:52px;height:44px;border-radius:12px;border:none;background:rgba(255,255,255,.14);color:#fff;font-size:20px;font-weight:800;cursor:pointer}
+.lb-zoom button:active,.lb-nav:active,.lb-x:active{background:rgba(201,246,83,.35)}
 .gname{font-size:15.5px;font-weight:800;letter-spacing:-.2px}
 .gmus{font-size:12px;color:var(--accent);font-weight:600;margin-top:3px}
 .gcues{margin:9px 0 0;padding-left:18px}
@@ -253,14 +268,15 @@ label.f{display:block;margin-top:20px;font-size:13px;font-weight:700;color:var(-
     <div id="exCats"></div>
     <div class="guide" id="guideCard">
       <div class="gimgs" id="gImgs">
-        <img id="gImg0" alt="Tư thế bắt đầu">
-        <img id="gImg1" alt="Tư thế kết thúc">
+        <figure><img id="gImg0" alt="Ảnh 1 — chuẩn bị"><figcaption>1 · Chuẩn bị</figcaption></figure>
+        <figure><img id="gImg1" alt="Ảnh 2 — động tác chính"><figcaption>2 · Động tác</figcaption></figure>
+        <figure><img id="gImg2" alt="Ảnh 3 — nhịp &amp; lỗi"><figcaption>3 · Nhịp &amp; lỗi</figcaption></figure>
       </div>
+      <div class="gimgnote" id="gImgNote">👆 Chạm vào ảnh để xem to &amp; phóng lớn</div>
       <div class="gname" id="gName"></div>
       <div class="gmus" id="gMus"></div>
       <ul class="gcues" id="gCues"></ul>
       <div class="gpos" id="gPos"></div>
-      <a class="gvideo" id="gVideo" target="_blank" rel="noopener">🎬 Xem video hướng dẫn</a>
     </div>
     <label class="f">Số set (hiệp)</label>
     <div class="stepper"><button id="setMinus">−</button><div class="val"><span id="setVal">3</span><small>set</small></div><button id="setPlus">+</button></div>
@@ -407,6 +423,16 @@ label.f{display:block;margin-top:20px;font-size:13px;font-weight:700;color:var(-
     <div class="po-hint">Chạm 2 lần để mở màn hình<br>Máy đang được giữ thức — đừng bấm nút nguồn</div>
   </div>
 
+  <!-- ====== LIGHTBOX: xem anh to + zoom ====== -->
+  <div id="lightbox">
+    <div class="lb-stage" id="lbStage"><img id="lbImg" alt=""></div>
+    <div class="lb-cap" id="lbCap"></div>
+    <button class="lb-x" id="lbClose" aria-label="Đóng">✕</button>
+    <button class="lb-nav lb-prev" id="lbPrev" aria-label="Ảnh trước">‹</button>
+    <button class="lb-nav lb-next" id="lbNext" aria-label="Ảnh sau">›</button>
+    <div class="lb-zoom"><button id="lbOut">−</button><button id="lbReset">↺</button><button id="lbIn">+</button></div>
+  </div>
+
   <!-- ====== MODAL: ho so nguoi dung ====== -->
   <div class="modal" id="modalProfile">
     <div class="sheet">
@@ -481,7 +507,7 @@ const EXERCISES = [
    mus:'Lưng giữa · xô', cues:['Ngực tựa đệm, chỉnh tay cầm ngang ngực dưới','Kéo về phía sườn, siết bả vai, khuỷu men theo thân','Về chậm hết tầm, giữ ngực áp đệm']},
   {id:'straightarm', cat:'back', name:'Straight Arm Pulldown (Kéo tay thẳng)', equip:'Cáp', alias:['straight arm pulldown','kéo tay thẳng','tay thẳng'],
    mus:'Xô (cô lập)', cues:['Đứng hơi gập hông, 2 tay thẳng cầm thanh cao','Kéo thanh xuống tới đùi bằng cách hạ vai, giữ tay thẳng','Cảm nhận xô căng, không gập khuỷu']},
-  {id:'assistpullup', cat:'back', name:'Assisted Pull-up (Kéo xà có hỗ trợ)', equip:'Máy hỗ trợ', img:'pullup', alias:['assisted pull up','kéo xà có hỗ trợ','kéo xà hỗ trợ','kéo xà','pull up'],
+  {id:'assistpullup', cat:'back', name:'Assisted Pull-up (Kéo xà có hỗ trợ)', equip:'Máy hỗ trợ', alias:['assisted pull up','kéo xà có hỗ trợ','kéo xà hỗ trợ','kéo xà','pull up'],
    mus:'Xô · tay trước', cues:['Quỳ/đứng lên đệm hỗ trợ, nắm xà rộng hơn vai','Kéo ngực về phía xà, khuỷu hướng xuống đất','Hạ xuống chậm có kiểm soát, duỗi hết tay']},
   {id:'backext', cat:'back', name:'Back Extension (Duỗi lưng dưới)', equip:'Ghế lưng dưới', alias:['back extension','duỗi lưng dưới','duỗi lưng','lưng dưới','hyperextension'],
    mus:'Lưng dưới · mông · đùi sau', cues:['Kê đệm ngay dưới hông, gập người xuống ~90 độ','Nâng thân lên thẳng hàng với chân, siết mông','Không ưỡn ngửa quá mức ở đỉnh — dừng ở thẳng hàng']},
@@ -492,7 +518,7 @@ const EXERCISES = [
    mus:'Vai · tay sau', cues:['Ngồi hoặc đứng, 2 tạ ngang tai, lòng bàn tay hướng trước','Đẩy lên chụm nhẹ 2 tạ trên đỉnh đầu','Hạ về ngang tai, không hạ quá sâu']},
   {id:'latraise', cat:'shoulder', name:'Dumbbell Lateral Raise (Nâng tạ ngang)', equip:'Tạ đơn', alias:['dumbbell lateral raise','nâng tạ ngang','bay vai','lateral'],
    mus:'Vai giữa', cues:['Tạ nhẹ, nâng 2 tay sang ngang tới ngang vai','Khuỷu hơi cong cố định, cổ tay không cao hơn khuỷu','Hạ chậm 2-3 giây — nửa hạ mới là nửa ăn cơ']},
-  {id:'cablelatraise', cat:'shoulder', name:'Cable Lateral Raise (Nâng ngang bằng cáp)', equip:'Cáp', img:'latraise', alias:['cable lateral raise','nâng ngang bằng cáp','nâng ngang cáp','bay vai cáp'],
+  {id:'cablelatraise', cat:'shoulder', name:'Cable Lateral Raise (Nâng ngang bằng cáp)', equip:'Cáp', alias:['cable lateral raise','nâng ngang bằng cáp','nâng ngang cáp','bay vai cáp'],
    mus:'Vai giữa', cues:['Cáp thấp bên hông đối diện, nâng tay sang ngang tới ngang vai','Giữ căng đều suốt tầm nhờ cáp','Hạ chậm, thân giữ thẳng không nhún']},
   {id:'reardelt', cat:'shoulder', name:'Rear Delt Fly (Bay vai sau)', equip:'Máy / tạ đơn', alias:['rear delt fly','bay vai sau','vai sau','rear delt'],
    mus:'Vai sau · lưng trên', cues:['Gập người ~45 độ hoặc tì ngực lên ghế nghiêng','Mở 2 tay sang ngang như dang cánh, siết bả vai','Tạ nhẹ thôi — vai sau là cơ nhỏ']},
@@ -505,14 +531,14 @@ const EXERCISES = [
    mus:'Tay trước', cues:['Nắm thanh rộng bằng vai, khuỷu cố định sát sườn','Cuốn lên tới ngang ngực, không văng người','Hạ chậm 2-3 giây']},
   {id:'hammer', cat:'bicep', name:'Hammer Curl (Cuốn tạ búa)', equip:'Tạ đơn', alias:['hammer curl','cuốn tạ búa','cuốn búa','búa'],
    mus:'Tay trước · cẳng tay', cues:['Cầm tạ dọc như cầm búa (lòng bàn tay hướng vào nhau)','Cuốn lên giữ nguyên hướng tạ','Khuỷu ghim sát sườn suốt bài']},
-  {id:'cablecurl', cat:'bicep', name:'Cable Curl (Cuốn cáp tay trước)', equip:'Cáp', img:'curl', alias:['cable curl','cuốn cáp tay trước','cuốn cáp'],
+  {id:'cablecurl', cat:'bicep', name:'Cable Curl (Cuốn cáp tay trước)', equip:'Cáp', alias:['cable curl','cuốn cáp tay trước','cuốn cáp'],
    mus:'Tay trước', cues:['Cáp thấp, khuỷu ghim sát sườn, cuốn tay cầm lên','Giữ căng đều suốt tầm nhờ cáp, siết ở đỉnh','Hạ chậm, khuỷu không rời sườn']},
   // 6. Tay sau
   {id:'pushdown', cat:'tricep', name:'Triceps Rope Pushdown (Đẩy cáp dây thừng tay sau)', equip:'Cáp', alias:['triceps rope pushdown','đẩy cáp dây thừng tay sau','đẩy cáp tay sau','đẩy cáp','tay sau','pushdown'],
    mus:'Tay sau', cues:['Khuỷu ghim sát sườn, đẩy dây xuống thẳng tay','Xoè dây ra 2 bên ở dưới cùng, siết tay sau','Trả lên chậm, khuỷu không rời sườn']},
   {id:'triext', cat:'tricep', name:'Overhead Triceps Extension (Duỗi tay sau qua đầu)', equip:'Tạ đơn / cáp', alias:['overhead triceps extension','duỗi tay sau qua đầu','duỗi tay','tay sau qua đầu'],
    mus:'Tay sau (đầu dài)', cues:['Giữ tạ/dây sau gáy, 2 khuỷu hướng trần nhà','Duỗi thẳng tay lên cao, chỉ cẳng tay chuyển động','Hạ chậm sau đầu, cảm nhận căng tay sau']},
-  {id:'assistdip', cat:'tricep', name:'Assisted Dip (Nhúng xà có hỗ trợ)', equip:'Máy hỗ trợ', img:'dips', alias:['assisted dip','nhúng xà có hỗ trợ','nhúng xà','xà kép','dip'],
+  {id:'assistdip', cat:'tricep', name:'Assisted Dip (Nhúng xà có hỗ trợ)', equip:'Máy hỗ trợ', alias:['assisted dip','nhúng xà có hỗ trợ','nhúng xà','xà kép','dip'],
    mus:'Tay sau · ngực dưới', cues:['Quỳ lên đệm hỗ trợ, chống thẳng tay trên 2 thanh','Giữ thân thẳng đứng để dồn vào tay sau','Hạ tới khuỷu ~90 độ rồi đẩy lên, không đánh đà']},
   {id:'closegrip', cat:'tricep', name:'Close-grip Machine Press (Đẩy máy tay hẹp)', equip:'Máy', alias:['close grip machine press','đẩy máy tay hẹp','tay hẹp','đẩy tay hẹp'],
    mus:'Tay sau · ngực', cues:['Nắm tay cầm hẹp, khuỷu men sát thân','Đẩy ra thẳng tay, dồn lực vào tay sau','Về chậm, không mở khuỷu bung ra ngoài']},
@@ -521,7 +547,7 @@ const EXERCISES = [
    mus:'Đùi trước · mông', cues:['Chân đặt giữa bàn đạp, rộng bằng vai','Hạ tới khi gối ~90 độ, lưng dưới không rời đệm','Đạp lên gần thẳng chân nhưng không khoá gối']},
   {id:'goblet', cat:'glute', name:'Goblet Squat (Squat ôm tạ)', equip:'Tạ đơn / kettlebell', alias:['goblet squat','squat ôm tạ','ôm tạ'],
    mus:'Đùi trước · mông · core', cues:['Ôm 1 tạ đơn/kettlebell trước ngực, khuỷu hướng xuống','Hạ mông xuống sâu, lưng thẳng, gối mở theo mũi chân','Đẩy gót đứng lên, siết mông ở đỉnh']},
-  {id:'smithsquat', cat:'glute', name:'Smith Machine Squat (Squat máy Smith)', equip:'Máy Smith', img:'squat', alias:['smith machine squat','squat máy smith','máy smith','smith','squat','gánh tạ'],
+  {id:'smithsquat', cat:'glute', name:'Smith Machine Squat (Squat máy Smith)', equip:'Máy Smith', alias:['smith machine squat','squat máy smith','máy smith','smith','squat','gánh tạ'],
    mus:'Đùi trước · mông', cues:['Thanh đòn tựa trên cầu vai, chân hơi bước ra trước','Hạ xuống tới khi đùi song song sàn, lưng thẳng','Đẩy gót đứng lên, không khoá gối gắt']},
   {id:'rdl', cat:'glute', name:'Romanian Deadlift (Kéo đất Rumani)', equip:'Tạ đơn / tạ đòn', alias:['romanian deadlift','kéo đất rumani','kéo đất ru ma ni','rdl','rumani'],
    mus:'Đùi sau · mông', cues:['Gối chỉ hơi chùng, đẩy hông ra sau, tạ trượt sát chân','Hạ tới khi căng đùi sau (khoảng giữa ống chân)','Siết mông đứng thẳng lên, lưng thẳng suốt bài']},
@@ -542,11 +568,11 @@ const EXERCISES = [
    mus:'Core toàn diện · vai', cues:['Chống khuỷu tay, thân thẳng như tấm ván từ đầu tới gót','Siết bụng + mông, không võng lưng, không nhổm mông','Thở đều — nín thở là hỏng']},
   {id:'deadbug', cat:'core', name:'Dead Bug (Con bọ chết)', equip:'Bodyweight', alias:['dead bug','con bọ chết','bọ chết'],
    mus:'Core sâu · bụng dưới', cues:['Nằm ngửa, 2 tay đưa thẳng lên trần, gối gập 90 độ','Duỗi tay + chân ĐỐI bên xuống thấp, ép lưng dưới sát sàn','Về giữa rồi đổi bên (1 rep = 2 bên), thở đều']},
-  {id:'crunch', cat:'core', name:'Crunch (Gập bụng)', equip:'Bodyweight', img:'situp', alias:['crunch','gập bụng','bụng'],
+  {id:'crunch', cat:'core', name:'Crunch (Gập bụng)', equip:'Bodyweight', alias:['crunch','gập bụng','bụng'],
    mus:'Bụng trên', cues:['Nằm ngửa, gối gập, tay chạm nhẹ 2 bên đầu','Cuộn vai lên khỏi sàn bằng cơ bụng, không kéo cổ','Hạ vai xuống chậm, giữ căng bụng']},
   {id:'cablecrunch', cat:'core', name:'Cable Crunch (Gập bụng cáp)', equip:'Cáp', alias:['cable crunch','gập bụng cáp'],
    mus:'Bụng trên', cues:['Quỳ dưới cáp cao, giữ dây 2 bên đầu','Cuộn thân xuống bằng cơ bụng (khuỷu về phía đùi)','Hông cố định — gập bằng bụng, không kéo bằng tay']},
-  {id:'hangingknee', cat:'core', name:'Hanging Knee Raise (Nâng gối treo xà)', equip:'Xà / máy', img:'legraise', alias:['hanging knee raise','nâng gối treo xà','nâng gối','treo xà'],
+  {id:'hangingknee', cat:'core', name:'Hanging Knee Raise (Nâng gối treo xà)', equip:'Xà / máy', alias:['hanging knee raise','nâng gối treo xà','nâng gối','treo xà'],
    mus:'Bụng dưới', cues:['Treo người trên xà, vai giữ chắc không đung đưa','Nâng 2 gối lên phía ngực bằng cơ bụng dưới','Hạ chậm, không lấy đà lắc người']},
   {id:'russian', cat:'core', name:'Russian Twist (Xoay bụng)', equip:'Bodyweight / tạ', alias:['russian twist','xoay bụng','twist','russian'],
    mus:'Bụng chéo', cues:['Ngồi ngả sau ~45 độ, chân nhấc khỏi sàn (hoặc chạm nhẹ)','Xoay thân sang 2 bên, tay chạm sàn mỗi bên','Xoay bằng thân, không chỉ vung tay (1 rep = 2 bên)']},
@@ -1063,20 +1089,22 @@ function renderGuide(){
         ? '⏱ Bài tính theo thời gian — app đếm giây và cổ vũ, không cần cảm biến. Cầm/đặt điện thoại tuỳ ý.'
         : '⏱ Bài giữ tư thế — app đếm giây tự động, không cần cảm biến. Đặt điện thoại đâu cũng được.')
     : POS_TEXT[posOf(ex.id)];
-  document.getElementById('gVideo').href='https://www.youtube.com/results?search_query='+encodeURIComponent('cách tập '+vietName(ex)+' đúng kỹ thuật');
+  const base=ex.img||ex.id;
   const wrap=document.getElementById('gImgs');
   wrap.style.display='flex';
-  [0,1].forEach(i=>{
+  let shown=0;
+  const caps=['1 · Chuẩn bị','2 · Động tác chính','3 · Nhịp & lỗi cần tránh'];
+  [0,1,2].forEach(i=>{
     const img=document.getElementById('gImg'+i);
-    img.classList.remove('hide','solo');
-    img.onerror=()=>{
-      img.classList.add('hide');
-      const other=document.getElementById('gImg'+(1-i));
-      if(other.classList.contains('hide')) wrap.style.display='none';
-      else other.classList.add('solo');
-    };
-    img.src=`img/${ex.img||ex.id}_${i}.jpg`;
+    const fig=img.parentElement;
+    fig.classList.remove('hide');
+    img.dataset.full=`img/${base}_${i}.jpg`;
+    img.dataset.cap=`${engName(ex)} — ${caps[i]}`;
+    img.onload=()=>{ shown++; document.getElementById('gImgNote').style.display=''; };
+    img.onerror=()=>{ fig.classList.add('hide'); if(!document.querySelector('#gImgs figure:not(.hide)')){ wrap.style.display='none'; document.getElementById('gImgNote').style.display='none'; } };
+    img.src=`img/${base}_${i}.jpg`;
   });
+  document.getElementById('gImgNote').style.display='none'; // hien lai khi co anh load duoc
 }
 document.getElementById('exCats').addEventListener('click',e=>{
   const isNext=S.session!==null&&S.session.exercises.length>0;
@@ -1951,6 +1979,78 @@ document.getElementById('restoreFile').addEventListener('change',e=>{
   rd.readAsText(f);
   e.target.value='';
 });
+
+/* =================== LIGHTBOX: xem anh to + zoom/pan =================== */
+const LB = {
+  el:document.getElementById('lightbox'), img:document.getElementById('lbImg'),
+  cap:document.getElementById('lbCap'), stage:document.getElementById('lbStage'),
+  list:[], idx:0, scale:1, tx:0, ty:0, ptrs:new Map(), pinch0:0, sc0:1, lastTap:0,
+  open(list, i){
+    this.list=list; this.idx=i; this.el.classList.add('on');
+    document.getElementById('lbPrev').style.display=list.length>1?'':'none';
+    document.getElementById('lbNext').style.display=list.length>1?'':'none';
+    this.show();
+  },
+  close(){ this.el.classList.remove('on'); this.img.src=''; },
+  show(){
+    const it=this.list[this.idx];
+    this.img.src=it.full; this.cap.textContent=it.cap;
+    this.scale=1; this.tx=0; this.ty=0; this.apply();
+  },
+  go(d){ this.idx=(this.idx+d+this.list.length)%this.list.length; this.show(); },
+  apply(){ this.img.style.transform=`translate(${this.tx}px,${this.ty}px) scale(${this.scale})`; },
+  zoom(f, cx, cy){
+    const s=Math.min(6, Math.max(1, this.scale*f));
+    if(cx!=null){ // zoom quanh diem cx,cy tren stage
+      const r=this.stage.getBoundingClientRect();
+      const px=cx-r.left, py=cy-r.top;
+      this.tx = px-(px-this.tx)*(s/this.scale);
+      this.ty = py-(py-this.ty)*(s/this.scale);
+    }
+    this.scale=s; if(s===1){ this.tx=0; this.ty=0; } this.apply();
+  }
+};
+function openLightbox(fromImg){
+  const figs=[...document.querySelectorAll('#gImgs figure:not(.hide) img')];
+  const list=figs.map(im=>({full:im.dataset.full, cap:im.dataset.cap}));
+  const i=Math.max(0, figs.indexOf(fromImg));
+  if(list.length) LB.open(list, i);
+}
+document.getElementById('gImgs').addEventListener('click',e=>{ const im=e.target.closest('img'); if(im&&im.dataset.full) openLightbox(im); });
+document.getElementById('lbClose').addEventListener('click',()=>LB.close());
+document.getElementById('lbPrev').addEventListener('click',()=>LB.go(-1));
+document.getElementById('lbNext').addEventListener('click',()=>LB.go(1));
+document.getElementById('lbIn').addEventListener('click',()=>LB.zoom(1.5));
+document.getElementById('lbOut').addEventListener('click',()=>LB.zoom(1/1.5));
+document.getElementById('lbReset').addEventListener('click',()=>{LB.scale=1;LB.tx=0;LB.ty=0;LB.apply();});
+LB.stage.addEventListener('wheel',e=>{ e.preventDefault(); LB.zoom(e.deltaY<0?1.15:1/1.15, e.clientX, e.clientY); },{passive:false});
+LB._downX=0; LB._downY=0; LB._moved=false;
+LB.stage.addEventListener('pointerdown',e=>{
+  LB.stage.setPointerCapture(e.pointerId);
+  LB.ptrs.set(e.pointerId,{x:e.clientX,y:e.clientY});
+  LB._downX=e.clientX; LB._downY=e.clientY; LB._moved=false;
+  if(LB.ptrs.size===2){ const p=[...LB.ptrs.values()]; LB.pinch0=Math.hypot(p[0].x-p[1].x,p[0].y-p[1].y); LB.sc0=LB.scale; }
+});
+LB.stage.addEventListener('pointermove',e=>{
+  if(!LB.ptrs.has(e.pointerId)) return;
+  const prev=LB.ptrs.get(e.pointerId); const dx=e.clientX-prev.x, dy=e.clientY-prev.y;
+  LB.ptrs.set(e.pointerId,{x:e.clientX,y:e.clientY});
+  if(Math.hypot(e.clientX-LB._downX,e.clientY-LB._downY)>10) LB._moved=true;
+  if(LB.ptrs.size===2){
+    const p=[...LB.ptrs.values()]; const d=Math.hypot(p[0].x-p[1].x,p[0].y-p[1].y);
+    if(LB.pinch0){ const mx=(p[0].x+p[1].x)/2, my=(p[0].y+p[1].y)/2; LB.scale=LB.sc0; LB.zoom(d/LB.pinch0, mx, my); }
+  } else if(LB.scale>1){ LB.tx+=dx; LB.ty+=dy; LB.apply(); } // pan khi da phong to
+});
+function lbUp(e){ LB.ptrs.delete(e.pointerId); if(LB.ptrs.size<2) LB.pinch0=0; }
+LB.stage.addEventListener('pointerup',lbUp);
+LB.stage.addEventListener('pointercancel',lbUp);
+LB.stage.addEventListener('click',e=>{
+  if(LB._moved) return;                 // vua kéo/pan -> khong tinh la cham
+  const now=Date.now(), dbl=now-LB.lastTap<300; LB.lastTap=now;
+  if(dbl){ clearTimeout(LB._t); LB.zoom(LB.scale>1.2?1/LB.scale:2.4, e.clientX, e.clientY); return; }
+  LB._t=setTimeout(()=>{ if(LB.scale<=1.02) LB.close(); }, 300); // cham don khi chua zoom -> dong
+});
+document.addEventListener('keydown',e=>{ if(!LB.el.classList.contains('on'))return; if(e.key==='Escape')LB.close(); else if(e.key==='ArrowLeft')LB.go(-1); else if(e.key==='ArrowRight')LB.go(1); });
 
 /* =================== INIT =================== */
 S.selKg = lastKg[S.selEx]!==undefined ? +lastKg[S.selEx] : 0;
