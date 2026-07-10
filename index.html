@@ -1236,8 +1236,8 @@ function startCountdown(){
   show('scr-count');
   document.getElementById('cdLabel').textContent=`${S.ex.name} · Set ${S.setIdx+1}/${S.ex.sets} · ${S.ex.reps} ${S.ex.timeEx?'giây':'rep'}`;
   // bat cam bien ngay tu dem nguoc: 3s dung yen chuan bi = cua so hieu chinh nen hoan hao,
-  // het dem nguoc la dem duoc tu rep dau tien
-  if(S.mode==='sensor') Sensor.start();
+  // het dem nguoc la dem duoc tu rep dau tien. Bai giu thoi gian: dong ho tu chay, cam bien PHAI tat
+  if(S.mode==='sensor' && !S.ex.timeEx) Sensor.start();
   let n=3;
   document.getElementById('cdNum').textContent=n;
   sayKeys(`${S.ex.name}, set ${S.setIdx+1}, ${S.ex.reps} ${S.ex.timeEx?'giây':'cái'}. Chuẩn bị! 3`,[`ex_${S.ex.id}`,'cb','n3'],true);
@@ -1274,11 +1274,12 @@ function startSet(){
     const mb2=document.getElementById('modeBadge');
     mb2.style.display='block'; mb2.textContent='⏱ Giữ tư thế'; mb2.style.color='var(--sub)';
     coach('setStart',{s:S.setIdx+1});
-    const target=S.ex.reps, t0=Date.now();
+    const target=S.ex.reps;
+    S.holdT0=Date.now(); // moc tren S de mpResume dich duoc khi pause (man hinh tat van tinh gio — nguoi tap van dang giu)
     let saidHalf=false, lastSpoken=0, lastBark=0;
     const tt=()=>{
       if(S.phase!=='active') return;
-      const el=Math.min(target,Math.floor((Date.now()-t0)/1000));
+      const el=Math.min(target,Math.floor((Date.now()-S.holdT0)/1000));
       if(el!==S.reps){
         S.reps=el;
         document.getElementById('repNum').textContent=el;
@@ -1325,6 +1326,7 @@ function renderDots(){
 /* ---- rep event (from any source) ---- */
 function onRep(){
   if(S.phase!=='active') return;
+  if(S.ex && S.ex.timeEx) return; // bai giu thoi gian: S.reps la dong ho giay cua tt(), khong nguon rep nao duoc dung vao
   S.reps++;
   const now=Date.now();
   S.repTimes.push(now);
@@ -1513,11 +1515,15 @@ document.getElementById('mpResume').addEventListener('click',()=>{
   const d = Date.now()-S.pausedAt;
   S.setStartAt += d;
   S.repTimes = S.repTimes.map(t=>t+d);
+  if(S.ex.timeEx && typeof S.holdT0==='number') S.holdT0 += d;
   S.phase='active';
   coach('resume');
-  if(S.mode==='sensor') Sensor.start();
-  if(S.mode==='demo') Demo.start();
-  every(1000,watchdog);
+  if(S.ex.timeEx){ if(typeof S._tick==='function') every(250,S._tick); } // bai giu: chi can dong ho, khong sensor/demo/watchdog
+  else {
+    if(S.mode==='sensor') Sensor.start();
+    if(S.mode==='demo') Demo.start();
+    every(1000,watchdog);
+  }
 });
 document.getElementById('mpQuit').addEventListener('click',()=>{
   openModal('modalPause',false);
@@ -1641,7 +1647,7 @@ const Sensor={
   gvec:[0,0,9.81], gPrev:[0,0,9.81], u:[0,0,1], meanVec:[0,0,0], axisSeed:false,
   acc:0, tNow:0, lastT:0, kHeavy:0, orientHold:0,
   sm:0, rms2:0, ampEMA:0.6, noiseFloor:0.05,
-  Plock:1.6, locked:false, lockCnt:0, jumpCnt:0, conf:0,
+  Plock:1.6, locked:false, lockCnt:0, jumpCnt:0, conf:0, lowConf:0,
   intervals:[], lastCount:-1e9, lastCommit:-1e9,
   cycleActive:false, sawPos:false, sawNeg:false, leadSign:0, cyclePeak:0, cycleStart:0, lobeSign:0, lastAboveT:0,
   bstate:'EMPTY', provIv:0, provLead:0, provPeak:0,
@@ -1660,7 +1666,7 @@ const Sensor={
     this.gvec=[0,0,9.81]; this.gPrev=[0,0,9.81]; this.u=[0,0,1]; this.meanVec=[0,0,0]; this.axisSeed=false;
     this.acc=0; this.tNow=0; this.lastT=performance.now(); this.kHeavy=0; this.orientHold=0;
     this.sm=0; this.rms2=0; this.ampEMA=0.6; this.noiseFloor=0.05;
-    this.locked=false; this.lockCnt=0; this.jumpCnt=0; this.conf=0;
+    this.locked=false; this.lockCnt=0; this.jumpCnt=0; this.conf=0; this.lowConf=0;
     this.intervals=[]; this.lastCount=-1e9; this.lastCommit=-1e9;
     this.cycleActive=false; this.sawPos=false; this.sawNeg=false; this.leadSign=0; this.cyclePeak=0; this.cycleStart=0; this.lobeSign=0;
     this.bstate='EMPTY';
@@ -1673,9 +1679,9 @@ const Sensor={
   stop(){ this.on=false; window.removeEventListener('devicemotion',this.handler); },
   handler:(e)=>{ Sensor.onMotion(e); },
   reset(){ // doi do nhay: reset dem, giu buffer/truc
-    this.locked=false; this.lockCnt=0; this.conf=0; this.intervals=[];
+    this.locked=false; this.lockCnt=0; this.conf=0; this.lowConf=0; this.intervals=[];
     this.cycleActive=false; this.sawPos=false; this.sawNeg=false; this.cyclePeak=0; this.lobeSign=0;
-    this.bstate='EMPTY';
+    if(this.bstate!=='RUN') this.bstate='EMPTY'; // nhip da xac lap thi giu — khong bat re-bootstrap lam mat rep ke tiep
   },
   sMul(){ return this.sens==='soft'?0.72:this.sens==='hard'?1.35:1.0; },
   onMotion(e){
@@ -1705,7 +1711,10 @@ const Sensor={
     this.sm += 0.25*(s-this.sm);
     this.rms2 += 0.02*(s*s - this.rms2); // ~1s: cong nang luong on dinh (khong tut trong pha nghi cua rep 1-go)
     const rms=Math.sqrt(Math.max(this.rms2,0));
-    if(++this.kHeavy>=15){ this.kHeavy=0; this.heavy(); }
+    if(++this.kHeavy>=15){ this.kHeavy=0; this.heavy();
+      // mo khoa tu phuc hoi: khoa ma conf sap keo dai ~1s (tin hieu doi han/rep >5s) -> tha gate, may trang thai tu dem
+      if(this.locked){ if(this.conf<0.35){ if(++this.lowConf>=3){ this.locked=false; this.lockCnt=0; this.lowConf=0; } } else this.lowConf=0; }
+    }
     const floor=Math.max(0.35*this.ampEMA,0.15)*this.floorScale*this.sMul();
     const f=document.getElementById('sigFill'); if(f) f.style.width=Math.min(100,Math.abs(this.sm)/(floor*1.6)*100)+'%';
     const Eon=Math.max(0.12, 3*this.noiseFloor)*this.sMul()*this.floorScale;
@@ -1728,7 +1737,7 @@ const Sensor={
     const atBase=av < 0.40*floor, refr=this.refractory();
     if(this.cycleActive && this.sawPos && this.sawNeg && atBase && (t-this.lastCount)>refr){ this.commit(t); return; } // (A) chu ky +/- (gom ca pha tra ve nhe)
     const soloTO=_clamp(0.65*this.medPeriod(),0.45,3.0), lobeSpan=this.lastAboveT-this.cycleStart;
-    if(this.cycleActive && (this.sawPos!==this.sawNeg) && atBase && lobeSpan>=0.40 && (t-this.cycleStart)>soloTO && (t-this.lastCount)>refr){ this.commit(t); return; } // (B) du phong: 1-go RAT cham keo dai >=0.40s (loai cu va/gai nhon)
+    if(this.cycleActive && (this.sawPos!==this.sawNeg) && atBase && lobeSpan>=0.40 && (t-this.lastAboveT)>0.30 && (t-this.cycleStart)>soloTO && (t-this.lastCount)>refr){ this.commit(t); return; } // (B) du phong: 1-go that su (nam im o base >=0.3s, khong co lobe nguoc) — chu ky doi xung cham se co lobe nguoc ngay nen di duong (A), khong bi che doi
     if(this.cycleActive && (t-this.cycleStart)>6.0) this.resetCycle();
   },
   commit(t){
@@ -1769,7 +1778,7 @@ const Sensor={
     for(let L=lagMin+1;L<lagMax;L++) if(r[L]>r[L-1]&&r[L]>=r[L+1]&&r[L]>=0.85*best){ Pest=L/FS; c=r[L]; break; }
     if(Pest==null){ this.conf=0; return; }
     this.conf=c;
-    if(!this.locked){ if(c>=0.5){ if(++this.lockCnt>=2) this.locked=true; } else this.lockCnt=0; this.Plock=Pest; }
+    if(!this.locked){ if(S.phase==='active'){ if(c>=0.5){ if(++this.lockCnt>=2) this.locked=true; } else this.lockCnt=0; this.Plock=Pest; } } // dem nguoc (di bo toi ghe): khong khoa, khong keo Plock — giu prior cua bai
     else if(Math.abs(Pest-this.Plock)/this.Plock<0.30){ this.Plock+=0.25*(Pest-this.Plock); this.jumpCnt=0; }
     else if(++this.jumpCnt>=2){ this.Plock=Pest; this.jumpCnt=0; }
   },
@@ -1814,7 +1823,7 @@ function pocketOff(){ pocketEl.classList.remove('on'); }
 function updatePocket(){
   if(!pocketEl.classList.contains('on')) return;
   const n=document.getElementById('poNum'), s=document.getElementById('poSub');
-  if(S.phase==='active'&&S.ex){ n.textContent=S.reps; s.textContent=`/ ${S.ex.reps} rep · set ${S.setIdx+1}/${S.ex.sets}`; }
+  if(S.phase==='active'&&S.ex){ n.textContent=S.reps; s.textContent=`/ ${S.ex.reps} ${S.ex.timeEx?'giây':'rep'} · set ${S.setIdx+1}/${S.ex.sets}`; }
   else if(S.phase==='rest'){ n.textContent=document.getElementById('restNum').textContent; s.textContent='đang nghỉ (giây)'; }
   else if(S.phase==='countdown'){ n.textContent=document.getElementById('cdNum').textContent; s.textContent='chuẩn bị…'; }
   else pocketOff();
@@ -1967,11 +1976,12 @@ const LB = {
   list:[], idx:0, scale:1, tx:0, ty:0, ptrs:new Map(), pinch0:0, sc0:1, lastTap:0,
   open(list, i){
     this.list=list; this.idx=i; this.el.classList.add('on');
+    this.ptrs.clear(); this.pinch0=0; this._multi=false; this._moved=false; // con tro cu ket lai tu lan truoc -> 1 ngon bi hieu nham la 2
     document.getElementById('lbPrev').style.display=list.length>1?'':'none';
     document.getElementById('lbNext').style.display=list.length>1?'':'none';
     this.show();
   },
-  close(){ this.el.classList.remove('on'); this.img.src=''; },
+  close(){ this.el.classList.remove('on'); this.img.src=''; this.ptrs.clear(); this.pinch0=0; this._multi=false; },
   show(){
     const it=this.list[this.idx];
     this.img.src=it.full; this.cap.textContent=it.cap;
@@ -1981,9 +1991,9 @@ const LB = {
   apply(){ this.img.style.transform=`translate(${this.tx}px,${this.ty}px) scale(${this.scale})`; },
   zoom(f, cx, cy){
     const s=Math.min(6, Math.max(1, this.scale*f));
-    if(cx!=null){ // zoom quanh diem cx,cy tren stage
+    if(cx!=null){ // zoom quanh diem cx,cy — quy ve toa do goc layout cua anh (anh duoc flex can giua, transform-origin 0 0)
       const r=this.stage.getBoundingClientRect();
-      const px=cx-r.left, py=cy-r.top;
+      const px=cx-r.left-this.img.offsetLeft, py=cy-r.top-this.img.offsetTop;
       this.tx = px-(px-this.tx)*(s/this.scale);
       this.ty = py-(py-this.ty)*(s/this.scale);
     }
@@ -2010,7 +2020,7 @@ LB.stage.addEventListener('pointerdown',e=>{
   try{ LB.stage.setPointerCapture(e.pointerId); }catch(_){}
   if(LB.ptrs.size===0){ LB._downX=e.clientX; LB._downY=e.clientY; LB._moved=false; LB._multi=false; } // ngon dau
   LB.ptrs.set(e.pointerId,{x:e.clientX,y:e.clientY});
-  if(LB.ptrs.size===2){ LB._multi=true; const p=[...LB.ptrs.values()]; LB.pinch0=Math.hypot(p[0].x-p[1].x,p[0].y-p[1].y); LB.sc0=LB.scale; }
+  if(LB.ptrs.size===2){ LB._multi=true; const p=[...LB.ptrs.values()]; LB.pinch0=Math.hypot(p[0].x-p[1].x,p[0].y-p[1].y); LB.sc0=LB.scale; LB.tx0=LB.tx; LB.ty0=LB.ty; }
 });
 LB.stage.addEventListener('pointermove',e=>{
   if(!LB.ptrs.has(e.pointerId)) return;
@@ -2019,7 +2029,7 @@ LB.stage.addEventListener('pointermove',e=>{
   if(Math.hypot(e.clientX-LB._downX,e.clientY-LB._downY)>10) LB._moved=true;
   if(LB.ptrs.size===2){
     const p=[...LB.ptrs.values()]; const d=Math.hypot(p[0].x-p[1].x,p[0].y-p[1].y);
-    if(LB.pinch0){ const mx=(p[0].x+p[1].x)/2, my=(p[0].y+p[1].y)/2; LB.scale=LB.sc0; LB.zoom(d/LB.pinch0, mx, my); }
+    if(LB.pinch0){ const mx=(p[0].x+p[1].x)/2, my=(p[0].y+p[1].y)/2; LB.scale=LB.sc0; LB.tx=LB.tx0; LB.ty=LB.ty0; LB.zoom(d/LB.pinch0, mx, my); } // tinh tuyet doi tu trang thai luc bat dau pinch — tx/ty phai khop scale, khong thi truot luy tien
   } else if(LB.scale>1){ LB.tx+=dx; LB.ty+=dy; LB.apply(); } // pan khi da phong to
 });
 function lbUp(e){
