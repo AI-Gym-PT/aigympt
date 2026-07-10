@@ -177,6 +177,11 @@ label.f{display:block;margin-top:20px;font-size:13px;font-weight:700;color:var(-
 /* modal */
 .modal{position:fixed;inset:0;background:rgba(3,6,10,.8);backdrop-filter:blur(3px);display:none;align-items:flex-end;justify-content:center;z-index:50}
 .modal.on{display:flex}
+#toast{position:fixed;left:50%;bottom:22px;transform:translate(-50%,20px);z-index:200;max-width:88vw;padding:11px 16px;border-radius:12px;background:var(--card2);border:1px solid var(--line);color:var(--txt);font-size:13.5px;text-align:center;opacity:0;pointer-events:none;transition:opacity .18s,transform .18s}
+#toast.on{opacity:1;transform:translate(-50%,0)}
+#txtFall{position:fixed;inset:0;z-index:210;background:rgba(3,6,10,.94);display:none;flex-direction:column;padding:16px;gap:10px}
+#txtFall.on{display:flex}
+#txtFall textarea{flex:1;width:100%;background:var(--card);color:var(--txt);border:1px solid var(--line);border-radius:12px;padding:10px;font:11px/1.45 ui-monospace,Menlo,monospace;resize:none}
 .sheet{background:var(--card);border-radius:22px 22px 0 0;padding:22px 18px 32px;width:100%;max-width:430px;border-top:1px solid var(--line);box-shadow:0 -12px 40px rgba(0,0,0,.4)}
 .sheet h2{margin-bottom:4px;font-size:18px}
 .sheet .btn{margin-top:10px}
@@ -377,6 +382,7 @@ label.f{display:block;margin-top:20px;font-size:13px;font-weight:700;color:var(-
         <button class="btn btn-ghost btn-sm" style="flex:1" id="btnBackup">💾 Sao lưu ra file</button>
         <button class="btn btn-ghost btn-sm" style="flex:1" id="btnRestore">📂 Khôi phục từ file</button>
       </div>
+      <button class="btn btn-ghost btn-sm" id="btnSlogHist" style="margin-top:8px;width:100%">📋 Xuất log cảm biến (khi đếm sai, gửi để tinh chỉnh)</button>
       <input type="file" id="restoreFile" accept=".json,application/json" style="display:none">
     </div>
     <div style="margin-top:auto;padding-top:18px">
@@ -421,6 +427,17 @@ label.f{display:block;margin-top:20px;font-size:13px;font-weight:700;color:var(-
     <div class="po-num" id="poNum">0</div>
     <div class="po-sub" id="poSub">/ 12 rep</div>
     <div class="po-hint">Chạm 2 lần để mở màn hình<br>Máy đang được giữ thức — đừng bấm nút nguồn</div>
+  </div>
+
+  <!-- ====== TOAST + du phong copy tay khi may khong cho tai/chia se file ====== -->
+  <div id="toast"></div>
+  <div id="txtFall">
+    <div class="sub" id="txtFallHead" style="font-size:12.5px"></div>
+    <textarea id="txtFallBody" readonly spellcheck="false"></textarea>
+    <div class="row">
+      <button class="btn btn-ghost btn-sm" style="flex:1" id="txtFallCopy">📋 Sao chép</button>
+      <button class="btn btn-ghost btn-sm" style="flex:1" id="txtFallClose">Đóng</button>
+    </div>
   </div>
 
   <!-- ====== LIGHTBOX: xem anh to + zoom ====== -->
@@ -1597,14 +1614,61 @@ const SLOG={
   },
   save(){ try{ localStorage.setItem('gpt_senslog',JSON.stringify(this.arr)); }catch(e){} },
   export(){
+    if(!this.arr.length){ toast('Chưa có dữ liệu — tập 1 set ở chế độ Cảm biến rồi xuất lại'); return; }
     const data={exportedAt:new Date().toISOString(), profile:getProfile(), sens:Sensor.sens, log:this.arr};
-    const blob=new Blob([JSON.stringify(data,null,1)],{type:'application/json'});
-    const a=document.createElement('a');
-    a.href=URL.createObjectURL(blob);
-    a.download='aigympt-sensorlog-'+new Date().toISOString().slice(0,10)+'.json';
-    a.click(); setTimeout(()=>URL.revokeObjectURL(a.href),2000);
+    exportJSON('aigympt-sensorlog-'+new Date().toISOString().slice(0,10)+'.json', data, 'log cảm biến');
   }
 };
+
+/* ===== Xuat file: dien thoai KHONG nhan <a download> (iOS Safari im lang, nhat la trong PWA).
+   Uu tien khay chia se he thong (luu vao Files / gui Zalo, Mail), roi moi den tai file, cuoi cung la copy tay. ===== */
+const IS_IOS = /iP(hone|ad|od)/.test(navigator.platform||'') || (/Mac/.test(navigator.userAgent) && 'ontouchend' in document);
+const IS_MOBILE = IS_IOS || /Android/i.test(navigator.userAgent);
+let toastT=0;
+function toast(msg, ms){
+  const el=document.getElementById('toast');
+  el.textContent=msg; el.classList.add('on');
+  clearTimeout(toastT); toastT=setTimeout(()=>el.classList.remove('on'), ms||2600);
+}
+function showTextFallback(name, text, hint){
+  document.getElementById('txtFallHead').textContent = hint || ('Máy không cho tải file. Bấm Sao chép rồi dán vào tin nhắn gửi đi. ('+name+')');
+  document.getElementById('txtFallBody').value=text;
+  document.getElementById('txtFall').classList.add('on');
+}
+function exportJSON(filename, obj, label){
+  const text=JSON.stringify(obj,null,1);
+  // (1) Khay chia se kem FILE — duong duy nhat chay tren iOS/PWA. Goi THANG trong cu cham (khong await truoc do) de khong mat user-gesture.
+  // Chi tren dien thoai: may tinh co canShare nhung mo khay Windows la te hon tai file thang.
+  try{
+    if(IS_MOBILE && navigator.canShare && typeof File==='function'){
+      const file=new File([text], filename, {type:'application/json'});
+      if(navigator.canShare({files:[file]})){
+        navigator.share({files:[file], title:label})
+          .then(()=>toast('Đã chia sẻ '+label))
+          .catch(err=>{ if(!err || err.name!=='AbortError') showTextFallback(filename, text); }); // huy khay chia se = im lang
+        return;
+      }
+    }
+  }catch(e){}
+  // (2) iOS khong co share-file thi <a download> cung vo dung -> copy tay luon, dung bao "da luu" doi tra
+  if(IS_IOS){ showTextFallback(filename, text); return; }
+  // (3) May tinh / Android Chrome: tai file that
+  try{
+    const blob=new Blob([text],{type:'application/json'});
+    const url=URL.createObjectURL(blob);
+    const a=document.createElement('a');
+    a.href=url; a.download=filename; a.style.display='none';
+    document.body.appendChild(a); a.click(); a.remove();
+    setTimeout(()=>URL.revokeObjectURL(url),4000);
+    toast('Đã tải '+filename);
+  }catch(e){ showTextFallback(filename, text); }
+}
+document.getElementById('txtFallClose').addEventListener('click',()=>document.getElementById('txtFall').classList.remove('on'));
+document.getElementById('txtFallCopy').addEventListener('click',async ()=>{
+  const ta=document.getElementById('txtFallBody');
+  try{ await navigator.clipboard.writeText(ta.value); toast('Đã sao chép — dán vào tin nhắn để gửi'); }
+  catch(e){ ta.focus(); ta.select(); try{ document.execCommand('copy'); toast('Đã sao chép'); }catch(_){ toast('Hãy giữ để chọn rồi Copy thủ công'); } }
+});
 
 /* Phone motion sensor v6 — dem theo CHU KY nhu nguoi that:
    1 rep = di + VE (keo vao + tha ra / xuong + len). Moi pha tao 1 "cu bung luc" (burst).
@@ -1985,12 +2049,9 @@ const BK_KEYS=['gpt_history','gpt_profile','gpt_lastkg','gpt_mode','gpt_sens','g
 document.getElementById('btnBackup').addEventListener('click',()=>{
   const data={app:'AI Gym PT', version:1, exportedAt:new Date().toISOString()};
   BK_KEYS.forEach(k=>{ const v=localStorage.getItem(k); if(v!==null) data[k]=v; });
-  const blob=new Blob([JSON.stringify(data,null,1)],{type:'application/json'});
-  const a=document.createElement('a');
-  a.href=URL.createObjectURL(blob);
-  a.download='aigympt-saoluu-'+new Date().toISOString().slice(0,10)+'.json';
-  a.click(); setTimeout(()=>URL.revokeObjectURL(a.href),2000);
+  exportJSON('aigympt-saoluu-'+new Date().toISOString().slice(0,10)+'.json', data, 'bản sao lưu');
 });
+document.getElementById('btnSlogHist').addEventListener('click',()=>{ SLOG.save(); SLOG.export(); });
 document.getElementById('btnRestore').addEventListener('click',()=>document.getElementById('restoreFile').click());
 document.getElementById('restoreFile').addEventListener('change',e=>{
   const f=e.target.files[0]; if(!f) return;
