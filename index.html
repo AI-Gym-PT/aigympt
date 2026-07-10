@@ -1647,7 +1647,7 @@ const Sensor={
   gvec:[0,0,9.81], gPrev:[0,0,9.81], u:[0,0,1], meanVec:[0,0,0], axisSeed:false,
   acc:0, tNow:0, lastT:0, kHeavy:0, orientHold:0,
   sm:0, rms2:0, ampEMA:0.6, noiseFloor:0.05,
-  Plock:1.6, locked:false, lockCnt:0, jumpCnt:0, conf:0, lowConf:0,
+  Plock:1.6, locked:false, lockCnt:0, jumpCnt:0, conf:0, lowConf:0, fastRej:0, fastIv:0, provOpp:0, lastEmitLead:0, gaitHold:0,
   intervals:[], lastCount:-1e9, lastCommit:-1e9,
   cycleActive:false, sawPos:false, sawNeg:false, leadSign:0, cyclePeak:0, cycleStart:0, lobeSign:0, lastAboveT:0,
   bstate:'EMPTY', provIv:0, provLead:0, provPeak:0,
@@ -1666,7 +1666,7 @@ const Sensor={
     this.gvec=[0,0,9.81]; this.gPrev=[0,0,9.81]; this.u=[0,0,1]; this.meanVec=[0,0,0]; this.axisSeed=false;
     this.acc=0; this.tNow=0; this.lastT=performance.now(); this.kHeavy=0; this.orientHold=0;
     this.sm=0; this.rms2=0; this.ampEMA=0.6; this.noiseFloor=0.05;
-    this.locked=false; this.lockCnt=0; this.jumpCnt=0; this.conf=0; this.lowConf=0;
+    this.locked=false; this.lockCnt=0; this.jumpCnt=0; this.conf=0; this.lowConf=0; this.fastRej=0; this.fastIv=0; this.provOpp=0; this.lastEmitLead=0; this.gaitHold=0;
     this.intervals=[]; this.lastCount=-1e9; this.lastCommit=-1e9;
     this.cycleActive=false; this.sawPos=false; this.sawNeg=false; this.leadSign=0; this.cyclePeak=0; this.cycleStart=0; this.lobeSign=0;
     this.bstate='EMPTY';
@@ -1679,7 +1679,7 @@ const Sensor={
   stop(){ this.on=false; window.removeEventListener('devicemotion',this.handler); },
   handler:(e)=>{ Sensor.onMotion(e); },
   reset(){ // doi do nhay: reset dem, giu buffer/truc
-    this.locked=false; this.lockCnt=0; this.conf=0; this.lowConf=0; this.intervals=[];
+    this.locked=false; this.lockCnt=0; this.conf=0; this.lowConf=0; this.fastRej=0; this.fastIv=0; this.provOpp=0; this.intervals=[];
     this.cycleActive=false; this.sawPos=false; this.sawNeg=false; this.cyclePeak=0; this.lobeSign=0;
     if(this.bstate!=='RUN') this.bstate='EMPTY'; // nhip da xac lap thi giu — khong bat re-bootstrap lam mat rep ke tiep
   },
@@ -1719,7 +1719,7 @@ const Sensor={
     const f=document.getElementById('sigFill'); if(f) f.style.width=Math.min(100,Math.abs(this.sm)/(floor*1.6)*100)+'%';
     const Eon=Math.max(0.12, 3*this.noiseFloor)*this.sMul()*this.floorScale;
     if(S.phase!=='active'){ if(rms<0.6*Eon) this.noiseFloor=0.99*this.noiseFloor+0.01*rms; return; }
-    const active = rms>=Eon && this.orientHold===0 && (!this.locked || this.conf>=0.35);
+    const active = rms>=Eon && this.orientHold===0 && this.gaitHold===0 && (!this.locked || this.conf>=0.35);
     if(!active){ this.softReset(rms); return; }
     this.stepCycle(this.sm, this.tNow, floor);
   },
@@ -1743,18 +1743,48 @@ const Sensor={
   commit(t){
     const iv=t-this.lastCommit;
     this.ampEMA += 0.30*(this.cyclePeak-this.ampEMA);
-    let emit=0;
-    if(this.bstate==='EMPTY'){ this.bstate='PROV'; this.provLead=this.leadSign; this.provPeak=this.cyclePeak; } // rep 1: giu tam, chua co khoang cach
+    let emit=0, echoRej=false;
+    if(this.bstate==='EMPTY'){ emit=1; this.bstate='PROV'; this.provLead=this.leadSign; this.provPeak=this.cyclePeak; } // dem "1" NGAY — nguoi dung can nghe so 1 de biet may bat nhip (giu tam roi cong bu 2 lam so nhay 0->2)
     else if(this.bstate==='PROV'){
-      // rep 2: iv = khoang cach that giua rep1-rep2; hop le + bien do ~ nhau + cung huong -> credit ca 2
-      const okP=iv>0.72&&iv<6.0, okA=_ratio(this.cyclePeak,this.provPeak,0.33,3.0);
-      if(okP&&okA&&this.leadSign===this.provLead){ emit=2; this.bstate='RUN'; this.pushIv(iv); }
-      else { this.provLead=this.leadSign; this.provPeak=this.cyclePeak; } // khong khop -> re-seed, van tam
-    } else if(iv>0.72&&iv<6.0){ emit=1; this.pushIv(iv); }
-    this.lastCommit=t; this.lastCount=t; this.resetCycle();
+      if(this.leadSign!==0 && this.leadSign!==this.provLead){
+        // NGUOC huong voi nhip dang cho = nua-tra-ve cua cung 1 rep (tap that co nghi o dinh/day: moi hanh trinh len/xuong
+        // la mot cap +/- rieng) -> nuot va GIU moc lastCommit, de rep cung huong ke tiep do dung chu ky DAY DU
+        if(++this.provOpp>=2){ this.provOpp=0; this.provLead=this.leadSign; this.provPeak=this.cyclePeak; } // 2 lan nguoc lien tiep = nhip that doi huong -> theo huong moi
+        else echoRej=true;
+      } else {
+        this.provOpp=0;
+        // rep 2 khop nhip (khoang cach + bien do + chu ky autocorr) -> vao guong, chi cong THEM 1
+        const okP=iv>0.72&&iv<6.0, okA=_ratio(this.cyclePeak,this.provPeak,0.33,3.0);
+        const okLock = !(this.locked&&this.conf>=0.45) || iv>=0.85*this.Plock; // di bo: commit ~0.74s nhung Plock 1.0s -> chan vao guong
+        if(okP&&okA&&okLock){ emit=1; this.bstate='RUN'; this.pushIv(iv); }
+        else { this.provLead=this.leadSign; this.provPeak=this.cyclePeak; } // khong khop -> re-seed im lang (so "1" da phat roi)
+      }
+    } else { // RUN
+      if(iv>=6.0){ emit=1; } // quay lai sau nghi dai giua set (rest-pause): rep dau tinh ngay, khong hoc iv vo nghia
+      else if(iv<=0.72){ echoRej=true; } // rung du sat sau rep (0.55-0.72s): nuot va GIU moc, khong de troi bien gioi rep that
+      else {
+        // chong dem trung: nghi ngo khi som hon nhip da xac lap (echo) HOAC nguoc huong + som (nua-tra-ve cua cung rep).
+        // autocorr khoa nhip moi voi conf cao = van thoat doi nhip chinh danh
+        const med=this.medPeriod();
+        const lockOK = this.locked && this.conf>=0.45 && iv>=0.85*this.Plock;
+        const opp = this.leadSign!==0 && this.lastEmitLead!==0 && this.leadSign!==this.lastEmitLead;
+        const suspect = !lockOK && (iv<0.60*med || (opp && iv<0.80*med));
+        if(suspect){
+          if(this.fastRej<2){ this.fastRej++; if(!opp) this.fastIv=iv; echoRej=true; } // nuot, giu moc
+          else { this.fastRej=0; emit=1; } // van cuu ho (3 lan lien tiep): dem nhung khong hoc med
+        } else {
+          emit=1;
+          if(this.fastRej>0 && this.fastIv>0 && _ratio(iv,2*this.fastIv,0.8,1.25)){ this.pushIv(this.fastIv); this.pushIv(this.fastIv); this.fastIv=0; } // iv ~ 2x nhip bi nuot cung huong = med dang hoc nham 2x nhip that -> hoc lai nhip that (thoat vong lap dem-cach-rep)
+          else this.pushIv(iv);
+          this.fastRej=0;
+        }
+      }
+    }
+    this.lastCount=t; if(!echoRej) this.lastCommit=t; // nuot khong doi moc iv — bien gioi rep that ke tiep van do tu rep truoc
+    this.resetCycle();
     const st=document.getElementById('sensorState');
-    if(emit){ this.log(iv,emit); for(let i=0;i<emit;i++) onRep(); if(st) st.textContent='✓ đếm nhịp tốt'; }
-    else if(st) st.textContent = this.bstate==='PROV'?'… đang xác nhận nhịp':'… bỏ qua';
+    if(emit){ this.lastEmitLead=this.leadSign; this.log(iv,emit); onRep(); if(st) st.textContent='✓ đếm nhịp tốt'; }
+    else { if(echoRej) this.log(iv,0); if(st) st.textContent='… bỏ qua'; }
   },
   heavy(){
     if(this.filled<50) return;
@@ -1769,10 +1799,17 @@ const Sensor={
     let C0=0; for(const q of p) C0+=q*q; C0+=1e-9;
     const RMSp=Math.sqrt(C0/p.length);
     if(RMSp<this.noiseFloor) this.noiseFloor=RMSp; else this.noiseFloor += 0.001*(RMSp-this.noiseFloor); // fast-attack slow-release min
+    if(this.gaitHold>0) this.gaitHold--;
     if(RMSp<0.05){ this.conf=0; return; }
     const FS=1/this.DT, lagMin=Math.max(20,Math.round(0.7*FS)), lagMax=Math.min(p.length-10,Math.round(5.0*FS));
     let best=0; const r=new Float32Array(lagMax+1);
     for(let L=lagMin;L<=lagMax;L++){ let sN=0; for(let n=0;n<p.length-L;n++) sN+=p[n]*p[n+L]; r[L]=sN/C0; if(r[L]>best)best=r[L]; }
+    // GAIT VETO: di bo co DINH CUC BO autocorr o 0.36-0.62s (nhip buoc chan) — bai cham chi co truot doc don dieu
+    // (lag nho luon tuong quan cao voi tin hieu muot), nen phai doi hoi dinh cuc bo, khong lay max tho
+    { const gMin=Math.round(0.36*FS), gMax=Math.round(0.62*FS); let rSub=0; const rg=[];
+      for(let L=gMin-1;L<=gMax+1;L++){ let sN=0; for(let n=0;n<p.length-L;n++) sN+=p[n]*p[n+L]; rg.push(sN/C0); }
+      for(let i=1;i<rg.length-1;i++) if(rg[i]>rg[i-1]&&rg[i]>=rg[i+1]&&rg[i]>rSub) rSub=rg[i];
+      if(rSub>=0.45 && rSub>=0.9*best) this.gaitHold=5; } // ~1.5s khoa dem
     if(best<0.30){ this.conf=0; return; }
     let Pest=null,c=0;
     for(let L=lagMin+1;L<lagMax;L++) if(r[L]>r[L-1]&&r[L]>=r[L+1]&&r[L]>=0.85*best){ Pest=L/FS; c=r[L]; break; }
@@ -1782,11 +1819,14 @@ const Sensor={
     else if(Math.abs(Pest-this.Plock)/this.Plock<0.30){ this.Plock+=0.25*(Pest-this.Plock); this.jumpCnt=0; }
     else if(++this.jumpCnt>=2){ this.Plock=Pest; this.jumpCnt=0; }
   },
-  refractory(){ return _clamp(0.45*(this.locked?this.Plock:this.medPeriod()),0.55,2.5); }, // san 0.55s: chan nhip di bo (~0.5s/buoc)
+  refractory(){ // san 0.55s: chan nhip di bo (~0.5s/buoc). Bootstrap CHUA khoa nhip: dung san — prior Plock (gentle 2.6s) khong duoc nuot rep nhanh (latraise ~1s)
+    const base=this.intervals.length? _median(this.intervals) : (this.locked? this.Plock : 0);
+    return base? _clamp(0.45*base,0.55,2.5) : 0.55;
+  },
   medPeriod(){ return this.intervals.length? _median(this.intervals) : this.Plock; },
   pushIv(iv){ this.intervals.push(iv); if(this.intervals.length>5) this.intervals.shift(); },
   resetCycle(){ this.cycleActive=false; this.sawPos=false; this.sawNeg=false; this.lobeSign=0; this.cyclePeak=0; },
-  softReset(rms){ this.resetCycle(); if(rms<this.noiseFloor) this.noiseFloor=rms; if(this.bstate==='PROV') this.bstate='EMPTY'; },
+  softReset(rms){ this.resetCycle(); if(rms<this.noiseFloor) this.noiseFloor=rms; this.fastRej=0; this.fastIv=0; this.provOpp=0; if(this.bstate==='PROV') this.bstate='EMPTY'; },
   log(iv,emit){ SLOG.push({t:Date.now(), ex:S.ex?S.ex.id:'', set:S.setIdx+1, rep:S.reps, iv:+iv.toFixed(2), P:+this.Plock.toFixed(2), conf:+this.conf.toFixed(2), amp:+this.ampEMA.toFixed(2), locked:this.locked, emit, sens:this.sens, mode:'sparc'}); },
 };
 function renderSens(){
