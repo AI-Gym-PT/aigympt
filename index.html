@@ -177,7 +177,7 @@ label.f{display:block;margin-top:20px;font-size:13px;font-weight:700;color:var(-
 /* modal */
 .modal{position:fixed;inset:0;background:rgba(3,6,10,.8);backdrop-filter:blur(3px);display:none;align-items:flex-end;justify-content:center;z-index:50}
 .modal.on{display:flex}
-#toast{position:fixed;left:50%;bottom:22px;transform:translate(-50%,20px);z-index:200;max-width:88vw;padding:11px 16px;border-radius:12px;background:var(--card2);border:1px solid var(--line);color:var(--txt);font-size:13.5px;text-align:center;opacity:0;pointer-events:none;transition:opacity .18s,transform .18s}
+#toast{position:fixed;left:50%;bottom:22px;transform:translate(-50%,20px);z-index:230;max-width:88vw;padding:11px 16px;border-radius:12px;background:var(--card2);border:1px solid var(--line);color:var(--txt);font-size:13.5px;text-align:center;opacity:0;pointer-events:none;transition:opacity .18s,transform .18s}
 #toast.on{opacity:1;transform:translate(-50%,0)}
 #txtFall{position:fixed;inset:0;z-index:210;background:rgba(3,6,10,.94);display:none;flex-direction:column;padding:16px;gap:10px}
 #txtFall.on{display:flex}
@@ -1230,7 +1230,7 @@ document.getElementById('btnStart').addEventListener('click',()=>{
   renderSetup(false); show('scr-setup');
   requestWakeLock();
 });
-document.getElementById('btnBackHome').addEventListener('click',()=>{ show('scr-home'); });
+document.getElementById('btnBackHome').addEventListener('click',()=>{ releaseWakeLock(); show('scr-home'); }); // ve home = khong tap: nha khoa man hinh (startCountdown se xin lai)
 let goBusy=false;
 document.getElementById('btnGo').addEventListener('click',async ()=>{
   if(goBusy || S.phase==='countdown') return; // chong bam dup (ke ca khi dang cho dialog quyen cam bien)
@@ -1290,6 +1290,7 @@ function startCountdown(){
 
 function startSet(){
   clearTimers(); S._tick=null;
+  hiddenAt=0; openModal('modalGap',false); S._gapN=0; // moc man-hinh-an va modal bu nhip cua set TRUOC khong duoc song sang set nay
   S.phase='active'; S.reps=0; S.repTimes=[]; S.lastStallLevel=0; S.slowWarned=0; S.safetyWarned=false;
   S._barkI=null; // xoay vong bark tu dau moi set
   S.setStartAt=Date.now();
@@ -1346,8 +1347,8 @@ function startSet(){
     renderSens();
     document.getElementById('posHint').textContent=posTextOf(S.ex.id);
     if(Sensor.on) document.getElementById('sensorState').textContent='sẵn sàng — tập đi!';
-    if(!localStorage.getItem('gpt_pocketTip')){ localStorage.setItem('gpt_pocketTip','1');
-      toast('💡 Muốn tắt màn hình mà vẫn đếm? Dùng nút 🌙 Bỏ túi. Bấm nút nguồn là máy NGƯNG đếm đấy!', 7000); }
+    try{ if(!localStorage.getItem('gpt_pocketTip')){ localStorage.setItem('gpt_pocketTip','1');
+      toast('💡 Muốn tắt màn hình mà vẫn đếm? Dùng nút 🌙 Bỏ túi. Bấm nút nguồn là máy NGƯNG đếm đấy!', 7000); } }catch(e){} // private mode co the throw — khong duoc lam chet startSet
   }
   coach('setStart',{s:S.setIdx+1});
   if(S.mode==='sensor' && !Sensor.on) Sensor.start(); // du phong (binh thuong da bat tu dem nguoc)
@@ -1664,13 +1665,16 @@ function exportJSON(filename, obj, label){
     if(IS_MOBILE && navigator.canShare && typeof File==='function'){
       const file=new File([text], filename, {type:'application/json'});
       if(navigator.canShare({files:[file]})){
+        if(exportJSON._busy) return; exportJSON._busy=true; // cham 2 lan lien = 2 share sheet chong nhau
+        S._selfHide=Date.now(); // share sheet lam trang bi AN — khong phai user bam nut nguon, dung hoi "bu nhip"
         navigator.share({files:[file], title:label})
           .then(()=>toast('Đã chia sẻ '+label))
-          .catch(err=>{ if(!err || err.name!=='AbortError') showTextFallback(filename, text); }); // huy khay chia se = im lang
+          .catch(err=>{ if(!err || err.name!=='AbortError') showTextFallback(filename, text); }) // huy khay chia se = im lang
+          .then(()=>{ exportJSON._busy=false; });
         return;
       }
     }
-  }catch(e){}
+  }catch(e){ exportJSON._busy=false; }
   // (2) iOS khong co share-file thi <a download> cung vo dung -> copy tay luon, dung bao "da luu" doi tra
   if(IS_IOS){ showTextFallback(filename, text); return; }
   // (3) May tinh / Android Chrome: tai file that
@@ -1688,7 +1692,13 @@ document.getElementById('txtFallClose').addEventListener('click',()=>document.ge
 document.getElementById('txtFallCopy').addEventListener('click',async ()=>{
   const ta=document.getElementById('txtFallBody');
   try{ await navigator.clipboard.writeText(ta.value); toast('Đã sao chép — dán vào tin nhắn để gửi'); }
-  catch(e){ ta.focus(); ta.select(); try{ document.execCommand('copy'); toast('Đã sao chép'); }catch(_){ toast('Hãy giữ để chọn rồi Copy thủ công'); } }
+  catch(e){
+    ta.removeAttribute('readonly'); ta.focus(); ta.select();
+    try{ ta.setSelectionRange(0, ta.value.length); }catch(_){}
+    let ok=false; try{ ok=document.execCommand('copy'); }catch(_){}
+    ta.setAttribute('readonly','');
+    toast(ok?'Đã sao chép — dán vào tin nhắn để gửi':'Máy chặn sao chép — giữ tay lên chữ để chọn rồi Copy thủ công'); // execCommand tra false chu khong throw — khong duoc bao "da chep" lao
+  }
 });
 
 /* Phone motion sensor v6 — dem theo CHU KY nhu nguoi that:
@@ -2008,9 +2018,17 @@ pocketEl.addEventListener('pointerdown',()=>{
 });
 
 /* wake lock — xin lai khi quay ve app (iOS/Android tu nha khi chuyen tab) */
-let wakeLock=null;
+let wakeLock=null, _wlBusy=false;
 async function requestWakeLock(){
-  try{ if('wakeLock' in navigator) wakeLock=await navigator.wakeLock.request('screen'); }catch(e){}
+  if(_wlBusy) return; // 2 cu goi chong nhau -> chi 1 request
+  try{
+    if(!('wakeLock' in navigator)) return;
+    if(wakeLock && !wakeLock.released) return; // sentinel con song: KHONG xin chong len — moi request tra sentinel MOI, cai cu khong ai release -> man hinh sang mai, tut pin
+    _wlBusy=true;
+    const s=await navigator.wakeLock.request('screen');
+    if(S.session) wakeLock=s; else { try{ s.release(); }catch(e){} } // buoi tap vua ket thuc trong luc doi cap phep: nha ngay
+  }catch(e){}
+  _wlBusy=false;
 }
 function releaseWakeLock(){ try{ if(wakeLock){ wakeLock.release(); wakeLock=null; } }catch(e){} }
 let hiddenAt=0;
@@ -2024,8 +2042,10 @@ function estGapReps(dSec){
 function addReps(n){ // bu nhip im lang: khong doc tung so, khong spam cau co vu
   if(S.phase!=='active' || n<=0) return;
   const per=(Sensor.intervals.length?_median(Sensor.intervals):2)*1000, now=Date.now();
-  for(let i=n;i>=1;i--) S.repTimes.push(now-(i-1)*per);
-  S.repTimes.sort((a,b)=>a-b);
+  // thoi diem gia phai nam SAU rep that cuoi (da dich +d ~ now) va truoc now — khong xen ke lam tempo/stall loan
+  const last=S.repTimes.length?S.repTimes[S.repTimes.length-1]:0;
+  const start=Math.max(last+500, now-(n-1)*per);
+  for(let i=0;i<n;i++) S.repTimes.push(n>1 ? start+i*(now-start)/(n-1) : now);
   S.reps=Math.min(S.ex.reps, S.reps+n);
   document.getElementById('repNum').textContent=S.reps;
   document.getElementById('ringFg').style.strokeDashoffset=754*(1-Math.min(1,S.reps/S.ex.reps));
@@ -2033,21 +2053,22 @@ function addReps(n){ // bu nhip im lang: khong doc tung so, khong spam cau co vu
   if(S.reps>=S.ex.reps) finishSet(false);
 }
 function onReturnVisible(){
+  const h=hiddenAt; hiddenAt=0; // don moc NGAY khi hien lai — set sau khong duoc thua huong khoang treo cua set truoc (dur/kcal am)
   if(S.session) requestWakeLock();
   Voice.unlock(); // hoi sinh AudioContext neu bi iOS 'interrupted' khi khoa may/cuoc goi
   if(typeof S._tick==='function') S._tick(); // dong ho nghi/dem nguoc/gio giu cap nhat ngay
-  if(S.phase==='active' && hiddenAt){
-    const d=Date.now()-hiddenAt; hiddenAt=0;
+  if(S.phase==='active' && h){
+    let d=Date.now()-h;
+    if(S.setStartAt) d=Math.min(d, Date.now()-S.setStartAt); // set moi bat dau trong luc may an: khong dich qua moc bat dau set
     if(d>3000){
-      // dich moc thoi gian de nhip/thoi luong set khong tinh khoang bi treo
-      S.setStartAt+=d;
-      S.repTimes=S.repTimes.map(t=>t+d);
-      const n=estGapReps(d/1000);
+      const selfHide = S._selfHide && (Date.now()-S._selfHide<60000); S._selfHide=0; // trang bi an do CHINH app mo share sheet (xuat log giua set) — khong phai nguoi tap bam nut nguon
+      if(!S.ex.timeEx){ S.setStartAt+=d; S.repTimes=S.repTimes.map(t=>t+d); } // bai giu thoi gian: dong ho van chay khi man khoa (chu dich) — KHONG dich moc, thoi luong ghi dung
+      const n=selfHide?0:estGapReps(d/1000);
       if(d>5000 && n>=1){
         // may khong the dem khi man hinh khoa — hoi user co bu theo uoc tinh khong, KHONG tu cong
         document.getElementById('gapMsg').textContent='Bấm nút nguồn là máy ngưng đếm ('+Math.round(d/1000)+' giây vừa rồi không được ghi). Theo nhịp của bạn, khoảng '+n+' nhịp đã trôi qua — bù vào chứ? Lần sau muốn màn hình tối, dùng nút 🌙 Bỏ túi nhé.';
         document.getElementById('gapAdd').textContent='＋ Bù '+n+' nhịp';
-        S._gapN=n; openModal('modalGap',true);
+        S._gapN=n; S._gapSet=S.setIdx; S._gapEx=S.ex.id; pocketOff(); openModal('modalGap',true); // pocketOverlay z-90 de len modal z-50 — phai tat man den truoc
       } else coach('resume');
     }
   }
@@ -2059,7 +2080,9 @@ document.addEventListener('visibilitychange',()=>{
   }
   onReturnVisible();
 });
-document.getElementById('gapAdd').addEventListener('click',()=>{ openModal('modalGap',false); addReps(S._gapN||0); S._gapN=0; });
+document.getElementById('gapAdd').addEventListener('click',()=>{ openModal('modalGap',false);
+  if(S.phase==='active' && S.ex && S._gapSet===S.setIdx && S._gapEx===S.ex.id) addReps(S._gapN||0); // modal cu treo sang set/bai khac: bo — khong tiem nhip ao vao set moi
+  S._gapN=0; });
 document.getElementById('gapSkip').addEventListener('click',()=>{ openModal('modalGap',false); S._gapN=0; coach('resume'); });
 
 /* =================== HISTORY SCREEN: bieu do tien bo + xoa buoi + backup =================== */
