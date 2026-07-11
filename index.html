@@ -342,7 +342,7 @@ label.f{display:block;margin-top:20px;font-size:13px;font-weight:700;color:var(-
         <button class="corr" id="repCorrPlus" title="Thêm 1 (đếm thiếu)">+1</button>
       </div>
       <div class="sub" style="font-size:11.5px;margin-top:6px;text-align:center">Đếm dư (rung/xoay nhẹ cũng tính)? Chọn <b>Chắc</b>. Đếm thiếu? Chọn <b>Nhạy</b>. Sai vài cái thì bấm −1/+1.</div>
-      <button class="btn btn-ghost" id="btnPocket" style="margin-top:10px">🌙 Bỏ túi — màn hình tối, vẫn đếm</button>
+      <button class="btn btn-ghost" id="btnPocket" style="margin-top:10px">🌙 Bỏ túi — “tắt màn hình” mà vẫn đếm</button>
       <div class="sub" style="text-align:center;margin-top:8px"><span id="slogExport" style="text-decoration:underline;cursor:pointer;font-size:11.5px">📋 Xuất log cảm biến (khi đếm sai, gửi file này để tinh chỉnh)</span></div>
     </div>
     <div class="row" style="margin-top:14px">
@@ -479,6 +479,15 @@ label.f{display:block;margin-top:20px;font-size:13px;font-weight:700;color:var(-
       <div class="sub">Nghỉ chút cũng được, nhưng đừng bỏ cuộc nhé!</div>
       <button class="btn btn-main" id="mpResume">▶️ Tiếp tục</button>
       <button class="btn btn-danger" id="mpQuit">Kết thúc buổi tập</button>
+    </div>
+  </div>
+
+  <div class="modal" id="modalGap">
+    <div class="sheet">
+      <h2>Màn hình vừa bị khoá 😴</h2>
+      <div class="sub" id="gapMsg"></div>
+      <button class="btn btn-main" id="gapAdd"></button>
+      <button class="btn btn-ghost" id="gapSkip">Bỏ qua — không bù</button>
     </div>
   </div>
 
@@ -1260,6 +1269,7 @@ document.getElementById('btnGo').addEventListener('click',async ()=>{
 function startCountdown(){
   clearTimers(); S.phase='countdown';
   show('scr-count');
+  requestWakeLock(); // giu man hinh sang suot buoi tap — khong duoc de may tu khoa lam chet dem giua set
   document.getElementById('cdLabel').textContent=`${S.ex.name} · Set ${S.setIdx+1}/${S.ex.sets} · ${S.ex.reps} ${S.ex.timeEx?'giây':'rep'}`;
   // bat cam bien ngay tu dem nguoc: 3s dung yen chuan bi = cua so hieu chinh nen hoan hao,
   // het dem nguoc la dem duoc tu rep dau tien. Bai giu thoi gian: dong ho tu chay, cam bien PHAI tat
@@ -1336,6 +1346,8 @@ function startSet(){
     renderSens();
     document.getElementById('posHint').textContent=posTextOf(S.ex.id);
     if(Sensor.on) document.getElementById('sensorState').textContent='sẵn sàng — tập đi!';
+    if(!localStorage.getItem('gpt_pocketTip')){ localStorage.setItem('gpt_pocketTip','1');
+      toast('💡 Muốn tắt màn hình mà vẫn đếm? Dùng nút 🌙 Bỏ túi. Bấm nút nguồn là máy NGƯNG đếm đấy!', 7000); }
   }
   coach('setStart',{s:S.setIdx+1});
   if(S.mode==='sensor' && !Sensor.on) Sensor.start(); // du phong (binh thuong da bat tu dem nguoc)
@@ -1561,7 +1573,7 @@ document.getElementById('btnEndSet').addEventListener('click',()=>{ if(S.phase==
 
 /* ---- end session ---- */
 function endSession(){
-  clearTimers(); Demo.stop(); Sensor.stop(); pocketOff();
+  clearTimers(); Demo.stop(); Sensor.stop(); pocketOff(); releaseWakeLock();
   S.phase='idle'; S.freeRest=false; S._tick=null;
   const sess=S.session;
   const exs=sess.exercises.filter(e=>e.sets.length);
@@ -2000,26 +2012,55 @@ let wakeLock=null;
 async function requestWakeLock(){
   try{ if('wakeLock' in navigator) wakeLock=await navigator.wakeLock.request('screen'); }catch(e){}
 }
+function releaseWakeLock(){ try{ if(wakeLock){ wakeLock.release(); wakeLock=null; } }catch(e){} }
 let hiddenAt=0;
+// uoc luong so nhip bi mat khi may bi khoa giua set (JS + cam bien dong bang) — theo nhip do dang tap
+function estGapReps(dSec){
+  if(S.mode!=='sensor' || !S.ex || S.ex.timeEx) return 0;
+  const per = Sensor.intervals.length ? _median(Sensor.intervals) : (Sensor.locked ? Sensor.Plock : 0);
+  if(!(per>0.5)) return 0; // chua co nhip xac lap thi khong doan bua
+  return Math.max(0, Math.min(Math.round(dSec/per), S.ex.reps - S.reps));
+}
+function addReps(n){ // bu nhip im lang: khong doc tung so, khong spam cau co vu
+  if(S.phase!=='active' || n<=0) return;
+  const per=(Sensor.intervals.length?_median(Sensor.intervals):2)*1000, now=Date.now();
+  for(let i=n;i>=1;i--) S.repTimes.push(now-(i-1)*per);
+  S.repTimes.sort((a,b)=>a-b);
+  S.reps=Math.min(S.ex.reps, S.reps+n);
+  document.getElementById('repNum').textContent=S.reps;
+  document.getElementById('ringFg').style.strokeDashoffset=754*(1-Math.min(1,S.reps/S.ex.reps));
+  updateTempoUI(); updatePocket(); speakNum(S.reps);
+  if(S.reps>=S.ex.reps) finishSet(false);
+}
+function onReturnVisible(){
+  if(S.session) requestWakeLock();
+  Voice.unlock(); // hoi sinh AudioContext neu bi iOS 'interrupted' khi khoa may/cuoc goi
+  if(typeof S._tick==='function') S._tick(); // dong ho nghi/dem nguoc/gio giu cap nhat ngay
+  if(S.phase==='active' && hiddenAt){
+    const d=Date.now()-hiddenAt; hiddenAt=0;
+    if(d>3000){
+      // dich moc thoi gian de nhip/thoi luong set khong tinh khoang bi treo
+      S.setStartAt+=d;
+      S.repTimes=S.repTimes.map(t=>t+d);
+      const n=estGapReps(d/1000);
+      if(d>5000 && n>=1){
+        // may khong the dem khi man hinh khoa — hoi user co bu theo uoc tinh khong, KHONG tu cong
+        document.getElementById('gapMsg').textContent='Bấm nút nguồn là máy ngưng đếm ('+Math.round(d/1000)+' giây vừa rồi không được ghi). Theo nhịp của bạn, khoảng '+n+' nhịp đã trôi qua — bù vào chứ? Lần sau muốn màn hình tối, dùng nút 🌙 Bỏ túi nhé.';
+        document.getElementById('gapAdd').textContent='＋ Bù '+n+' nhịp';
+        S._gapN=n; openModal('modalGap',true);
+      } else coach('resume');
+    }
+  }
+}
 document.addEventListener('visibilitychange',()=>{
   if(document.visibilityState==='hidden'){
     if(S.phase==='active') hiddenAt=Date.now(); // bi treo giua set (chuyen app / tat man hinh)
     return;
   }
-  // quay lai app
-  if(S.session) requestWakeLock();
-  Voice.unlock(); // hoi sinh AudioContext neu bi iOS 'interrupted' khi khoa may/cuoc goi
-  if(typeof S._tick==='function') S._tick(); // dong ho nghi/dem nguoc cap nhat ngay
-  if(S.phase==='active' && hiddenAt){
-    const d=Date.now()-hiddenAt; hiddenAt=0;
-    if(d>3000){
-      // dich moc thoi gian de nhip/thoi luong set khong tinh khoang bi treo + coach chao lai
-      S.setStartAt+=d;
-      S.repTimes=S.repTimes.map(t=>t+d);
-      coach('resume');
-    }
-  }
+  onReturnVisible();
 });
+document.getElementById('gapAdd').addEventListener('click',()=>{ openModal('modalGap',false); addReps(S._gapN||0); S._gapN=0; });
+document.getElementById('gapSkip').addEventListener('click',()=>{ openModal('modalGap',false); S._gapN=0; coach('resume'); });
 
 /* =================== HISTORY SCREEN: bieu do tien bo + xoa buoi + backup =================== */
 let histSelEx=null;
