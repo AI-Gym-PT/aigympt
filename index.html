@@ -1457,7 +1457,7 @@ function watchdog(){
 function finishSet(early){
   clearTimers(); Demo.stop(); Sensor.stop(); SLOG.save();
   S.phase='rest';
-  const dur=Math.round((Date.now()-S.setStartAt)/1000);
+  const dur=Math.max(0, Math.round((Date.now()-S.setStartAt)/1000)); // chot chan: khong bao gio ghi thoi luong AM vao lich su (kcal am)
   const cur=S.session.exercises[S.session.exercises.length-1];
   cur.sets.push({reps:S.reps, dur, kg:S.ex.kg||0});
   const done=S.reps;
@@ -1567,7 +1567,7 @@ document.getElementById('mpResume').addEventListener('click',()=>{
 document.getElementById('mpQuit').addEventListener('click',()=>{
   openModal('modalPause',false);
   // record partial set
-  if(S.reps>0){ S.session.exercises[S.session.exercises.length-1].sets.push({reps:S.reps,dur:Math.round((S.pausedAt-S.setStartAt)/1000),kg:S.ex.kg||0}); }
+  if(S.reps>0){ S.session.exercises[S.session.exercises.length-1].sets.push({reps:S.reps,dur:Math.max(0,Math.round((S.pausedAt-S.setStartAt)/1000)),kg:S.ex.kg||0}); }
   endSession();
 });
 document.getElementById('btnEndSet').addEventListener('click',()=>{ if(S.phase==='active') finishSet(true); });
@@ -2054,6 +2054,7 @@ function addReps(n){ // bu nhip im lang: khong doc tung so, khong spam cau co vu
 }
 function onReturnVisible(){
   const h=hiddenAt; hiddenAt=0; // don moc NGAY khi hien lai — set sau khong duoc thua huong khoang treo cua set truoc (dur/kcal am)
+  const selfHide = S._selfHide && (Date.now()-S._selfHide<60000); S._selfHide=0; // tieu thu co NGAY moi lan hien lai — share nhanh <3s ma khong tieu thu thi co song sot de len lan bam nut nguon THAT sau do
   if(S.session) requestWakeLock();
   Voice.unlock(); // hoi sinh AudioContext neu bi iOS 'interrupted' khi khoa may/cuoc goi
   if(typeof S._tick==='function') S._tick(); // dong ho nghi/dem nguoc/gio giu cap nhat ngay
@@ -2061,7 +2062,6 @@ function onReturnVisible(){
     let d=Date.now()-h;
     if(S.setStartAt) d=Math.min(d, Date.now()-S.setStartAt); // set moi bat dau trong luc may an: khong dich qua moc bat dau set
     if(d>3000){
-      const selfHide = S._selfHide && (Date.now()-S._selfHide<60000); S._selfHide=0; // trang bi an do CHINH app mo share sheet (xuat log giua set) — khong phai nguoi tap bam nut nguon
       if(!S.ex.timeEx){ S.setStartAt+=d; S.repTimes=S.repTimes.map(t=>t+d); } // bai giu thoi gian: dong ho van chay khi man khoa (chu dich) — KHONG dich moc, thoi luong ghi dung
       const n=selfHide?0:estGapReps(d/1000);
       if(d>5000 && n>=1){

@@ -37,7 +37,7 @@ self.addEventListener('fetch', e => {
   if (e.request.mode === 'navigate' || url.pathname.endsWith('index.html')) {
     e.respondWith(
       fetch(e.request)
-        .then(r => { const cp = r.clone(); caches.open(CACHE).then(c => c.put('./', cp)); return r; })
+        .then(r => { if (r.ok) { const cp = r.clone(); caches.open(CACHE).then(c => c.put('./', cp)); } return r; }) // 404/500 luc Pages dang deploy KHONG duoc de len ban offline tot
         .catch(() => caches.match('./'))
     );
     return;
