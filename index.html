@@ -885,15 +885,24 @@ function bodyWeight(){ const p=getProfile(); return (p&&+p.weight)||+(localStora
 /* Vi tri dat dien thoai de cam bien doc duoc chuyen dong cua bai */
 const POS_WRIST=new Set(['machinechest','dbpress','bench','incline','pecdeck','fly','latpull','cablerow','chestrow','dbrow','machinerow','straightarm','assistpullup','machineshoulder','dbshoulder','latraise','cablelatraise','reardelt','facepull','curl','bbcurl','hammer','cablecurl','pushdown','triext','closegrip','pallof']);
 const POS_SHIN=new Set(['legext','legcurl','kickback']);
-function posOf(id){ return POS_WRIST.has(id)?'wrist':POS_SHIN.has(id)?'shin':'pocket'; }
+const POS_CHEST=new Set(['crunch','cablecrunch','russian']); // bung gap/xoay THAN TREN — dui dung yen, tui quan cam
+function posOf(id){ return POS_WRIST.has(id)?'wrist':POS_SHIN.has(id)?'shin':POS_CHEST.has(id)?'chest':'pocket'; }
 function isTimeEx(id){ const e=EXERCISES.find(x=>x.id===id); return !!(e&&e.time); }
 const CARDIO_IDS=new Set(['treadmill','bike','elliptical','farmer','battlerope']);
 function isCardio(id){ return CARDIO_IDS.has(id); }
 const POS_TEXT={
   pocket:'📍 Đặt điện thoại: túi quần là được — bài này thân dưới/cả người chuyển động.',
-  wrist:'📍 Đặt điện thoại: buộc vào cổ tay/cẳng tay (dây đeo). Bài này tay chuyển động là chính — để túi quần sẽ đếm thiếu. Chưa có dây đeo thì dùng chế độ 👆 Chạm tay.',
+  wrist:'📍 Đặt điện thoại: buộc vào cổ tay/cẳng tay (dây armband đeo sát). Bài này tay chuyển động là chính — để túi quần sẽ đếm thiếu. Chưa có dây đeo thì dùng chế độ 👆 Chạm tay.',
   shin:'📍 Đặt điện thoại: kẹp vào ống chân/vớ cao (chân chuyển động, hông đứng yên). Không tiện thì dùng chế độ 👆 Chạm tay.',
+  chest:'📍 Đặt điện thoại: kẹp túi áo ngực / nhét cạp áo sát ngực — bài này THÂN TRÊN chuyển động, để túi quần máy không thấy gì. Không có túi áo thì dùng chế độ 👆 Chạm tay.',
 };
+// note rieng tung bai, noi them sau text vi tri
+const POS_NOTE={
+  russian:'Máy đếm 1 nhịp = 1 cặp xoay trái+phải.',
+  hangingknee:'Bài này chân di chuyển nên túi quần đếm tốt.',
+  deadbug:'Bài này chân di chuyển nên túi quần đếm tốt.',
+};
+function posTextOf(id){ const t=POS_TEXT[posOf(id)], n=POS_NOTE[id]; return n? t+' '+n : t; }
 /* MET theo bai: cardio/toan than > compound > isolation */
 const MET_COMPOUND=new Set(['machinechest','dbpress','bench','incline','latpull','cablerow','chestrow','dbrow','machinerow','assistpullup','backext','machineshoulder','dbshoulder','legpress','goblet','smithsquat','rdl','hipthrust','glutebridge','lunge','closegrip','assistdip']);
 function METof(id){ return isCardio(id)?7 : isTimeEx(id)?4 : MET_COMPOUND.has(id)?6 : 5; }
@@ -1123,7 +1132,7 @@ function renderGuide(){
     ? (isCardio(ex.id)
         ? '⏱ Bài tính theo thời gian — app đếm giây và cổ vũ, không cần cảm biến. Cầm/đặt điện thoại tuỳ ý.'
         : '⏱ Bài giữ tư thế — app đếm giây tự động, không cần cảm biến. Đặt điện thoại đâu cũng được.')
-    : POS_TEXT[posOf(ex.id)];
+    : posTextOf(ex.id);
   const base=ex.img||ex.id;
   const wrap=document.getElementById('gImgs');
   wrap.style.display='flex';
@@ -1325,7 +1334,7 @@ function startSet(){
   else { mb.textContent='👆 Chạm'; mb.style.color='var(--sub)'; }
   if(S.mode==='sensor'){
     renderSens();
-    document.getElementById('posHint').textContent=POS_TEXT[posOf(S.ex.id)];
+    document.getElementById('posHint').textContent=posTextOf(S.ex.id);
     if(Sensor.on) document.getElementById('sensorState').textContent='sẵn sàng — tập đi!';
   }
   coach('setStart',{s:S.setIdx+1});
@@ -1730,8 +1739,9 @@ const Sensor={
     this.ringA=new Array(this.W); this.ringG=new Array(this.W); this.ringT=new Float64Array(this.W); this.head=0; this.filled=0;
     this.gvec=[0,0,9.81]; this.gPrev=[0,0,9.81]; this.u=[0,0,1]; this.meanVec=[0,0,0]; this.axisSeed=false;
     this.gf=null; this.uR=[1,0,0]; this.meanG=[0,0,0]; this.kAlt=0; this.chanSw=0; this.rmsP=0;
-    // bai deo CO TAY: rep = cu XOAY (~120°) -> kenh xoay; bai bo tui: rep = tinh tien -> kenh gia toc. Sau do tu doi theo nhip ro hon.
-    this.chan = (S.ex && posOf(S.ex.id)==='wrist') ? 'r' : 't';
+    // bai deo CO TAY / kep NGUC: rep = cu XOAY (tay ~120°, than gap ~30-45°) -> kenh xoay; bai bo tui: tinh tien -> kenh gia toc. Sau do tu doi theo nhip ro hon.
+    const _pos = S.ex ? posOf(S.ex.id) : 'pocket';
+    this.chan = (_pos==='wrist' || _pos==='chest') ? 'r' : 't';
     this.acc=0; this.tNow=0; this.lastT=performance.now(); this.kHeavy=0; this.orientHold=0;
     this.sm=0; this.rms2=0; this.ampEMA=0.6; this.noiseFloor=0.05;
     this.locked=false; this.lockCnt=0; this.jumpCnt=0; this.conf=0; this.lowConf=0; this.fastRej=0; this.fastIv=0; this.provOpp=0; this.lastEmitLead=0; this.gaitHold=0;
