@@ -548,7 +548,7 @@ const EXERCISES = [
    mus:'Lưng giữa · xô', cues:['Ngực tựa đệm, chỉnh tay cầm ngang ngực dưới','Kéo về phía sườn, siết bả vai, khuỷu men theo thân','Về chậm hết tầm, giữ ngực áp đệm']},
   {id:'straightarm', cat:'back', name:'Straight Arm Pulldown (Kéo tay thẳng)', equip:'Cáp', alias:['straight arm pulldown','kéo tay thẳng','tay thẳng'],
    mus:'Xô (cô lập)', cues:['Đứng hơi gập hông, 2 tay thẳng cầm thanh cao','Kéo thanh xuống tới đùi bằng cách hạ vai, giữ tay thẳng','Cảm nhận xô căng, không gập khuỷu']},
-  {id:'assistpullup', cat:'back', name:'Assisted Pull-up (Kéo xà có hỗ trợ)', equip:'Máy hỗ trợ', alias:['assisted pull up','kéo xà có hỗ trợ','kéo xà hỗ trợ','kéo xà','pull up'],
+  {id:'assistpullup', cat:'back', name:'Assisted Pull-up (Kéo xà có hỗ trợ)', equip:'Máy hỗ trợ', alias:['assisted pull up','kéo xà có hỗ trợ','kéo xà hỗ trợ'],
    mus:'Xô · tay trước', cues:['Quỳ/đứng lên đệm hỗ trợ, nắm xà rộng hơn vai','Kéo ngực về phía xà, khuỷu hướng xuống đất','Hạ xuống chậm có kiểm soát, duỗi hết tay']},
   {id:'backext', cat:'back', name:'Back Extension (Duỗi lưng dưới)', equip:'Ghế lưng dưới', alias:['back extension','duỗi lưng dưới','duỗi lưng','lưng dưới','hyperextension'],
    mus:'Lưng dưới · mông · đùi sau', cues:['Kê đệm ngay dưới hông, gập người xuống ~90 độ','Nâng thân lên thẳng hàng với chân, siết mông','Không ưỡn ngửa quá mức ở đỉnh — dừng ở thẳng hàng']},
@@ -579,7 +579,7 @@ const EXERCISES = [
    mus:'Tay sau', cues:['Khuỷu ghim sát sườn, đẩy dây xuống thẳng tay','Xoè dây ra 2 bên ở dưới cùng, siết tay sau','Trả lên chậm, khuỷu không rời sườn']},
   {id:'triext', cat:'tricep', name:'Overhead Triceps Extension (Duỗi tay sau qua đầu)', equip:'Tạ đơn / cáp', alias:['overhead triceps extension','duỗi tay sau qua đầu','duỗi tay','tay sau qua đầu'],
    mus:'Tay sau (đầu dài)', cues:['Giữ tạ/dây sau gáy, 2 khuỷu hướng trần nhà','Duỗi thẳng tay lên cao, chỉ cẳng tay chuyển động','Hạ chậm sau đầu, cảm nhận căng tay sau']},
-  {id:'assistdip', cat:'tricep', name:'Assisted Dip (Nhúng xà có hỗ trợ)', equip:'Máy hỗ trợ', alias:['assisted dip','nhúng xà có hỗ trợ','nhúng xà','xà kép','dip'],
+  {id:'assistdip', cat:'tricep', name:'Assisted Dip (Nhúng xà có hỗ trợ)', equip:'Máy hỗ trợ', alias:['assisted dip','nhúng xà có hỗ trợ','nhúng xà','xà kép'],
    mus:'Tay sau · ngực dưới', cues:['Quỳ lên đệm hỗ trợ, chống thẳng tay trên 2 thanh','Giữ thân thẳng đứng để dồn vào tay sau','Hạ tới khuỷu ~90 độ rồi đẩy lên, không đánh đà']},
   {id:'closegrip', cat:'tricep', name:'Close-grip Machine Press (Đẩy máy tay hẹp)', equip:'Máy', alias:['close grip machine press','đẩy máy tay hẹp','tay hẹp','đẩy tay hẹp'],
    mus:'Tay sau · ngực', cues:['Nắm tay cầm hẹp, khuỷu men sát thân','Đẩy ra thẳng tay, dồn lực vào tay sau','Về chậm, không mở khuỷu bung ra ngoài']},
@@ -630,7 +630,7 @@ const EXERCISES = [
    mus:'Toàn thân · core · lực nắm', cues:['Cầm 2 tạ nặng 2 bên, vai kéo ra sau, ngực ưỡn','Đi bước ngắn chắc, thân giữ thẳng không nghiêng','Siết bụng suốt quãng đi, thở đều']},
   {id:'battlerope', cat:'cardio', name:'Battle Rope (Dây thừng chiến)', equip:'Dây thừng', time:1, alias:['battle rope','dây thừng chiến','dây thừng','battle'],
    mus:'Tim mạch · vai · core', cues:['Gối hơi chùng, hạ trọng tâm, nắm chắc 2 đầu dây','Quật dây liên tục bằng vai và tay, tạo sóng đều','Siết core, thở theo nhịp quật']},
-  {id:"chestdip", cat:"chest", name:"Chest Dip (Nhúng ngực xà kép)", equip:"Xà kép", alias:["nhúng ngực", "nhúng xà kép", "chest dip", "dip ngực", "hít xà kép ngực"],
+  {id:"chestdip", cat:"chest", name:"Chest Dip (Nhúng ngực xà kép)", equip:"Xà kép", alias:["nhúng ngực", "nhúng ngực xà kép", "chest dip", "dip ngực", "hít xà kép ngực"],
    mus:"Ngực dưới · tay sau · vai trước", cues:["Ngực hướng xuống trước, thân hơi nghiêng", "Hạ đến khi cánh tay gần song song sàn, khuỷu ~90°", "Vai vẫn hạ, không nhún vai/cổ rụt"]},
   {id:"deadlift", cat:"back", name:"Deadlift (Deadlift bằng tạ đòn)", equip:"Tạ đòn", alias:["deadlift", "đét-líp", "kéo đất", "nâng tạ đòn từ sàn", "deadlift tạ đòn"],
    mus:"Lưng dưới · mông · gân kheo · cơ dựng cột sống", cues:["Đạp sàn tạo lực từ chân đến hông rồi thân", "Giữ thanh đi sát người suốt quãng kéo", "Khóa đỉnh bằng mông, không ưỡn lưng quá mức"]},
@@ -642,7 +642,7 @@ const EXERCISES = [
    mus:"Mông lớn/nhỡ · đùi trước · đùi trong · core", cues:["Chân trước bước đủ xa, gối theo hướng mũi chân", "Hạ thẳng người xuống có kiểm soát, chân trước chịu lực chính", "Đạp mạnh qua gót/giữa bàn chân trước để đứng lên"]},
   {id:"hipabduct", cat:"glute", name:"Hip Abduction Machine (Mở hông trên máy)", equip:"Máy", alias:["mở hông trên máy", "máy mở hông", "hip abduction machine", "tập mông ngoài", "dang chân máy"],
    mus:"Mông nhỡ · mông bé · mông lớn (hỗ trợ) · TFL/hông ngoài", cues:["Mở bằng cơ mông ngoài, mở có kiểm soát, không lấy đà", "Giữ lưng tựa đệm, không xoay hông, thân không lắc", "Siết đỉnh ngắn, khép gối chậm, vẫn giữ căng cơ"]},
-  {id:"latlunge", cat:"glute", name:"Lateral Lunge (Lunge Sang Ngang)", equip:"Tạ đơn / Kettlebell", alias:["lunge sang ngang", "lateral lunge", "lunge ngang", "chùng chân ngang", "side lunge"],
+  {id:"latlunge", cat:"glute", name:"Lateral Lunge (Lunge Sang Ngang)", equip:"Tạ đơn / Kettlebell", alias:["lunge sang ngang", "chùng chân sang ngang", "lateral lunge", "lunge ngang", "chùng chân ngang", "side lunge"],
    mus:"Đùi trong · mông · đùi trước", cues:["Bước rộng, dồn trọng tâm về chân đang gập, chân kia duỗi thẳng", "Hạ hông xuống có kiểm soát, lưng thẳng ngực mở, giữ gót chân chạm đất", "Đầu gối theo hướng mũi chân, không vượt quá mũi chân"]},
   {id:"stepup", cat:"glute", name:"Step-up (Bước lên bục với tạ đơn)", equip:"Tạ đơn", alias:["step-up", "step up", "bước lên bục", "bước bục", "dumbbell step up"],
    mus:"Mông lớn · đùi trước · gân kheo · core", cues:["Đạp mạnh qua gót chân trên bục, không dùng chân dưới lấy đà", "Duỗi hông và gối chân trụ ở đỉnh, thân đứng cao", "Hạ chân dưới xuống chậm, có kiểm soát"]},
@@ -650,9 +650,9 @@ const EXERCISES = [
    mus:"Mông lớn · đùi trong · đùi trước · core", cues:["Đầu gối mở theo mũi chân, không chụm vào trong", "Đứng chân rộng hơn vai 1.5-2 lần, mũi chân mở 30-45°", "Giữ gót và toàn bàn chân bám sàn, đạp qua gót"]},
   {id:"chinup", cat:"bicep", name:"Chin-up (Hít xà tay ngửa)", equip:"Xà đơn", alias:["hít xà tay ngửa", "chin-up", "chin up", "hít xà nắm ngửa", "kéo xà tay trước"],
    mus:"Tay trước · cơ xô · cẳng tay", cues:["Nắm ngửa rộng bằng vai, cổ tay trung tính", "Kéo khuỷu xuống về phía sườn, cằm vượt qua thanh xà", "Siết bụng giữ thân thẳng, không đu đưa"]},
-  {id:"inclinecurl", cat:"bicep", name:"Incline Dumbbell Curl (Cuốn tạ đơn ghế dốc)", equip:"Tạ đơn + ghế dốc", alias:["cuốn tạ ghế dốc", "incline dumbbell curl", "incline curl", "cuốn tạ đơn nghiêng", "cuốn bắp tay ghế dốc"],
+  {id:"inclinecurl", cat:"bicep", name:"Incline Dumbbell Curl (Cuốn tạ đơn ghế dốc)", equip:"Tạ đơn + ghế dốc", alias:["cuốn tạ đơn ghế dốc", "incline dumbbell curl", "incline curl", "cuốn tạ đơn nghiêng", "cuốn bắp tay ghế dốc"],
    mus:"Cơ tay trước (bắp tay trước)", cues:["Khuỷu tay giữ gần thân, không đưa ra trước", "Cổ tay giữ thẳng, không bẻ để ăn gian", "Lưng tựa chắc ghế, không đung đưa người"]},
-  {id:"preacher", cat:"bicep", name:"Preacher Curl (Cuốn tạ ghế dốc)", equip:"Thanh EZ + ghế Preacher", alias:["cuốn tạ ghế dốc", "cuốn tạ trên ghế preacher", "preacher curl", "cuốn tay trước ghế dốc", "cuốn tạ tay trước"],
+  {id:"preacher", cat:"bicep", name:"Preacher Curl (Cuốn tạ ghế dốc)", equip:"Thanh EZ + ghế Preacher", alias:["cuốn tạ ghế dốc", "cuốn tạ trên ghế preacher", "preacher curl", "cuốn tay trước ghế dốc", "ghế preacher"],
    mus:"Cơ tay trước (bắp tay trước) · cẳng tay hỗ trợ", cues:["Khuỷu tay tì chắc trên đệm, không nhấc lên", "Cuốn theo cung tròn, siết cơ tay trước ở đỉnh", "Duỗi gần hết biên độ, hạ chậm không thả rơi"]},
   {id:"dip", cat:"tricep", name:"Bodyweight Dip (Nhúng xà kép)", equip:"Xà kép", alias:["nhúng xà kép", "dip", "bodyweight dip", "nhúng xà tay sau", "chống đẩy xà kép"],
    mus:"Cơ tam đầu cánh tay; hỗ trợ: ngực dưới · vai trước", cues:["Cùi chỏ hướng ra sau, giữ sát thân, không xoè rộng", "Hạ vai xuống, siết bả vai, không nhún vai lên tai", "Xuống đến khi khuỷu khoảng 90°, không xuống quá sâu"]},
@@ -660,7 +660,7 @@ const EXERCISES = [
    mus:"Cơ tam đầu cánh tay; hỗ trợ ngực lớn · vai trước", cues:["Nắm hẹp hơn vai một chút, cổ tay thẳng", "Khuỷu khép 30–45°, không xòe ngang", "Chạm nhẹ ngực dưới, không nảy thanh"]},
   {id:"skullcrush", cat:"tricep", name:"EZ-Bar Skull Crusher (Đập trán thanh EZ)", equip:"Thanh đòn EZ", alias:["đập trán", "skull crusher", "ez-bar skull crusher", "duỗi tay sau nằm ghế", "gập tay sau thanh ez"],
    mus:"Cơ tam đầu cánh tay (nhấn đầu dài)", cues:["Chỉ gập khuỷu, cánh tay trên giữ yên gần vuông góc sàn", "Khuỷu giữ gần nhau, không xoè ra ngoài", "Hạ thanh chậm 2-3 giây về gần trán, nâng lên có kiểm soát"]},
-  {id:"ohcable", cat:"tricep", name:"Overhead Cable Triceps Extension (Duỗi tay sau cáp qua đầu)", equip:"Máy cáp", alias:["duỗi tay sau qua đầu", "overhead cable triceps extension", "overhead cable extension", "kéo cáp tay sau qua đầu", "duỗi tam đầu cáp"],
+  {id:"ohcable", cat:"tricep", name:"Overhead Cable Triceps Extension (Duỗi tay sau cáp qua đầu)", equip:"Máy cáp", alias:["duỗi tay sau cáp qua đầu", "overhead cable triceps extension", "overhead cable extension", "kéo cáp tay sau qua đầu", "duỗi tam đầu cáp"],
    mus:"Cơ tam đầu cánh tay (nhấn mạnh đầu dài) · hỗ trợ ổn định vai", cues:["Cánh tay trên giữ gần cố định, chỉ khớp khuỷu đi chuyển", "Khuỷu giữ gần nhau, không xòe ra ngoài", "Vai hạ xuống, không nhô vai, ngực mở thân gần thẳng"]},
   {id:"scable", cat:"tricep", name:"Single-arm Cable Triceps Extension (Duỗi tay sau cáp một tay)", equip:"Máy cáp", alias:["duỗi tay sau cáp một tay", "đẩy cáp tay sau", "single-arm cable triceps extension", "cable triceps extension", "tay sau cáp đơn"],
    mus:"Cơ tam đầu cánh tay; phụ cẳng tay · core ổn định", cues:["Cùi chỏ kẹp sát thân, gập khoảng 90°", "Ngực mở, siết core, không nhún vai", "Cổ tay giữ thẳng, không gập"]},
@@ -973,7 +973,7 @@ function bodyWeight(){ const p=getProfile(); return (p&&+p.weight)||+(localStora
 /* Vi tri dat dien thoai de cam bien doc duoc chuyen dong cua bai */
 const POS_WRIST=new Set(["ohp","inclinecurl","preacher","cgbench","skullcrush","ohcable","scable",'machinechest','dbpress','bench','incline','pecdeck','fly','latpull','cablerow','chestrow','dbrow','machinerow','straightarm','assistpullup','machineshoulder','dbshoulder','latraise','cablelatraise','reardelt','facepull','curl','bbcurl','hammer','cablecurl','pushdown','triext','closegrip','pallof']);
 const POS_SHIN=new Set(["hipabduct",'legext','legcurl','kickback']);
-const POS_CHEST=new Set(["revcrunch",'crunch','cablecrunch','russian']); // bung gap/xoay THAN TREN — dui dung yen, tui quan cam
+const POS_CHEST=new Set(['crunch','cablecrunch','russian']); // bung gap/xoay THAN TREN — dui dung yen, tui quan cam
 function posOf(id){ return POS_WRIST.has(id)?'wrist':POS_SHIN.has(id)?'shin':POS_CHEST.has(id)?'chest':'pocket'; }
 function isTimeEx(id){ const e=EXERCISES.find(x=>x.id===id); return !!(e&&e.time); }
 const CARDIO_IDS=new Set(['treadmill','bike','elliptical','farmer','battlerope']);
@@ -1319,7 +1319,9 @@ function vnNums(s){
 // KHONG dung \p{L} (Safari/Android doi cu + V8 cu vo) — chi loai dau cau, giu nguyen chu tieng Viet
 function vlow(s){ return (s||'').toLowerCase().replace(/[.,!?;:"'’“”`~()\[\]{}<>\/\\|@#$%^&*_+=–—-]+/g,' ').replace(/\s+/g,' ').trim(); }
 function vnorm(s){ return vlow(s).normalize('NFD').replace(/[̀-ͯ]/g,'').replace(/đ/g,'d'); }
-const EX_VOICE=EXERCISES.map(ex=>({ex, alR:[...new Set(ex.alias.map(vlow).filter(Boolean))], al:[...new Set(ex.alias.map(vnorm).filter(Boolean))]}));
+// khop ca TEN VIET + TEN ANH cua bai (khong chi alias) -> moi bai luon goi duoc bang chinh ten no,
+// tranh alias ngan cua bai khac cuop (vd "cuốn tạ" cua curl cuop "cuốn tạ đơn ghế dốc" cua inclinecurl)
+const EX_VOICE=EXERCISES.map(ex=>{const src=[...ex.alias, vietName(ex), engName(ex)]; return {ex, alR:[...new Set(src.map(vlow).filter(Boolean))], al:[...new Set(src.map(vnorm).filter(Boolean))]};});
 function scoreExVoice(Traw, T, Tw, entry){
   let best=0;
   for(const a of entry.alR){ if(a && Traw.includes(a)) best=Math.max(best, 200+a.length); } // khop GIU DAU -> uu tien cao nhat, phan biet don/dòn
@@ -1603,7 +1605,7 @@ function watchdog(){
   }
   // TEMPO: qua nhanh so voi chuan bai (nhip khuyen nghi ha 2-3s + day 1-2s => >=3.5s/rep).
   // <2s/rep = dung da/nay tung, khong the co pha ha co kiem soat -> nhac. Tru cardio + bai giu thoi gian.
-  if(!isCardio(S.ex.id) && !isTimeEx(S.ex.id) && (S.fastWarned||0)<2 && S.reps>=4){
+  if(!isCardio(S.ex.id) && !isTimeEx(S.ex.id) && !GENTLE_EX.has(S.ex.id) && (S.fastWarned||0)<2 && S.reps>=4){
     const med=baseline();
     if(med && med<2000 && now-S.lastStallAt>7000){
       S.fastWarned=(S.fastWarned||0)+1; S.lastStallAt=now;
