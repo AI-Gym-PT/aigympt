@@ -1281,6 +1281,10 @@ function parseVoice(cands){
     return;
   }
   renderSetup(true);
+  if(m.ex){ // nhan dung ten bai -> CUON toi bai do (nhom da mo + chip sang) de user thay ro app da nhay dung
+    const chip=document.querySelector('#exCats .exch.sel');
+    if(chip&&chip.scrollIntoView) chip.scrollIntoView({behavior:'smooth', block:'center'});
+  }
   const exName=EXERCISES.find(e=>e.id===S.selEx).name;
   micFeedback('👂 Nghe: “'+primary+'”'+(m.ex?'':' — giữ nguyên bài, chỉ đổi số set/rep'));
   setTimeout(()=>sayKeys(`OK! ${exName}, ${S.selSets} set, mỗi set ${S.selReps} cái. Bấm vào set 1 khi sẵn sàng!`,['p_voiceok_0'],true),300);
