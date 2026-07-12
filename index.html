@@ -1202,22 +1202,27 @@ document.getElementById('repPlus').onclick=()=>{const st=repStep();S.selReps=Mat
 /* voice input */
 const SR = window.SpeechRecognition||window.webkitSpeechRecognition;
 const micBtn=document.getElementById('micBtn');
+let recog=null, recogTm=0;
+function micIdle(){ recog=null; clearTimeout(recogTm); micBtn.classList.remove('listening'); micBtn.textContent='🎤 Nói bài tập'; }
 if(!SR) micBtn.style.display='none';
 else micBtn.addEventListener('click',()=>{
-  const r=new SR(); r.lang='vi-VN'; r.interimResults=false; r.maxAlternatives=4; // nhieu phuong an ASR -> khop duoc ca khi phuong an dau sai dau/chinh ta
-  micBtn.classList.add('listening'); micBtn.textContent='🎤 Đang nghe… nói đi!';
+  if(recog){ try{ recog.stop(); }catch(e){} return; } // dang nghe -> bam lan nua = DUNG (va xu ly phan da noi)
+  const r=new SR(); recog=r; r.lang='vi-VN'; r.interimResults=false; r.maxAlternatives=4; // nhieu phuong an ASR -> khop ca khi phuong an dau sai dau/chinh ta
+  micBtn.classList.add('listening'); micBtn.textContent='⏹ Đang nghe… bấm để dừng';
+  recogTm=setTimeout(()=>{ try{ r.stop(); }catch(e){} }, 10000); // tran an toan: neu treo/khong noi thi tu dung sau 10s
+  r.onspeechend=()=>{ try{ r.stop(); }catch(e){} }; // NGUNG NOI -> dung ghi ngay (khong cho may om mic them vai giay)
   r.onresult=e=>{
     const res=e.results[0], cands=[]; for(let i=0;i<res.length;i++) cands.push(res[i].transcript);
     parseVoice(cands);
   };
-  r.onend=()=>{ micBtn.classList.remove('listening'); micBtn.textContent='🎤 Nói bài tập'; };
-  r.onerror=(ev)=>{ micBtn.classList.remove('listening'); micBtn.textContent='🎤 Nói bài tập';
+  r.onend=()=>micIdle();
+  r.onerror=(ev)=>{ micIdle();
     const er=ev&&ev.error;
     if(er==='not-allowed'||er==='service-not-allowed') micFeedback('🎤 Cần cho phép micro trong cài đặt trình duyệt để nói tên bài.');
     else if(er==='no-speech') micFeedback('🤫 Không nghe thấy gì — bấm mic rồi nói to tên bài nhé.');
     else if(er==='network') micFeedback('📶 Nhận giọng cần mạng — kiểm tra kết nối rồi thử lại.');
   };
-  r.start();
+  try{ r.start(); }catch(e){ micIdle(); } // start 2 lan lien co the throw
 });
 const VN_U={'không':0,'một':1,'mốt':1,'hai':2,'ba':3,'bốn':4,'tư':4,'năm':5,'lăm':5,'nhăm':5,'sáu':6,'bảy':7,'tám':8,'chín':9};
 // so tieng Viet -> chu so: "mười lăm"=15, "sáu mươi"=60, "ba mươi mốt"=31, "ba"=3
