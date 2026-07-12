@@ -685,6 +685,7 @@ const PH = {
   lastOne: ['Còn 1 cái cuối! Tất cả cho cái này!','Cái cuối cùng! Bung hết đi!!'],
   praise: ['Đẹp lắm, nhịp đều tăm tắp!','Form chuẩn đấy, giữ vậy nhé!','Quá mượt! Tiếp tục nào!','Nhịp này đỉnh đấy!'],
   slowing: ['Chậm lại rồi đó, hít sâu, giữ nhịp nhé!','Đuối chưa? Thở đều, từng cái một thôi!','Mỏi là đang lớn đó! Giữ nhịp, cố lên!'],
+  tooFast: ['Nhanh quá rồi! Hạ tạ hai đến ba giây có kiểm soát, đừng dùng đà!','Chậm nhịp xuống nào! Kiểm soát lúc hạ, đừng thả rơi tạ!'],
   stall1: ['Ê ê, đừng dừng! Còn chút nữa thôi, lên nào!','Nghỉ tay hả? Vào lại đi, sắp xong rồi!','Cố lên! Đứng dậy làm nốt, tôi tin bạn làm được!'],
   safety: ['Nếu đuối quá thì giảm tạ hoặc dừng ở đây cũng rất đẹp rồi. An toàn trước đã nhé!','Nhịp rớt sâu rồi đó. Hai cái cuối làm chậm và chắc thôi, đừng ráng quá!'],
   restStart: ['Nghỉ {t} giây. Thở sâu, uống ngụm nước nhé!','Nghỉ {t} giây thôi đấy! Thả lỏng vai nào!'],
@@ -1394,7 +1395,7 @@ document.getElementById('btnGo').addEventListener('click',async ()=>{
     // milestone + khen + dong vien + ket set + nghi
     ['half_0','half_1','half_2','three_0','three_1','two_0','two_1',
      'p_lastOne_0','p_lastOne_1','p_praise_0','p_praise_1','p_praise_2','p_praise_3',
-     'p_slowing_0','p_slowing_1','p_slowing_2','p_stall1_0','p_stall1_1','p_stall1_2',
+     'p_slowing_0','p_slowing_1','p_slowing_2','p_tooFast_0','p_tooFast_1','p_stall1_0','p_stall1_1','p_stall1_2',
      'st2p_0','st2p_1','st2p_2','st2s_0','st2s_1','st2s_2',
      'sdp_0','sdp_1','sdp_2','sds_0','sds_1','sds_2','sdep_0','sdep_1','sdes_0','sdes_1',
      'sdt_0','sdet_0','p_restReady_0','p_restReady_1','p_safety_0','p_safety_1',
@@ -1439,7 +1440,7 @@ function startSet(){
   clearTimers(); S._tick=null;
   openModal('modalGap',false); S._gapN=0; // modal bu nhip cua set TRUOC khong duoc song sang set nay
   hiddenAt = (document.visibilityState==='hidden') ? Date.now() : 0; // set BAT DAU khi man dang tat (nghi het gio luc khoa may) -> danh dau de con hoi bu; clamp theo setStartAt o onReturnVisible
-  S.phase='active'; S.reps=0; S.repTimes=[]; S.lastStallLevel=0; S.slowWarned=0; S.safetyWarned=false;
+  S.phase='active'; S.reps=0; S.repTimes=[]; S.lastStallLevel=0; S.slowWarned=0; S.safetyWarned=false; S.fastWarned=0;
   S._barkI=null; // xoay vong bark tu dau moi set
   S.setStartAt=Date.now();
   show('scr-work');
@@ -1599,6 +1600,15 @@ function watchdog(){
   } else if(since>stallThr && S.lastStallLevel<1 && now-S.lastStallAt>6000){
     S.lastStallLevel=1; S.lastStallAt=now;
     coach('stall1');
+  }
+  // TEMPO: qua nhanh so voi chuan bai (nhip khuyen nghi ha 2-3s + day 1-2s => >=3.5s/rep).
+  // <2s/rep = dung da/nay tung, khong the co pha ha co kiem soat -> nhac. Tru cardio + bai giu thoi gian.
+  if(!isCardio(S.ex.id) && !isTimeEx(S.ex.id) && (S.fastWarned||0)<2 && S.reps>=4){
+    const med=baseline();
+    if(med && med<2000 && now-S.lastStallAt>7000){
+      S.fastWarned=(S.fastWarned||0)+1; S.lastStallAt=now;
+      coach('tooFast');
+    }
   }
   // slowing (still moving but slower)
   const iv=intervals();
@@ -2214,7 +2224,7 @@ function addReps(n){ // bu nhip im lang: khong doc tung so, khong spam cau co vu
   // -> khong bi nhip gia nen lam baseline sup (canh bao an toan gia) va dong ho stall tuoi moi
   const total=Math.min(S.ex.reps, S.reps+n);
   S.repTimes=[]; for(let i=total;i>=1;i--) S.repTimes.push(now-(i-1)*per);
-  S.reps=total; S.slowWarned=0; S.safetyWarned=false; S.lastStallLevel=0;
+  S.reps=total; S.slowWarned=0; S.safetyWarned=false; S.lastStallLevel=0; S.fastWarned=0;
   document.getElementById('repNum').textContent=S.reps;
   document.getElementById('ringFg').style.strokeDashoffset=754*(1-Math.min(1,S.reps/S.ex.reps));
   updateTempoUI(); updatePocket(); speakNum(S.reps);
