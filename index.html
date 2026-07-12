@@ -273,8 +273,9 @@ label.f{display:block;margin-top:20px;font-size:13px;font-weight:700;color:var(-
   <!-- ====== SETUP ====== -->
   <section class="screen" id="scr-setup">
     <h1 id="setupTitle">Bài tập tiếp theo?</h1>
-    <div class="sub" style="margin-top:4px">Chọn bài hoặc bấm mic và nói: <i>"Squat 3 set 12 cái"</i></div>
+    <div class="sub" style="margin-top:4px">Chọn bài hoặc bấm mic và nói tên bài tiếng Việt: <i>"Cuốn tạ tay trước 3 set 12 cái"</i></div>
     <button class="micbtn" id="micBtn">🎤 Nói bài tập</button>
+    <div class="sub" id="micHeard" style="margin-top:6px;text-align:center;font-size:12px;display:none"></div>
     <label class="f">Bài tập — chọn nhóm cơ</label>
     <div id="exCats"></div>
     <div class="guide" id="guideCard">
@@ -1203,37 +1204,80 @@ const SR = window.SpeechRecognition||window.webkitSpeechRecognition;
 const micBtn=document.getElementById('micBtn');
 if(!SR) micBtn.style.display='none';
 else micBtn.addEventListener('click',()=>{
-  const r=new SR(); r.lang='vi-VN'; r.interimResults=false;
+  const r=new SR(); r.lang='vi-VN'; r.interimResults=false; r.maxAlternatives=4; // nhieu phuong an ASR -> khop duoc ca khi phuong an dau sai dau/chinh ta
   micBtn.classList.add('listening'); micBtn.textContent='🎤 Đang nghe… nói đi!';
   r.onresult=e=>{
-    const txt=e.results[0][0].transcript.toLowerCase();
-    parseVoice(txt);
+    const res=e.results[0], cands=[]; for(let i=0;i<res.length;i++) cands.push(res[i].transcript);
+    parseVoice(cands);
   };
   r.onend=()=>{ micBtn.classList.remove('listening'); micBtn.textContent='🎤 Nói bài tập'; };
-  r.onerror=r.onend;
+  r.onerror=(ev)=>{ micBtn.classList.remove('listening'); micBtn.textContent='🎤 Nói bài tập';
+    const er=ev&&ev.error;
+    if(er==='not-allowed'||er==='service-not-allowed') micFeedback('🎤 Cần cho phép micro trong cài đặt trình duyệt để nói tên bài.');
+    else if(er==='no-speech') micFeedback('🤫 Không nghe thấy gì — bấm mic rồi nói to tên bài nhé.');
+    else if(er==='network') micFeedback('📶 Nhận giọng cần mạng — kiểm tra kết nối rồi thử lại.');
+  };
   r.start();
 });
-const VN_NUM={'một':1,'mốt':1,'hai':2,'ba':3,'bốn':4,'tư':4,'năm':5,'lăm':5,'sáu':6,'bảy':7,'tám':8,'chín':9,'mười':10,'mười hai':12,'mười lăm':15,'hai mươi':20};
-function parseVoice(txt){
-  // exercise: alias DAI nhat thang (tranh "đẩy ngực trên" bị dính "đẩy ngực" của bài khác)
-  let best=null, bestLen=0;
-  for(const ex of EXERCISES){
-    for(const a of ex.alias){
-      if(a.length>bestLen && txt.includes(a)){ best=ex; bestLen=a.length; }
-    }
+const VN_U={'không':0,'một':1,'mốt':1,'hai':2,'ba':3,'bốn':4,'tư':4,'năm':5,'lăm':5,'nhăm':5,'sáu':6,'bảy':7,'tám':8,'chín':9};
+// so tieng Viet -> chu so: "mười lăm"=15, "sáu mươi"=60, "ba mươi mốt"=31, "ba"=3
+function vnNums(s){
+  const w=vlow(s).split(' '), o=[];
+  for(let i=0;i<w.length;i++){
+    if(w[i]==='mười'){ let v=10; if(VN_U[w[i+1]]!==undefined){ v+=VN_U[w[i+1]]; i++; } o.push(''+v); continue; }        // 10..19
+    if(VN_U[w[i]]!==undefined && w[i+1]==='mươi'){ let v=VN_U[w[i]]*10; i++; if(VN_U[w[i+1]]!==undefined){ v+=VN_U[w[i+1]]; i++; } o.push(''+v); continue; } // 20..99
+    o.push(VN_U[w[i]]!==undefined ? ''+VN_U[w[i]] : w[i]);
   }
-  if(best){ S.selEx=best.id; openCat=best.cat; S.selKg=lastKg[best.id]!==undefined?+lastKg[best.id]:0; }
-  // numbers: replace VN words then extract digits
-  let t=txt;
-  Object.keys(VN_NUM).sort((a,b)=>b.length-a.length).forEach(w=>{ t=t.replaceAll(w,' '+VN_NUM[w]+' '); });
+  return o.join(' ');
+}
+// vlow: giu DAU (phan biet "tạ đòn" barbell vs "tạ đơn" dumbbell); vnorm: BO dau (chiu ASR sai dau thanh)
+// KHONG dung \p{L} (Safari/Android doi cu + V8 cu vo) — chi loai dau cau, giu nguyen chu tieng Viet
+function vlow(s){ return (s||'').toLowerCase().replace(/[.,!?;:"'’“”`~()\[\]{}<>\/\\|@#$%^&*_+=–—-]+/g,' ').replace(/\s+/g,' ').trim(); }
+function vnorm(s){ return vlow(s).normalize('NFD').replace(/[̀-ͯ]/g,'').replace(/đ/g,'d'); }
+const EX_VOICE=EXERCISES.map(ex=>({ex, alR:[...new Set(ex.alias.map(vlow).filter(Boolean))], al:[...new Set(ex.alias.map(vnorm).filter(Boolean))]}));
+function scoreExVoice(Traw, T, Tw, entry){
+  let best=0;
+  for(const a of entry.alR){ if(a && Traw.includes(a)) best=Math.max(best, 200+a.length); } // khop GIU DAU -> uu tien cao nhat, phan biet don/dòn
+  if(best) return best;
+  for(const a of entry.al){
+    if(!a) continue;
+    if(T.includes(a)){ best=Math.max(best, 100+a.length); continue; } // khop BO dau -> chiu ASR sai dau
+    const aw=a.split(' '); let hit=0; for(const w of aw) if(w.length>=2 && Tw.has(w)) hit++; // khop theo tu -> chiu dao tu / tu thua
+    if(hit) best=Math.max(best, 50*(hit/aw.length)+6*hit);
+  }
+  return best;
+}
+function matchExercise(cands){ // cands: cac phuong an ASR (chuoi tho)
+  let bestEx=null, bestSc=0;
+  for(const raw of cands){
+    const Traw=vlow(raw), T=vnorm(raw); if(!T) continue;
+    const Tw=new Set(T.split(' '));
+    for(const entry of EX_VOICE){ const sc=scoreExVoice(Traw,T,Tw,entry); if(sc>bestSc){ bestSc=sc; bestEx=entry.ex; } }
+  }
+  return { ex: bestSc>=60 ? bestEx : null, score:bestSc };
+}
+function micFeedback(msg){ const el=document.getElementById('micHeard'); if(!el) return; el.textContent=msg; el.style.display='block'; }
+function parseVoice(cands){
+  if(typeof cands==='string') cands=[cands];
+  const primary=cands[0]||'';
+  const m=matchExercise(cands);
+  if(m.ex){ S.selEx=m.ex.id; openCat=m.ex.cat; S.selKg=lastKg[m.ex.id]!==undefined?+lastKg[m.ex.id]:0; }
+  // so: doi so-chu tieng Viet (con dau) -> chu so
+  let t=vnNums(primary);
   const nums=(t.match(/\d+/g)||[]).map(Number);
   const tEx=isTimeEx(S.selEx), mx=tEx?300:50;
-  const setM=t.match(/(\d+)\s*(set|séc|hiệp)/); if(setM) S.selSets=Math.min(10,+setM[1]);
-  const repM=t.match(/(\d+)\s*(rep|cái|lần|nhịp|giây|giay)/); if(repM) S.selReps=Math.min(mx,+repM[1]);
-  if(!setM&&!repM&&nums.length>=2){ S.selSets=Math.min(10,nums[0]); S.selReps=Math.min(mx,nums[1]); }
+  let gotNum=false;
+  const setM=t.match(/(\d+)\s*(set|séc|hiệp)/); if(setM){ S.selSets=Math.min(10,+setM[1]); gotNum=true; }
+  const repM=t.match(/(\d+)\s*(rep|cái|lần|nhịp|giây|giay)/); if(repM){ S.selReps=Math.min(mx,+repM[1]); gotNum=true; }
+  if(!setM&&!repM&&nums.length>=2){ S.selSets=Math.min(10,nums[0]); S.selReps=Math.min(mx,nums[1]); gotNum=true; }
   if(tEx&&!repM&&S.selReps<10) S.selReps=30;
+  if(!m.ex && !gotNum){ // khong hieu gi ca -> KHONG xac nhan bua bai dang chon; bao ro da nghe thanh gi
+    micFeedback('Chưa nghe rõ 😅 Em nghe thành “'+primary+'”. Thử nói chậm tên bài, hoặc chọn tay bên dưới.');
+    return;
+  }
   renderSetup(true);
   const exName=EXERCISES.find(e=>e.id===S.selEx).name;
+  micFeedback('👂 Nghe: “'+primary+'”'+(m.ex?'':' — giữ nguyên bài, chỉ đổi số set/rep'));
   setTimeout(()=>sayKeys(`OK! ${exName}, ${S.selSets} set, mỗi set ${S.selReps} cái. Bấm vào set 1 khi sẵn sàng!`,['p_voiceok_0'],true),300);
 }
 
