@@ -35,11 +35,20 @@ self.addEventListener('fetch', e => {
 
   // trang chinh: uu tien mang (nhan ban cap nhat), rot mang thi dung cache
   if (e.request.mode === 'navigate' || url.pathname.endsWith('index.html')) {
-    e.respondWith(
-      fetch(e.request)
-        .then(r => { if (r.ok) { const cp = r.clone(); caches.open(CACHE).then(c => c.put('./', cp)); } return r; }) // 404/500 luc Pages dang deploy KHONG duoc de len ban offline tot
-        .catch(() => caches.match('./'))
-    );
+    e.respondWith((async () => {
+      try {
+        const net = fetch(e.request).then(r => {
+          if (!r || !r.ok) throw new Error('bad status ' + (r && r.status)); // 404 luc Pages deploy / 5xx -> KHONG phuc vu trang loi, roi ve cache
+          const cp = r.clone(); caches.open(CACHE).then(c => c.put('./', cp));
+          return r;
+        });
+        // mang gym cham: chay dua voi 4s — co app trong cache thi dung ngay, khong bat user nhin man trang
+        const timeout = new Promise((_, rej) => setTimeout(() => rej(new Error('timeout')), 4000));
+        return await Promise.race([net, timeout]);
+      } catch (err) {
+        return (await caches.match('./')) || (await caches.match('./index.html')) || fetch(e.request);
+      }
+    })());
     return;
   }
   // CHI file media bat bien (mp3/jpg/png) moi cache-first;
