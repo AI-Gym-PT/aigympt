@@ -63,6 +63,12 @@ h2{font-size:16.5px;font-weight:700;letter-spacing:-.2px}
 .btn:active{transform:scale(.97);filter:brightness(1.05)}
 .btn-main{background:var(--grad);color:var(--on-accent);font-weight:800;box-shadow:0 10px 26px rgba(139,227,59,.25)}
 .btn-ghost{background:var(--card2);color:var(--txt);border:1px solid var(--line)}
+.btn-pocket{background:rgba(201,246,83,.10);color:var(--accent);border:1.5px solid var(--accent);font-weight:800}
+.btn-pocket:active{transform:scale(.97);filter:brightness(1.1)}
+.btn-pocket .kbd{display:block;font-size:11px;font-weight:600;color:var(--sub);margin-top:2px}
+.btn-pocket.pos-pocket{border-width:2px}
+@keyframes pocketGlow{0%,100%{box-shadow:0 0 0 0 rgba(201,246,83,0)}50%{box-shadow:0 0 20px 2px rgba(201,246,83,.45)}}
+@media (prefers-reduced-motion:no-preference){.btn-pocket.hint{animation:pocketGlow 1.2s ease-in-out 3}}
 .btn-danger{background:transparent;color:var(--danger);border:1px solid rgba(255,122,118,.35)}
 .btn-sm{padding:11px 14px;font-size:13.5px;border-radius:11px;width:auto}
 .row{display:flex;gap:10px}
@@ -330,6 +336,7 @@ label.f{display:block;margin-top:20px;font-size:13px;font-weight:700;color:var(-
     <div class="tapzone" id="tapZone" style="display:none">👆 Chạm mỗi khi xong 1 rep</div>
     <div id="sensorPanel" style="display:none">
       <div class="gpos" id="posHint" style="margin-top:14px"></div>
+      <button class="btn btn-pocket" id="btnPocket" style="margin-top:10px">🌙 Bỏ túi — tắt màn hình mà vẫn đếm<span class="kbd">Bấm nút nguồn là máy NGƯNG đếm</span></button>
       <div class="sensorbar">📱 <div class="sig"><i id="sigFill"></i></div><span id="sensorState">đang đo…</span></div>
       <div class="senstune">
         <span>Độ nhạy</span>
@@ -342,7 +349,6 @@ label.f{display:block;margin-top:20px;font-size:13px;font-weight:700;color:var(-
         <button class="corr" id="repCorrPlus" title="Thêm 1 (đếm thiếu)">+1</button>
       </div>
       <div class="sub" style="font-size:11.5px;margin-top:6px;text-align:center">Đếm dư (rung/xoay nhẹ cũng tính)? Chọn <b>Chắc</b>. Đếm thiếu? Chọn <b>Nhạy</b>. Sai vài cái thì bấm −1/+1.</div>
-      <button class="btn btn-ghost" id="btnPocket" style="margin-top:10px">🌙 Bỏ túi — “tắt màn hình” mà vẫn đếm</button>
       <div class="sub" style="text-align:center;margin-top:8px"><span id="slogExport" style="text-decoration:underline;cursor:pointer;font-size:11.5px">📋 Xuất log cảm biến (khi đếm sai, gửi file này để tinh chỉnh)</span></div>
     </div>
     <div class="row" style="margin-top:14px">
@@ -879,6 +885,7 @@ const S = {
   reps: 0,
   repTimes: [],
   phase: 'idle',          // idle|countdown|active|rest|paused
+  pocketArm: false,       // ep glow nut Bo tui 1 set sau khi user lo bam nut nguon
   timers: [],
   lastStallLevel: 0,
   lastStallAt: 0,
@@ -1356,8 +1363,24 @@ function startSet(){
     renderSens();
     document.getElementById('posHint').textContent=posTextOf(S.ex.id);
     if(Sensor.on) document.getElementById('sensorState').textContent='sẵn sàng — tập đi!';
-    try{ if(!localStorage.getItem('gpt_pocketTip')){ localStorage.setItem('gpt_pocketTip','1');
-      toast('💡 Muốn tắt màn hình mà vẫn đếm? Dùng nút 🌙 Bỏ túi. Bấm nút nguồn là máy NGƯNG đếm đấy!', 7000); } }catch(e){} // private mode co the throw — khong duoc lam chet startSet
+    // NUT BO TUI: glow 1-phat dung luc VAO SET (may con tren tay, dang quyet dinh cat dau) — khong bao gio glow giua luc dem
+    const bp=document.getElementById('btnPocket');
+    bp.classList.toggle('pos-pocket', posOf(S.ex.id)==='pocket');
+    try{
+      const used=localStorage.getItem('gpt_pocketUsed');
+      let seen=+(localStorage.getItem('gpt_pocketSeen')||0);
+      if(!used && (seen<8 || S.pocketArm)){
+        bp.classList.remove('hint'); void bp.offsetWidth; bp.classList.add('hint'); // reset de replay animation moi set tren cung element
+        if(!S.pocketArm) localStorage.setItem('gpt_pocketSeen', seen+1);
+        if(posOf(S.ex.id)==='pocket' && !localStorage.getItem('gpt_pocketVoice')){
+          localStorage.setItem('gpt_pocketVoice','1');
+          speak('Muốn tắt màn hình mà vẫn đếm thì bấm nút Mặt Trăng. Đừng bấm nút nguồn, máy sẽ ngưng đếm nhé.', false); // kenh duy nhat xuyen qua tui quan; critical:false -> nhuong tieng dem rep
+        }
+      }
+      S.pocketArm=false; // tieu thu co arm sau khi da glow
+      if(!localStorage.getItem('gpt_pocketTip')){ localStorage.setItem('gpt_pocketTip','1');
+        toast('💡 Cho điện thoại vào túi? Bấm nút 🌙 Bỏ túi (đang sáng) để tắt màn hình mà VẪN đếm rep — đừng bấm nút nguồn nhé!', 7000); }
+    }catch(e){} // private mode co the throw — khong duoc lam chet startSet
   }
   coach('setStart',{s:S.setIdx+1});
   if(S.mode==='sensor' && !Sensor.on) Sensor.start(); // du phong (binh thuong da bat tu dem nguoc)
@@ -2006,6 +2029,8 @@ document.getElementById('repCorrPlus').addEventListener('click',()=>correctRep(1
 const pocketEl=document.getElementById('pocketOverlay');
 let pocketTap=0;
 function pocketOn(){
+  try{ localStorage.setItem('gpt_pocketUsed','1'); }catch(e){} // da bam 1 lan = da hoc xong -> tat glow + voice VINH VIEN
+  const bp=document.getElementById('btnPocket'); if(bp) bp.classList.remove('hint');
   pocketEl.classList.add('on');
   updatePocket();
   requestWakeLock();
@@ -2077,9 +2102,10 @@ function onReturnVisible(){
       if(!S.ex.timeEx){ S.setStartAt+=d; S.repTimes=S.repTimes.map(t=>t+d); } // bai giu thoi gian: dong ho van chay khi man khoa (chu dich) — KHONG dich moc, thoi luong ghi dung
       const n=selfHide?0:estGapReps(d/1000);
       if(d>5000 && n>=1){
-        // may khong the dem khi man hinh khoa — hoi user co bu theo uoc tinh khong, KHONG tu cong
-        document.getElementById('gapMsg').textContent='Bấm nút nguồn là máy ngưng đếm ('+Math.round(d/1000)+' giây vừa rồi không được ghi). Theo nhịp của bạn, khoảng '+n+' nhịp đã trôi qua — bù vào chứ? Lần sau muốn màn hình tối, dùng nút 🌙 Bỏ túi nhé.';
-        document.getElementById('gapAdd').textContent='＋ Bù '+n+' nhịp';
+        // may khong the dem khi man hinh khoa — hoi user co bu theo uoc tinh khong, KHONG tu cong; bien loi thanh hanh vi dung ngay
+        S.pocketArm=true; // nho loi -> ep glow nut Bo tui o set ke tiep du da qua tran 8 buoi
+        document.getElementById('gapMsg').textContent='Bấm nút nguồn là máy ngưng đếm ('+Math.round(d/1000)+' giây vừa rồi không được ghi). Khoảng '+n+' nhịp đã trôi qua. Bù vào rồi bật 🌙 Bỏ túi để phần còn lại vẫn đếm nhé.';
+        document.getElementById('gapAdd').textContent='＋ Bù '+n+' & bật 🌙 Bỏ túi';
         S._gapN=n; S._gapSet=S.setIdx; S._gapEx=S.ex.id; pocketOff(); openModal('modalGap',true); // pocketOverlay z-90 de len modal z-50 — phai tat man den truoc
       } else coach('resume');
     }
@@ -2093,7 +2119,10 @@ document.addEventListener('visibilitychange',()=>{
   onReturnVisible();
 });
 document.getElementById('gapAdd').addEventListener('click',()=>{ openModal('modalGap',false);
-  if(S.phase==='active' && S.ex && S._gapSet===S.setIdx && S._gapEx===S.ex.id) addReps(S._gapN||0); // modal cu treo sang set/bai khac: bo — khong tiem nhip ao vao set moi
+  if(S.phase==='active' && S.ex && S._gapSet===S.setIdx && S._gapEx===S.ex.id){ // modal cu treo sang set/bai khac: bo — khong tiem nhip ao vao set moi
+    addReps(S._gapN||0);
+    if(S.phase==='active') pocketOn(); // 1 cham = bu nhip + bat Bo tui luon (bien loi thanh hanh vi dung). addReps co the finishSet -> re-check phase, khong mo man den tren set da xong
+  }
   S._gapN=0; });
 document.getElementById('gapSkip').addEventListener('click',()=>{ openModal('modalGap',false); S._gapN=0; coach('resume'); });
 
