@@ -63,6 +63,13 @@ h2{font-size:16.5px;font-weight:700;letter-spacing:-.2px}
 .btn:active{transform:scale(.97);filter:brightness(1.05)}
 .btn-main{background:var(--grad);color:var(--on-accent);font-weight:800;box-shadow:0 10px 26px rgba(139,227,59,.25)}
 .btn-ghost{background:var(--card2);color:var(--txt);border:1px solid var(--line)}
+.coachpick{display:flex;gap:10px;margin-top:12px}
+.coachtile{flex:1;background:var(--card2);border:1.5px solid var(--line);border-radius:14px;padding:12px 8px;text-align:center;cursor:pointer;transition:border-color .15s,background .15s;font-family:inherit;color:var(--txt)}
+.coachtile.sel{border-color:var(--accent);background:rgba(201,246,83,.08)}
+.coachtile .av{font-size:32px;line-height:1}
+.coachtile .nm{font-weight:800;font-size:14px;margin-top:5px}
+.coachtile.sel .nm{color:var(--accent)}
+.coachtile .tg{font-size:11px;color:var(--sub);margin-top:3px;line-height:1.35}
 .btn-pocket{background:rgba(201,246,83,.10);color:var(--accent);border:1.5px solid var(--accent);font-weight:800}
 .btn-pocket:active{transform:scale(.97);filter:brightness(1.1)}
 .btn-pocket .kbd{display:block;font-size:11px;font-weight:600;color:var(--sub);margin-top:2px}
@@ -236,10 +243,11 @@ label.f{display:block;margin-top:20px;font-size:13px;font-weight:700;color:var(-
     </div>
     <div class="card">
       <div style="display:flex;justify-content:space-between;align-items:center">
-        <h2>Giọng HLV</h2>
+        <h2>Huấn luyện viên</h2>
         <button class="btn btn-ghost btn-sm" id="voiceToggle">🔊 Bật</button>
       </div>
-      <div class="sub" style="margin-top:6px">HLV sẽ đếm to từng rep, cổ vũ khi bạn chậm nhịp và khen khi hoàn thành.</div>
+      <div class="sub" style="margin-top:6px">Chọn HLV — mỗi người một chất giọng &amp; cách cổ vũ riêng. Chạm để nghe thử.</div>
+      <div class="coachpick" id="coachPick"></div>
     </div>
     <div class="card">
       <h2>Hôm nay</h2>
@@ -668,16 +676,35 @@ function pick(key, vars={}){
   return s;
 }
 
+/* =================== HLV (persona giong) =================== */
+// moi HLV = 1 giong + 1 thu muc clip rieng + tinh cach. Mac dinh 'namminh' o voice/ (goc).
+const PERSONAS = [
+  {id:'namminh', name:'Anh Nam', emoji:'💪', tag:'Nghiêm khắc, tiếp lửa mạnh', base:'voice/'},
+  {id:'hoaimy',  name:'Chị Mai', emoji:'🌸', tag:'Nhẹ nhàng, động viên', base:'voice/hoaimy/'},
+];
+function coachId(){ try{ return localStorage.getItem('gpt_coach')||'namminh'; }catch(e){ return 'namminh'; } }
+function curPersona(){ return PERSONAS.find(p=>p.id===coachId())||PERSONAS[0]; }
+
 /* =================== VOICE ENGINE =================== */
-/* Uu tien file mp3 thu san (voice/) — fallback TTS trinh duyet */
+/* Uu tien file mp3 thu san (voice/<persona>/) — fallback TTS trinh duyet */
 const Voice = {
   ok:false, files:null, base:'voice/', ctx:null, bufs:new Map(), MAX_BUFS:140,
   cur:null, curSrcs:[], token:0, criticalPlaying:false,
   async init(){
+    this.base = curPersona().base; // chon thu muc theo HLV dang chon
     try{
       const r = await fetch(this.base+'manifest.json', {cache:'no-cache'});
       if(r.ok){ this.files = new Set(await r.json()); this.ok = this.files.size>0; }
     }catch(e){}
+  },
+  async setPersona(id){ // doi HLV: nap manifest giong moi, xoa cache giong cu, chao 1 cau
+    const p=PERSONAS.find(x=>x.id===id); if(!p) return;
+    try{ localStorage.setItem('gpt_coach',id); }catch(e){}
+    this.stop(); this.bufs.clear(); this.ok=false; this.files=null;
+    this._prefetching=false; this._prefetchDone=false;
+    await this.init();
+    if(this.ok){ this.prefetchAll(); this.play(['p_voiceon_0'], true); } // chao bang giong moi
+    else speak('Đã đổi huấn luyện viên!', true); // giong chua tai duoc -> bao bang TTS
   },
   /* iOS Safari: WebAudio phai duoc unlock boi cham tay 1 lan, sau do timer phat tu do */
   unlock(){
@@ -995,6 +1022,18 @@ document.getElementById('modeSeg').addEventListener('click',e=>{
 document.getElementById('voiceToggle').addEventListener('click',e=>{
   voiceOn=!voiceOn; e.target.textContent = voiceOn?'🔊 Bật':'🔇 Tắt';
   if(voiceOn) sayKeys('Giọng HLV đã bật!',['p_voiceon_0'],true); else {Voice.stop(); try{speechSynthesis.cancel()}catch(e2){}}
+});
+function renderCoachPick(){
+  const el=document.getElementById('coachPick'); if(!el) return;
+  const cur=coachId();
+  el.innerHTML=PERSONAS.map(p=>`<button class="coachtile ${p.id===cur?'sel':''}" data-coach="${p.id}"><div class="av">${p.emoji}</div><div class="nm">${p.name}</div><div class="tg">${p.tag}</div></button>`).join('');
+}
+document.getElementById('coachPick').addEventListener('click',e=>{
+  const t=e.target.closest('.coachtile'); if(!t) return;
+  const id=t.dataset.coach;
+  voiceOn=true; document.getElementById('voiceToggle').textContent='🔊 Bật'; // chon HLV = muon nghe -> bat tieng
+  if(id!==coachId()) Voice.setPersona(id); else Voice.play(['p_voiceon_0'],true); // chon lai chinh no -> nghe thu
+  renderCoachPick();
 });
 function renderHistory(){
   const el=document.getElementById('histList');
@@ -2258,7 +2297,7 @@ document.getElementById('btnHistAll').addEventListener('click',()=>{ renderHistS
 document.getElementById('btnHistBack').addEventListener('click',()=>{ renderHistory(); show('scr-home'); });
 
 /* ===== sao luu / khoi phuc ===== */
-const BK_KEYS=['gpt_history','gpt_profile','gpt_lastkg','gpt_mode','gpt_sens','gpt_bw'];
+const BK_KEYS=['gpt_history','gpt_profile','gpt_lastkg','gpt_mode','gpt_sens','gpt_bw','gpt_coach'];
 document.getElementById('btnBackup').addEventListener('click',()=>{
   const data={app:'AI Gym PT', version:1, exportedAt:new Date().toISOString()};
   BK_KEYS.forEach(k=>{ const v=localStorage.getItem(k); if(v!==null) data[k]=v; });
@@ -2277,7 +2316,7 @@ document.getElementById('restoreFile').addEventListener('change',e=>{
       const staged={};
       BK_KEYS.forEach(k=>{
         if(typeof data[k]!=='string') return;
-        if(k==='gpt_mode'||k==='gpt_sens'||k==='gpt_bw'){ staged[k]=data[k]; return; } // gia tri thuong, khong phai JSON
+        if(k==='gpt_mode'||k==='gpt_sens'||k==='gpt_bw'||k==='gpt_coach'){ staged[k]=data[k]; return; } // gia tri thuong, khong phai JSON
         const v=JSON.parse(data[k]); // hong -> nem, khong ghi gi
         if(k==='gpt_history' && !Array.isArray(v)) throw new Error('lịch sử sai định dạng');
         if((k==='gpt_profile'||k==='gpt_lastkg') && (typeof v!=='object'||v===null||Array.isArray(v))) throw new Error(k+' sai định dạng');
@@ -2379,7 +2418,7 @@ document.addEventListener('keydown',e=>{ if(!LB.el.classList.contains('on'))retu
 
 /* =================== INIT =================== */
 S.selKg = lastKg[S.selEx]!==undefined ? +lastKg[S.selEx] : 0;
-renderMode(); renderHistory(); renderProfile();
+renderMode(); renderHistory(); renderProfile(); renderCoachPick();
 Voice.init().then(()=>{ setTimeout(()=>Voice.prefetchAll(),4000); }); // tai ngam bo giong sau 4s
 window.addEventListener('online',()=>{ // mat mang giua chung -> co mang lai thi tai tiep (SW cache hit = re)
   if(!Voice.ok) Voice.init().then(()=>Voice.prefetchAll());
