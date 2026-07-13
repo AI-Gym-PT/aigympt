@@ -1429,14 +1429,29 @@ function startCountdown(){
     if(isFirst) idxs=cues.map((_,i)=>i).slice(0,7);                       // set 1: het (toi da 7 cho khoi qua dai)
     else{ const pick=Math.min(2,cues.length); idxs=[...cues.keys()].sort(()=>Math.random()-0.5).slice(0,pick).sort((a,b)=>a-b); } // set sau: 1-2 ngau nhien
   }
-  const CUE_GAP=4200, INTRO_GAP=1900, CD_SEC=isFirst?10:6;
-  sayKeys(`Chuẩn bị bài ${ex.name}!`, [`ex_${ex.id}`,'cb'], true); // "<Ten bai>. Chuẩn bị!"
-  after(600,()=>{ if(S.phase==='countdown') document.getElementById('cdLabel').textContent=isFirst?'Vào tư thế theo hướng dẫn…':'Chuẩn bị…'; });
-  let t=INTRO_GAP;
-  idxs.forEach(ci=>{ after(t,()=>{ if(S.phase!=='countdown')return; const tx=cues[ci];
-    document.getElementById('cdLabel').textContent=tx;
-    if(!Voice.play(['su_'+ex.id+'_'+ci],true,tx)) speak(tx,true); }); t+=CUE_GAP; });
-  after(t+400, ()=>startCd(CD_SEC));
+  const CD_SEC=isFirst?10:6;
+  Voice.unlock(); // mo audio (den tu cu cham btnGo) de doc duoc do dai clip
+  // chuoi noi: intro + tung cue. KHE NGHI THEO DO DAI CLIP THAT -> khong cat cau dai, nhip tu nhien.
+  const items=[{keys:[`ex_${ex.id}`,'cb'], text:`Chuẩn bị bài ${ex.name}!`, label:isFirst?'Vào tư thế theo hướng dẫn…':'Chuẩn bị…'}];
+  idxs.forEach(ci=>items.push({keys:['su_'+ex.id+'_'+ci], text:cues[ci], label:cues[ci]}));
+  speakSeq(items, 0, 2000, ()=>startCd(CD_SEC));
+}
+// doc lan luot: chỉ đọc câu sau khi câu trước phát XONG + nghỉ `pause` ms (theo do dai clip that)
+function speakSeq(items, k, pause, doneFn){
+  if(S.phase!=='countdown') return;
+  if(k>=items.length){ doneFn(); return; }
+  const it=items[k];
+  if(it.label!=null){ const el=document.getElementById('cdLabel'); if(el) el.textContent=it.label; }
+  const keys=(voiceOn?it.keys:[]).filter(x=>Voice.has(x));
+  const nextFixed=()=>{ if(voiceOn && it.text) speak(it.text, true); after(3200, ()=>speakSeq(items,k+1,pause,doneFn)); };
+  if(keys.length && Voice.ctx){
+    Promise.all(keys.map(x=>Voice.buffer(x))).then(clips=>{
+      if(S.phase!=='countdown') return;
+      Voice.play(keys, true, it.text);
+      const total=clips.reduce((a,c)=>a+(c.dur||0),0);
+      after(Math.max(1400, total*1000)+pause, ()=>speakSeq(items,k+1,pause,doneFn));
+    }).catch(nextFixed);
+  } else nextFixed();
 }
 function startCd(sec){
   if(S.phase!=='countdown') return;
