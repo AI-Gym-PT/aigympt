@@ -1,0 +1,643 @@
+{
+ "machinechest": [
+  "Áp sát lưng và đầu vào tựa lưng.",
+  "Kéo vai xuống và ra sau.",
+  "Chỉnh ghế để tay cầm ngang giữa ngực.",
+  "Mở khuỷu khoảng 45 độ so với thân.",
+  "Siết bụng, giữ ngực mở.",
+  "Giữ cổ tay thẳng.",
+  "Đặt bàn chân chắc trên sàn."
+ ],
+ "dbpress": [
+  "Đưa tạ về nằm trên ngực, ngay dưới tầm mắt.",
+  "Giữ cổ tay thẳng, không gập.",
+  "Kéo vai xuống và ra sau.",
+  "Ép chặt đầu, vai và mông vào ghế.",
+  "Mở khuỷu khoảng 45–60 độ so với thân.",
+  "Siết bụng và giữ ngực mở.",
+  "Đặt bàn chân chắc trên sàn."
+ ],
+ "bench": [
+  "Đặt mắt nằm ngay dưới thanh đòn.",
+  "Nắm đòn rộng hơn vai một chút.",
+  "Ngón cái ôm trọn quanh thanh đòn.",
+  "Giữ cổ tay thẳng.",
+  "Ép chặt đầu, vai và mông áp sát ghế.",
+  "Kéo vai xuống và ra sau.",
+  "Siết bụng, giữ ngực mở.",
+  "Mở khuỷu khoảng 45–75° so với thân, bàn chân đặt chắc trên sàn."
+ ],
+ "incline": [
+  "Đưa tạ về ngang ngực trên, ngay dưới tầm mắt.",
+  "Giữ cổ tay thẳng.",
+  "Kéo vai xuống và ra sau.",
+  "Áp sát đầu, vai và mông vào ghế.",
+  "Mở khuỷu khoảng 45 đến 60 độ so với thân.",
+  "Siết bụng và giữ ngực mở.",
+  "Chỉnh ghế dốc 30 đến 45 độ.",
+  "Đặt bàn chân chắc trên sàn."
+ ],
+ "pecdeck": [
+  "Chỉnh ghế để hai tay ngang ngực.",
+  "Khuỷu và cổ tay giữ ngang vai.",
+  "Cẳng tay tỳ vào đệm, tay nắm chắc tay cầm, khuỷu gập khoảng 90 độ.",
+  "Kéo vai xuống và ra sau.",
+  "Ép lưng và đầu áp sát ghế.",
+  "Siết bụng, giữ ngực mở.",
+  "Không để tay ra sau thân.",
+  "Đặt bàn chân chắc trên sàn."
+ ],
+ "fly": [
+  "Chỉnh ròng rọc ngang vai hoặc hơi cao hơn.",
+  "Mở ngực ra, kéo vai xuống và ra sau.",
+  "Giữ cổ tay thẳng.",
+  "Khuỷu hơi gập một góc 15 đến 30 độ.",
+  "Mở tay sang ngang, đừng đưa ra sau thân.",
+  "Siết bụng, giữ thân người ổn định.",
+  "Đứng một chân trước, một chân sau.",
+  "Bàn chân bám chắc xuống sàn."
+ ],
+ "latpull": [
+  "Nắm thanh rộng hơn vai một chút.",
+  "Giữ cổ trung lập, mắt nhìn thẳng về trước.",
+  "Hạ vai xuống, kéo nhẹ ra sau.",
+  "Siết bụng, mở ngực.",
+  "Ngả thân ra sau nhẹ khoảng 20 độ.",
+  "Khóa chắc đùi dưới đệm.",
+  "Đặt bàn chân phẳng, gối gập khoảng 90 độ."
+ ],
+ "cablerow": [
+  "Hạ vai xuống, đừng nhún vai.",
+  "Mở ngực, siết bụng, giữ cột sống trung lập.",
+  "Giữ thân người thẳng hoặc ngả nhẹ 5 đến 10 độ.",
+  "Duỗi tay ra hết tầm nhưng đừng gù lưng.",
+  "Nắm tay cầm chữ V, giữ cổ tay thẳng.",
+  "Đạp chắc bàn chân lên bàn đạp.",
+  "Gối hơi chùng, đừng khóa cứng."
+ ],
+ "chestrow": [
+  "Hạ vai xuống, đừng nhún vai.",
+  "Áp nhẹ ngực vào đệm ngực.",
+  "Duỗi tay hết tầm nhưng đừng rướn người.",
+  "Siết bụng, giữ cột sống trung lập.",
+  "Nắm chắc tay cầm, giữ cổ tay thẳng.",
+  "Chỉnh ghế sao cho tay cầm ngang vai, ngang ngực giữa.",
+  "Đạp chắc hai bàn chân, giữ thân ổn định."
+ ],
+ "dbrow": [
+  "Giữ lưng phẳng, đầu thẳng hàng với cột sống.",
+  "Tay chống đặt ngay dưới vai.",
+  "Siết bụng, giữ thân người ổn định.",
+  "Hạ vai xuống, không nhún vai.",
+  "Đặt gối cùng bên chắc trên ghế.",
+  "Giữ hông và vai gần song song với sàn, không xoay người.",
+  "Chân còn lại đạp vững xuống sàn.",
+  "Tay cầm tạ duỗi tự nhiên, giữ cổ tay thẳng."
+ ],
+ "machinerow": [
+  "Áp nhẹ ngực vào đệm, giữ thân người ổn định.",
+  "Hạ vai xuống, giữ cổ thẳng, mắt nhìn thẳng phía trước.",
+  "Giữ lưng trung lập, siết nhẹ bụng.",
+  "Duỗi tay hết tầm nhưng đừng rướn vai.",
+  "Chỉnh ghế sao cho tay cầm ngang ngực giữa hoặc ngang vai.",
+  "Nắm chắc tay cầm, giữ cổ tay thẳng.",
+  "Đạp chắc bàn chân lên bệ, giữ thân dưới vững."
+ ],
+ "straightarm": [
+  "Chỉnh ròng rọc lên vị trí cao, gắn tay cầm phù hợp.",
+  "Hạ vai xuống, giữ cổ thẳng, mắt nhìn về trước.",
+  "Duỗi tay gần thẳng, khuỷu chỉ hơi mềm.",
+  "Siết bụng, giữ ngực mở nhẹ.",
+  "Gập hông nhẹ, giữ cột sống trung lập.",
+  "Chùng gối nhẹ, giữ thân dưới vững.",
+  "Lùi lại một bước, đặt bàn chân rộng ngang hông."
+ ],
+ "assistpullup": [
+  "Giữ cổ thẳng, mắt nhìn thẳng phía trước hoặc hơi lên.",
+  "Nắm xà úp tay, rộng hơn vai một chút.",
+  "Mở ngực nhẹ, giữ cột sống trung lập.",
+  "Hạ vai xuống, không nhún vai.",
+  "Siết bụng lại, tránh đung đưa người.",
+  "Quỳ chắc lên đệm hỗ trợ, giữ thân dưới ổn định.",
+  "Chọn mức tạ hỗ trợ phù hợp trước khi lên máy."
+ ],
+ "backext": [
+  "Giữ cổ thẳng, mắt nhìn xuống phía trước.",
+  "Bắt chéo hai tay trước ngực để dễ kiểm soát.",
+  "Giữ thân người thẳng hàng, cột sống trung lập.",
+  "Siết bụng và siết nhẹ mông để giữ ổn định.",
+  "Chỉnh đệm sao cho mép đệm nằm ngay dưới nếp gập hông.",
+  "Đừng ưỡn lưng quá mức trước khi bắt đầu.",
+  "Móc chân chắc dưới đệm giữ, cố định bàn chân."
+ ],
+ "machineshoulder": [
+  "Giữ cổ tay thẳng.",
+  "Chỉnh ghế sao cho tay cầm ngang vai.",
+  "Để khuỷu hơi chếch trước thân cho vai an toàn hơn.",
+  "Ép đầu, lưng trên và mông áp sát đệm.",
+  "Siết core và mở ngực ra.",
+  "Đặt bàn chân chắc trên sàn."
+ ],
+ "dbshoulder": [
+  "Đưa tạ lên ngang vai, sát gần tai.",
+  "Giữ cổ tay thẳng.",
+  "Ngồi chắc trên ghế tựa.",
+  "Khuỷu đưa hơi ra trước thân.",
+  "Ép lưng trên, đầu và mông sát vào đệm.",
+  "Hạ vai xuống, không nhún vai.",
+  "Siết chặt core và mở rộng ngực.",
+  "Đặt bàn chân chắc trên sàn."
+ ],
+ "latraise": [
+  "Giữ đầu thẳng hàng với cột sống.",
+  "Hạ vai xuống, giữ cổ dài.",
+  "Siết chặt core, mở rộng ngực.",
+  "Khuỷu tay hơi gập tự nhiên, đừng khóa cứng.",
+  "Giữ cổ tay thẳng.",
+  "Đặt tạ cạnh đùi, lòng bàn tay hướng vào thân.",
+  "Đứng vững, hai chân rộng bằng hông."
+ ],
+ "cablelatraise": [
+  "Đứng nghiêng cạnh máy cáp.",
+  "Hạ vai xuống, giữ cổ dài.",
+  "Khuỷu tay hơi gập tự nhiên.",
+  "Chỉnh ròng rọc đặt khoảng ngang eo.",
+  "Siết core, mở ngực.",
+  "Cổ tay giữ thẳng.",
+  "Tay không tập bám nhẹ máy để giữ thăng bằng.",
+  "Cầm tay bên ngoài thân, cáp đi chéo trước người, chân đứng vững rộng bằng hông."
+ ],
+ "reardelt": [
+  "Chỉnh ghế dốc khoảng 30 đến 45 độ.",
+  "Tì ngực vào ghế, giữ đầu thẳng hàng với cột sống.",
+  "Hạ vai xuống, giữ cổ dài.",
+  "Siết core, giữ thân ổn định.",
+  "Khuỷu tay hơi gập tự nhiên.",
+  "Thả tạ xuống dưới vai.",
+  "Giữ cổ tay thẳng.",
+  "Đặt bàn chân chắc trên sàn."
+ ],
+ "facepull": [
+  "Chỉnh ròng rọc ngang tầm mắt hoặc cao hơn một chút.",
+  "Cầm chắc hai đầu dây thừng.",
+  "Giữ đầu thẳng hàng với cột sống.",
+  "Giữ cổ tay thẳng.",
+  "Hạ vai xuống, không nhún vai.",
+  "Siết chặt core và mở ngực.",
+  "Bước lùi để cáp luôn căng.",
+  "Đứng vững, hai chân so le nhẹ."
+ ],
+ "curl": [
+  "Siết chặt core, mở ngực, hạ vai xuống và kéo nhẹ ra sau.",
+  "Giữ khuỷu tay áp sát thân người.",
+  "Mỗi tay cầm một tạ đơn, lòng bàn tay hướng ra trước.",
+  "Giữ cổ tay thẳng, không bẻ cổ tay.",
+  "Đứng thẳng, chân rộng bằng hông, gối hơi chùng."
+ ],
+ "bbcurl": [
+  "Đứng thẳng, siết chặt bụng và mở ngực ra.",
+  "Khuỷu tay khép sát thân, hạ vai xuống.",
+  "Cầm tạ đòn ngửa tay, hai tay rộng ngang vai.",
+  "Cổ tay giữ thẳng, nắm kín thanh đòn.",
+  "Hai chân rộng bằng hông, gối hơi chùng.",
+  "Đưa thanh đòn ra trước đùi, tay duỗi gần hết."
+ ],
+ "hammer": [
+  "Đứng thẳng, siết bụng, mở ngực.",
+  "Hai chân rộng bằng hông, gối hơi chùng.",
+  "Cầm tạ kiểu trung lập, lòng bàn tay hướng vào nhau.",
+  "Khuỷu tay giữ sát thân, hạ vai xuống.",
+  "Cổ tay giữ thẳng, không bẻ cổ tay.",
+  "Bắt đầu với tay duỗi gần hết ở hai bên thân."
+ ],
+ "cablecurl": [
+  "Đứng thẳng, siết bụng, mở ngực ra.",
+  "Nắm thanh cáp ngửa tay, hai tay rộng ngang vai.",
+  "Khuỷu tay ép sát thân, hạ vai xuống.",
+  "Giữ cổ tay thẳng, nắm kín thanh.",
+  "Hai chân rộng bằng hông, gối hơi chùng.",
+  "Bắt đầu với thanh cáp trước đùi, tay duỗi gần hết mà dây vẫn căng."
+ ],
+ "pushdown": [
+  "Đặt ròng rọc lên cao và gắn dây thừng vào.",
+  "Kéo vai xuống và ra sau.",
+  "Cầm dây kiểu trung lập, hai lòng bàn tay đối nhau.",
+  "Kẹp cùi chỏ sát thân.",
+  "Giữ cổ tay trung lập, đừng gập cổ tay.",
+  "Siết core, mở ngực.",
+  "Bắt đầu với tay gập, dây ở ngang thân trên.",
+  "Đứng chân rộng bằng hông hoặc so le nhẹ."
+ ],
+ "triext": [
+  "Kéo vai xuống và ra sau.",
+  "Cùi chỏ hướng lên, kẹp gần đầu.",
+  "Siết core, gồng bụng nhẹ, không ưỡn lưng.",
+  "Đứng chân rộng bằng hông hoặc so le nhẹ.",
+  "Cầm một tạ đơn bằng hai tay.",
+  "Giữ cổ tay trung lập.",
+  "Bắt đầu với tạ ở sau đầu, tay gập lại."
+ ],
+ "assistdip": [
+  "Kéo vai xuống và ra sau.",
+  "Mở ngực, giữ thân ổn định.",
+  "Cùi chỏ hướng ra sau, đừng xòe ngang.",
+  "Bắt đầu ở vị trí trên, duỗi tay gần hết nhưng đừng khóa cứng khuỷu.",
+  "Siết chặt core, không đung đưa.",
+  "Chọn mức hỗ trợ phù hợp, càng nhiều hỗ trợ càng dễ.",
+  "Nắm chắc tay cầm, giữ cổ tay trung lập.",
+  "Quỳ gối chắc lên pad hỗ trợ."
+ ],
+ "closegrip": [
+  "Chỉnh ghế sao cho tay cầm ngang giữa ngực.",
+  "Lưng áp sát vào tựa ghế.",
+  "Kéo vai xuống và ra sau.",
+  "Mở ngực, siết chặt core.",
+  "Khép cùi chỏ khoảng 30 đến 45 độ so với thân.",
+  "Đặt bàn chân chắc trên sàn.",
+  "Nắm tay cầm hẹp, giữ cổ tay trung lập.",
+  "Bắt đầu với tay cầm gần ngực, chọn mức tạ đủ để kiểm soát."
+ ],
+ "legpress": [
+  "Đặt hai chân rộng bằng hông.",
+  "Mũi chân hướng thẳng về phía trước.",
+  "Gập gối khoảng 90 độ.",
+  "Ép sát gót chân vào bàn đạp.",
+  "Áp sát lưng và xương cùng vào đệm tựa.",
+  "Giữ gối thẳng hàng với mũi chân.",
+  "Gồng chặt core và nắm chắc tay cầm."
+ ],
+ "goblet": [
+  "Mắt nhìn thẳng về phía trước.",
+  "Ôm tạ sát trước ngực.",
+  "Giữ khuỷu tay gần sát thân người.",
+  "Mở ngực, giữ lưng thẳng.",
+  "Đứng chân rộng bằng vai.",
+  "Gồng chặt core.",
+  "Dồn trọng tâm vào giữa bàn chân và gót."
+ ],
+ "smithsquat": [
+  "Mắt nhìn thẳng về phía trước.",
+  "Mở ngực, giữ cột sống trung lập.",
+  "Gồng chặt core.",
+  "Đứng chân rộng bằng vai.",
+  "Đặt bàn chân hơi nhích ra trước thanh đòn.",
+  "Xoay mũi chân mở nhẹ 15 đến 30 độ.",
+  "Đặt thanh đòn tựa trên cơ vai, phần upper traps.",
+  "Nắm thanh rộng hơn vai một chút."
+ ],
+ "rdl": [
+  "Mắt nhìn xuống phía trước khoảng 1 đến 2 mét.",
+  "Cằm thu nhẹ lại.",
+  "Vai kéo xuống và ra sau.",
+  "Mở ngực, giữ cột sống trung lập.",
+  "Gồng chặt core.",
+  "Tay duỗi thẳng, nắm tạ thật chắc.",
+  "Giữ tạ sát đùi.",
+  "Gối chùng nhẹ."
+ ],
+ "hipthrust": [
+  "Thu nhẹ cằm, mắt nhìn thẳng về trước.",
+  "Tựa mép ghế vào ngay dưới xương bả vai.",
+  "Hạ xương sườn xuống, gồng chặt core.",
+  "Đặt thanh đòn vào nếp gấp hông, nhớ lót pad.",
+  "Hai tay giữ chắc thanh cho ổn định.",
+  "Mở chân rộng bằng hông, mũi chân hơi xoay nhẹ ra.",
+  "Đầu gối hướng theo mũi chân, cẳng chân gần thẳng đứng khi lên đỉnh.",
+  "Bám chặt bàn chân xuống sàn, dồn lực vào gót và giữa bàn chân."
+ ],
+ "glutebridge": [
+  "Đặt tạ lên nếp gấp hông nếu dùng tạ.",
+  "Hai tay giữ tạ thật ổn định.",
+  "Thu cằm nhẹ, mắt nhìn lên trần.",
+  "Hạ xương sườn xuống, gồng chặt core.",
+  "Đầu gối hướng theo mũi chân.",
+  "Đặt chân rộng bằng hông.",
+  "Ép nhẹ lưng dưới xuống sàn.",
+  "Kéo gót chân lại gần mông."
+ ],
+ "legext": [
+  "Giữ cổ trung lập, mắt nhìn thẳng về trước.",
+  "Cố định đùi dưới đệm chặn.",
+  "Gồng nhẹ cơ core.",
+  "Canh trục gối thẳng hàng với trục máy.",
+  "Chỉnh ghế vừa chiều dài chân, ép lưng và mông sát vào ghế.",
+  "Gập gối khoảng 90 độ.",
+  "Nắm chắc hai tay cầm.",
+  "Đặt đệm cẳng chân ngay trên cổ chân, bàn chân hướng thẳng hoặc mở nhẹ."
+ ],
+ "legcurl": [
+  "Canh gối thẳng hàng với trục xoay của máy.",
+  "Gồng core, giữ cột sống trung lập.",
+  "Nằm sấp, hông áp sát ghế.",
+  "Đặt đệm tỳ ở một phần ba dưới cẳng chân, ngay trên gót.",
+  "Nắm chắc tay cầm.",
+  "Duỗi chân gần thẳng, đừng khóa gối.",
+  "Giữ bàn chân trung tính."
+ ],
+ "kickback": [
+  "Hai tay bám chắc trụ máy.",
+  "Nghiêng người nhẹ về trước, giữ lưng trung lập.",
+  "Gồng core, giữ hông vuông.",
+  "Đặt ròng rọc ở mức thấp, đeo cuff vào cổ chân.",
+  "Chân trụ hơi chùng gối.",
+  "Chân làm việc hơi gập gối, đặt ngay dưới hông.",
+  "Giữ bàn chân trung tính, mũi chân hướng xuống nhẹ.",
+  "Dồn trọng tâm vào chân trụ."
+ ],
+ "lunge": [
+  "Mắt nhìn thẳng về phía trước.",
+  "Mở ngực, thả lỏng vai.",
+  "Giữ cột sống trung lập.",
+  "Tay cầm tạ sát hai bên thân.",
+  "Gồng chặt core.",
+  "Siết nhẹ mông để ổn định hông.",
+  "Đặt bàn chân rộng bằng hông.",
+  "Dồn lực đều, bám chắc bàn chân."
+ ],
+ "plank": [
+  "Đặt khuỷu tay ngay dưới vai.",
+  "Áp cẳng tay xuống sàn, bàn tay thả lỏng hoặc đan nhẹ vào nhau.",
+  "Siết nhẹ cơ bụng và giữ cổ trung lập.",
+  "Chống mũi chân, duỗi từng chân ra sau.",
+  "Chuẩn bị tạo một đường thẳng từ đầu đến gót chân."
+ ],
+ "deadbug": [
+  "Đưa hai tay hướng thẳng lên trần.",
+  "Gập hông và gối vuông góc 90 độ.",
+  "Giữ ống chân song song với sàn.",
+  "Thả lỏng cổ, không nhún vai.",
+  "Siết bụng, kéo xương sườn xuống.",
+  "Giữ lưng dưới áp sát thảm, không ưỡn."
+ ],
+ "crunch": [
+  "Thu nhẹ cằm, thả lỏng cổ.",
+  "Siết nhẹ bụng, giữ cột sống trung tính.",
+  "Nằm ngửa trên thảm.",
+  "Gập gối, đặt hai bàn chân chắc xuống sàn.",
+  "Đặt gót chân cách mông khoảng 30 đến 45 cm.",
+  "Mở bàn chân rộng bằng hông."
+ ],
+ "cablecrunch": [
+  "Gắn dây thừng vào ròng rọc cao.",
+  "Giữ hai đầu dây sát hai bên thái dương.",
+  "Giữ cổ trung tính, mắt nhìn xuống nhẹ.",
+  "Siết nhẹ bụng, chuẩn bị gập cột sống.",
+  "Hướng khuỷu tay xuống và hơi khép lại.",
+  "Chuẩn bị kéo lồng ngực về phía xương chậu.",
+  "Giữ hông trên gối, đừng ngồi hẳn xuống gót.",
+  "Quỳ chắc trên thảm, hai gối rộng bằng hông."
+ ],
+ "hangingknee": [
+  "Nắm sấp xà, hai tay rộng bằng vai.",
+  "Ngón cái ôm trọn xà, siết chặt tay nắm.",
+  "Kéo vai xuống, đừng nhún vai lên.",
+  "Gồng bụng lại, hạ xương sườn xuống.",
+  "Hơi cuộn chậu ra sau, tránh võng lưng.",
+  "Khép chân, bàn chân hơi đưa ra trước.",
+  "Thiết lập tư thế treo thật ổn định trước khi kéo gối."
+ ],
+ "russian": [
+  "Giữ cổ trung lập, mắt nhìn theo tạ.",
+  "Cầm tạ bằng hai tay, giữ sát trước ngực.",
+  "Ngả thân sau khoảng 45 độ, lưng trung lập.",
+  "Gồng bụng, hạ xương sườn, tránh gù lưng.",
+  "Đặt gót chạm sàn để dễ kiểm soát hơn.",
+  "Ngồi vững trên mông, gập gối thoải mái.",
+  "Thiết lập thân nghiêng sau cho ổn định rồi mới xoay."
+ ],
+ "pallof": [
+  "Mắt nhìn thẳng, giữ cổ trung lập.",
+  "Tay cầm giữ sát trước ngực, khuỷu tay co nhẹ.",
+  "Gồng bụng, hạ xương sườn, tránh ưỡn lưng.",
+  "Hai chân rộng bằng vai, gối chùng nhẹ.",
+  "Đứng vuông góc với máy cáp.",
+  "Siết mông nhẹ, giữ hông và vai vuông về trước."
+ ],
+ "treadmill": [
+  "Mắt nhìn thẳng về phía trước.",
+  "Thả lỏng vai, mở ngực ra.",
+  "Siết nhẹ cơ bụng để giữ thân ổn định.",
+  "Đứng ở giữa băng tải.",
+  "Đặt bàn chân song song, mũi chân hướng về trước.",
+  "Tay vịn chỉ dùng khi lên hoặc xuống máy.",
+  "Bắt đầu chậm, khoảng 3,2 đến 4,8 km/h, độ dốc 0 đến 1%.",
+  "Khởi động 3 đến 5 phút trước khi tăng dốc."
+ ],
+ "bike": [
+  "Giữ cột sống trung lập, mắt nhìn thẳng về phía trước.",
+  "Thả lỏng vai, mở rộng lồng ngực.",
+  "Siết nhẹ cơ bụng để giữ thân người ổn định.",
+  "Ngồi vào giữa yên, giữ hông cân bằng.",
+  "Chỉnh yên xe ngang mức hông khi bạn đứng cạnh xe.",
+  "Đặt gót lên bàn đạp ở điểm thấp thì gối gần duỗi thẳng; khi đặt nửa trước bàn chân thì gối còn gập nhẹ.",
+  "Tay cầm nhẹ nhàng, khuỷu hơi chùng.",
+  "Bắt đầu chậm với lực cản thấp, nhịp đạp 50 đến 70 RPM, khởi động 3 đến 5 phút."
+ ],
+ "elliptical": [
+  "Mắt nhìn thẳng về trước, giữ cổ trung lập.",
+  "Thả lỏng vai, mở rộng ngực.",
+  "Siết nhẹ cơ bụng để giữ thân người ổn định.",
+  "Đứng giữa bàn đạp, giữ hông cân bằng.",
+  "Đặt bàn chân áp đều lên pedal, không nhón gót.",
+  "Tay cầm nhẹ nhàng, khuỷu tay hơi chùng.",
+  "Chọn lực cản thấp để chuyển động trơn tru."
+ ],
+ "farmer": [
+  "Mắt nhìn thẳng về phía trước.",
+  "Hạ vai xuống, mở ngực ra.",
+  "Siết nhẹ core, giữ cột sống trung lập.",
+  "Cầm chắc hai tạ, lòng bàn tay hướng vào đùi.",
+  "Đứng thẳng, hông cân bằng, không nghiêng người.",
+  "Đặt bàn chân rộng bằng hông, chuẩn bị bước ngắn có kiểm soát.",
+  "Chọn tạ vừa sức để giữ dáng đi thẳng.",
+  "Bắt đầu với quãng ngắn, tập kiểm soát tư thế."
+ ],
+ "battlerope": [
+  "Mắt nhìn thẳng về phía trước.",
+  "Hạ vai xuống, mở ngực ra.",
+  "Siết core, giữ lưng trung lập.",
+  "Cầm hai đầu dây kiểu overhand, cổ tay trung lập.",
+  "Đẩy nhẹ hông ra sau, gối hơi chùng.",
+  "Đứng hai chân rộng bằng hông đến vai.",
+  "Tạo độ chùng dây nhẹ giữa tay và điểm neo.",
+  "Bắt đầu 15-20 giây mỗi hiệp để làm quen nhịp."
+ ],
+ "chestdip": [
+  "Vai hạ xuống, giữ ổn định.",
+  "Ngực mở, không gù lưng.",
+  "Nắm thanh chắc, cổ tay trung tính.",
+  "Siết bụng, giữ thân không đung đưa.",
+  "Thân hơi nghiêng trước để dồn vào ngực.",
+  "Hít vào chuẩn bị.",
+  "Chân gập nhẹ, khép gọn phía sau.",
+  "Bắt đầu ở vị trí chống đỡ vững."
+ ],
+ "deadlift": [
+  "Giữ lưng trung lập, mở ngực vừa phải.",
+  "Hít sâu vào bụng, gồng core trước khi kéo.",
+  "Siết xô, kéo thanh sát ống chân.",
+  "Gập hông trước, chùng gối vừa đủ.",
+  "Đặt thanh trên giữa bàn chân.",
+  "Tay nắm ngay ngoài gối.",
+  "Đứng chân ngang hông, mũi chân hơi mở."
+ ],
+ "pullup": [
+  "Nắm xà rộng hơn vai một chút.",
+  "Giữ cổ trung lập, mắt nhìn thẳng phía trước.",
+  "Treo người, duỗi thẳng hết tay.",
+  "Hạ vai xuống, đừng nhún vai lên.",
+  "Siết bụng, khép sườn lại.",
+  "Bắt đầu từ active hang, tạo lực xô nhẹ.",
+  "Gồng mông nhẹ, khép hoặc bắt chéo chân."
+ ],
+ "ohp": [
+  "Đặt thanh tạ ngang vai.",
+  "Cổ tay giữ thẳng, thẳng hàng với khuỷu tay.",
+  "Đưa khuỷu tay hơi ra trước thanh tạ.",
+  "Mở ngực, siết chặt core.",
+  "Siết mông, đứng cho vững.",
+  "Đứng hai chân rộng bằng vai."
+ ],
+ "bulgarian": [
+  "Mở ngực ra, giữ lưng trung lập.",
+  "Hông vuông góc, mắt nhìn thẳng về phía trước.",
+  "Cầm hai tạ đơn nhỏ, thả xuôi dọc thân.",
+  "Đặt mu bàn chân sau lên ghế phía sau.",
+  "Bước chân trước ra đủ xa.",
+  "Gối trước hướng cùng chiều với mũi chân.",
+  "Dồn lực vào giữa bàn chân và gót chân trước.",
+  "Hít sâu, siết chặt core trước khi hạ người."
+ ],
+ "hipabduct": [
+  "Chỉnh máy cho biên độ phù hợp.",
+  "Áp đầu gối vào đệm.",
+  "Đặt bàn chân vững trên bệ.",
+  "Tựa lưng vào đệm, mở ngực.",
+  "Nắm chắc tay cầm.",
+  "Ngồi cân hông, không nghiêng.",
+  "Siết core, sẵn sàng mở gối.",
+  "Giữ gối và mũi chân cùng hướng."
+ ],
+ "latlunge": [
+  "Mắt nhìn thẳng về phía trước.",
+  "Đứng chân rộng hơn vai 1.5 đến 2 lần.",
+  "Hai tay cầm tạ trước ngực.",
+  "Siết core, giữ lưng thẳng.",
+  "Mũi chân hướng thẳng hoặc hơi mở ra ngoài."
+ ],
+ "stepup": [
+  "Mắt nhìn thẳng về phía trước.",
+  "Mở ngực, giữ lưng trung lập và siết chặt core.",
+  "Cầm tạ đơn buông hai bên thân.",
+  "Đặt trọn một chân lên bục.",
+  "Chọn bục cao ngang gối hoặc thấp hơn.",
+  "Chân dưới chỉ đỡ nhẹ, không lấy đà.",
+  "Dồn lực chuẩn bị vào chân đặt trên bục."
+ ],
+ "sumosquat": [
+  "Mắt nhìn thẳng về phía trước.",
+  "Mở ngực, giữ lưng trung lập.",
+  "Cầm một tạ đơn dọc, giữ ngay giữa hai chân.",
+  "Siết chặt core.",
+  "Đứng chân rộng hơn vai 1,5 đến 2 lần.",
+  "Hướng đầu gối theo mũi chân.",
+  "Xoay mũi chân mở 30 đến 45 độ.",
+  "Dồn đều trọng tâm khắp cả bàn chân."
+ ],
+ "chinup": [
+  "Tay nắm ngửa, rộng bằng vai hoặc hẹp hơn một chút.",
+  "Nắm kín thanh xà, giữ cổ tay trung tính.",
+  "Kéo vai xuống và hơi ra sau, đừng nhún vai lên.",
+  "Khuỷu tay gần như duỗi hết, sẵn sàng kéo.",
+  "Siết chặt bụng, giữ thân người thẳng, không đu đưa.",
+  "Có thể bắt chéo nhẹ hai chân ra sau để giữ ổn định."
+ ],
+ "inclinecurl": [
+  "Chỉnh ghế dốc khoảng 45 đến 60 độ, tựa chắc đầu và lưng vào ghế.",
+  "Hạ vai xuống, mở ngực nhẹ, tránh gù vai.",
+  "Cầm hai tạ đơn, lòng bàn tay ngửa ra trước, cổ tay giữ thẳng.",
+  "Giữ khuỷu tay gần thân, tay duỗi gần hết và hơi nằm sau thân.",
+  "Siết bụng, ngồi vững, hai chân đặt chắc trên sàn.",
+  "Giữ tạ đứng yên ở vị trí bắt đầu, chuẩn bị cuốn tạ lên."
+ ],
+ "preacher": [
+  "Ngồi chỉnh ghế sao cho nách và tay trên tựa chắc vào đệm.",
+  "Ngực áp gần đệm, vai hạ xuống, tránh gù vai.",
+  "Cầm thanh EZ ngửa tay, rộng bằng vai hoặc hơi hẹp hơn.",
+  "Khuỷu tay cố định trên đệm, cổ tay giữ thẳng.",
+  "Tay duỗi gần hết nhưng không khóa cứng khớp khuỷu.",
+  "Siết bụng, đặt chắc hai chân, giữ người ổn định trước khi cuốn tạ."
+ ],
+ "dip": [
+  "Giữ cổ trung lập, mắt nhìn thẳng về trước.",
+  "Hạ vai xuống, siết nhẹ bả vai.",
+  "Duỗi thẳng tay ở tư thế support, đừng treo lỏng vai.",
+  "Cùi chỏ hướng ra sau, giữ sát thân.",
+  "Siết chặt core, giữ thân gần thẳng.",
+  "Nắm chắc thanh, tay rộng bằng vai.",
+  "Chân gập nhẹ ra sau, không đung đưa."
+ ],
+ "cgbench": [
+  "Nắm thanh hẹp hơn vai một chút, giữ cổ tay thẳng.",
+  "Đặt mắt ngay dưới thanh trước khi nhấc ra.",
+  "Siết bả vai về sau và ghim xuống ghế.",
+  "Mở ngực, lưng cong nhẹ tự nhiên.",
+  "Khép khuỷu khoảng 30 đến 45 độ so với thân.",
+  "Giữ mông áp chắc trên ghế.",
+  "Đạp chắc hai bàn chân xuống sàn."
+ ],
+ "skullcrush": [
+  "Nắm tay cầm vào góc nghiêng của EZ-bar, giữ cổ tay thẳng.",
+  "Mắt nhìn lên thanh, vào tư thế thật ổn định.",
+  "Ghim vai xuống ghế, không nhô vai lên.",
+  "Mở ngực ra, lưng cong nhẹ tự nhiên.",
+  "Hướng khuỷu lên trần, giữ hai khuỷu gần nhau.",
+  "Giữ mông áp trên ghế, siết nhẹ core.",
+  "Đạp chắc hai bàn chân xuống sàn."
+ ],
+ "ohcable": [
+  "Cầm chắc dây thừng, cổ tay giữ trung lập.",
+  "Khuỷu tay hướng lên trần và giữ gần tai.",
+  "Hạ vai xuống, đừng nhô vai lên.",
+  "Đứng quay lưng với máy kéo, bước chân so le cho vững.",
+  "Đưa dây ra sau đầu, sát sau gáy.",
+  "Mắt nhìn thẳng về trước, cổ giữ trung lập.",
+  "Mở ngực, thân gần thẳng, đừng gập người quá mức.",
+  "Siết nhẹ core, không ưỡn lưng."
+ ],
+ "scable": [
+  "Chỉnh ròng rọc lên cao và lắp tay cầm đơn.",
+  "Tay còn lại bám vào khung máy để giữ ổn định.",
+  "Kẹp cùi chỏ sát thân, gập khuỷu khoảng 90 độ.",
+  "Mở ngực, siết chặt core, không nhún vai.",
+  "Giữ cổ tay thẳng, nắm chắc tay cầm.",
+  "Đứng vững, chân rộng bằng hông hoặc so le nhẹ."
+ ],
+ "abwheel": [
+  "Mắt nhìn xuống sàn, giữ cổ thẳng tự nhiên.",
+  "Siết bụng, kéo xương sườn xuống.",
+  "Gồng mông, giữ chậu trung lập.",
+  "Duỗi thẳng cánh tay, chủ động ép vai.",
+  "Tạo thân người thật vững chắc trước khi lăn bánh.",
+  "Cầm chắc tay cầm, giữ cổ tay trung lập.",
+  "Đặt bánh xe ngay dưới vai.",
+  "Quỳ trên thảm, đầu gối ngay dưới hông."
+ ],
+ "revcrunch": [
+  "Nằm đầu ở phía cao của ghế, hai tay bám chắc tay cầm hoặc mép ghế.",
+  "Vào tư thế bắt đầu thật ổn định, sẵn sàng cuộn chậu lên.",
+  "Gập hông và gối khoảng 90 độ, cẳng chân gần song song với sàn.",
+  "Giữ cổ trung tính, cằm hơi thu, mắt nhìn lên trần.",
+  "Thả lỏng bàn chân, không đá chân lấy đà.",
+  "Thả lỏng vai, tay chỉ giữ ổn định, không kéo người bằng tay.",
+  "Ép nhẹ lưng dưới vào ghế và siết bụng trước khi kéo."
+ ],
+ "sideplank": [
+  "Giữ cổ trung lập, mắt nhìn thẳng.",
+  "Đặt tay trên lên hông để kiểm soát xoay người.",
+  "Tạo thân người vững trước khi nâng hông.",
+  "Đặt khuỷu tay ngay dưới vai.",
+  "Chống cẳng tay chắc xuống sàn.",
+  "Xếp chân chồng hoặc so le nhẹ để dễ ổn định."
+ ]
+}
