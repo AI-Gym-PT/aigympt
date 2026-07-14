@@ -3,9 +3,9 @@
   "id": "machinechest",
   "verb": "Đẩy!",
   "barks": [
-   "Đừng khoá khuỷu!",
-   "Lưng tựa sát đệm!",
-   "Về chậm căng ngực!"
+   "Đẩy tay ra trước!",
+   "Siết ngực ở đỉnh!",
+   "Thở ra khi đẩy!"
   ],
   "breath": "Thở ra khi đẩy!"
  },
@@ -13,9 +13,9 @@
   "id": "dbpress",
   "verb": "Đẩy!",
   "barks": [
-   "Hạ sâu căng ngực!",
-   "Chụm tạ trên đỉnh!",
-   "Cổ tay thẳng, đừng bẻ!"
+   "Đẩy tạ lên vòng cung!",
+   "Siết cơ ngực ở đỉnh!",
+   "Cổ tay giữ thẳng!"
   ],
   "breath": "Thở ra khi đẩy lên!"
  },
@@ -23,9 +23,9 @@
   "id": "bench",
   "verb": "Đẩy!",
   "barks": [
-   "Ép chặt bả vai!",
-   "Hạ chậm chạm ngực!",
-   "Đừng khoá khuỷu!"
+   "Đẩy thanh lên!",
+   "Siết ngực ở đỉnh!",
+   "Thở ra khi đẩy!"
   ],
   "breath": "Thở ra khi đẩy!"
  },
@@ -33,9 +33,9 @@
   "id": "incline",
   "verb": "Đẩy!",
   "barks": [
-   "Hạ về xương đòn!",
-   "Đừng vồng lưng!",
-   "Đừng banh khuỷu tay!"
+   "Đẩy tạ lên theo vòng cung!",
+   "Siết ngực trên ở đỉnh!",
+   "Thở ra khi đẩy!"
   ],
   "breath": "Thở ra khi đẩy!"
  },
@@ -43,9 +43,9 @@
   "id": "pecdeck",
   "verb": "Ép vào!",
   "barks": [
-   "Ép sát vào giữa!",
-   "Siết ngực một nhịp!",
-   "Mở ra thật chậm!"
+   "Khép tay theo vòng cung!",
+   "Siết mạnh ngực ở đỉnh!",
+   "Thở ra khi khép tay!"
   ],
   "breath": "Thở ra khi ép vào!"
  },
@@ -53,9 +53,9 @@
   "id": "fly",
   "verb": "Ép vào!",
   "barks": [
-   "Khuỷu tay cong cố định!",
-   "Khép tay siết ngực đỉnh!",
-   "Đừng gập khuỷu thành đẩy!"
+   "Khép tay vòng cung!",
+   "Hai tay gặp trước ngực!",
+   "Siết mạnh cơ ngực!"
   ],
   "breath": "Thở ra khi ép vào!"
  },
@@ -63,9 +63,9 @@
   "id": "latpull",
   "verb": "Kéo!",
   "barks": [
-   "Khuỷu đâm xuống đất!",
-   "Kéo về trên ngực!",
-   "Thả lên từ từ!"
+   "Kéo thanh về ngực trên!",
+   "Khuỷu tay kéo xuống!",
+   "Hạ vai, siết bả vai!"
   ],
   "breath": "Thở ra khi kéo!"
  },
@@ -73,9 +73,9 @@
   "id": "cablerow",
   "verb": "Kéo!",
   "barks": [
-   "Siết bả vai vào!",
-   "Đừng ngả người lấy đà!",
-   "Kéo sát về bụng!"
+   "Kéo về rốn!",
+   "Siết bả vai lại!",
+   "Khuỷu sát thân, kéo ra sau!"
   ],
   "breath": "Thở ra khi kéo!"
  },
@@ -83,9 +83,9 @@
   "id": "chestrow",
   "verb": "Kéo!",
   "barks": [
-   "Ngực dán chặt đệm!",
-   "Siết chặt hai bả vai!",
-   "Đừng nhấc lấy đà!"
+   "Kéo về sườn dưới!",
+   "Dẫn bằng khuỷu tay!",
+   "Siết bả vai lại!"
   ],
   "breath": "Thở ra khi kéo!"
  },
@@ -93,9 +93,9 @@
   "id": "dbrow",
   "verb": "Kéo!",
   "barks": [
-   "Khuỷu sát sườn!",
-   "Kéo lên sát hông!",
-   "Hạ chậm căng xô!"
+   "Kéo tạ về hông!",
+   "Khuỷu đi sát thân!",
+   "Siết lưng ở đỉnh!"
   ],
   "breath": "Thở ra khi kéo!"
  },
@@ -103,9 +103,9 @@
   "id": "machinerow",
   "verb": "Kéo!",
   "barks": [
-   "Siết bả vai!",
-   "Ngực áp đệm!",
-   "Khuỷu men sát sườn!"
+   "Kéo khuỷu ra sau!",
+   "Siết bả vai ở đỉnh!",
+   "Thở ra khi kéo!"
   ],
   "breath": "Thở ra khi kéo!"
  },
@@ -113,9 +113,9 @@
   "id": "straightarm",
   "verb": "Kéo!",
   "barks": [
-   "Giữ tay thẳng!",
-   "Hạ vai kéo xuống đùi!",
-   "Đừng gập khuỷu!"
+   "Ép vai xuống, kéo bằng xô!",
+   "Kéo vòng cung sát đùi!",
+   "Siết cơ xô ở đáy!"
   ],
   "breath": "Thở ra khi kéo xuống!"
  },
@@ -123,9 +123,9 @@
   "id": "assistpullup",
   "verb": "Kéo!",
   "barks": [
-   "Kéo ngực lên xà!",
-   "Khuỷu ép xuống đất!",
-   "Duỗi hết tay dưới!"
+   "Kéo khuỷu tay xuống!",
+   "Bả vai dồn về sau!",
+   "Cằm lên qua xà!"
   ],
   "breath": "Thở ra khi kéo!"
  },
@@ -133,9 +133,9 @@
   "id": "backext",
   "verb": "Nâng!",
   "barks": [
-   "Siết mông lên đỉnh!",
-   "Đừng ưỡn ngửa quá!",
-   "Dừng ở thẳng hàng!"
+   "Duỗi hông đưa người lên!",
+   "Siết mông ở đỉnh!",
+   "Dừng một giây, thẳng hàng!"
   ],
   "breath": "Thở ra khi nâng thân lên!"
  },
@@ -143,9 +143,9 @@
   "id": "machineshoulder",
   "verb": "Đẩy!",
   "barks": [
-   "Đừng nhún vai!",
-   "Đẩy thẳng qua đầu!",
-   "Hạ chậm tới tai!"
+   "Đẩy thẳng lên trên!",
+   "Vai giữ thấp!",
+   "Thở ra khi đẩy!"
   ],
   "breath": "Thở ra khi đẩy!"
  },
@@ -153,9 +153,9 @@
   "id": "dbshoulder",
   "verb": "Đẩy!",
   "barks": [
-   "Đẩy thẳng qua đỉnh đầu!",
-   "Siết bụng, đừng ưỡn lưng!",
-   "Hạ ngang tai thôi!"
+   "Đẩy tạ thẳng lên!",
+   "Vai giữ thấp!",
+   "Tay duỗi gần thẳng!"
   ],
   "breath": "Thở ra khi đẩy lên!"
  },
@@ -163,9 +163,9 @@
   "id": "latraise",
   "verb": "Nâng!",
   "barks": [
-   "Nâng ngang vai thôi!",
-   "Đừng nhún vai!",
-   "Hạ thật chậm!"
+   "Nâng tạ ngang vai!",
+   "Khuỷu tay dẫn đường!",
+   "Giữ vai thấp xuống!"
   ],
   "breath": "Thở ra khi nâng!"
  },
@@ -173,9 +173,9 @@
   "id": "cablelatraise",
   "verb": "Nâng!",
   "barks": [
-   "Nâng đúng ngang vai!",
-   "Đừng nhún người lên!",
-   "Hạ chậm giữ căng!"
+   "Nâng tay ngang vai!",
+   "Khuỷu tay dẫn đường!",
+   "Thở ra khi nâng!"
   ],
   "breath": "Thở ra khi nâng!"
  },
@@ -183,9 +183,9 @@
   "id": "reardelt",
   "verb": "Siết!",
   "barks": [
-   "Siết bả vai lại!",
-   "Đừng nhún vai lên!",
-   "Tạ nhẹ, đừng vung!"
+   "Mở tay ngang vai!",
+   "Khuỷu tay dẫn đường!",
+   "Vai giữ thấp, siết vai sau!"
   ],
   "breath": "Thở ra khi siết!"
  },
@@ -193,9 +193,9 @@
   "id": "facepull",
   "verb": "Kéo!",
   "barks": [
-   "Khuỷu mở cao lên!",
-   "Siết bả vai lại!",
-   "Nắm tay ngang tai!"
+   "Kéo dây về ngang mặt!",
+   "Khuỷu tay mở ngang!",
+   "Siết cơ vai sau!"
   ],
   "breath": "Thở ra khi kéo!"
  },
@@ -203,9 +203,9 @@
   "id": "legpress",
   "verb": "Đạp!",
   "barks": [
-   "Đừng khoá gối!",
-   "Lưng ép sát đệm!",
-   "Đạp chắc gót chân!"
+   "Đẩy bàn đạp ra xa!",
+   "Dồn lực qua gót chân!",
+   "Siết mông ở đỉnh!"
   ],
   "breath": "Thở ra khi đạp!"
  },
@@ -213,9 +213,9 @@
   "id": "goblet",
   "verb": "Xuống, lên!",
   "barks": [
-   "Ôm tạ sát ngực!",
+   "Hạ hông xuống sâu!",
    "Gối mở theo mũi chân!",
-   "Đẩy gót, siết mông!"
+   "Gót chân bám sàn!"
   ],
   "breath": "Hít vào khi hạ, thở ra khi lên!"
  },
@@ -223,9 +223,9 @@
   "id": "smithsquat",
   "verb": "Xuống, lên!",
   "barks": [
-   "Đùi song song sàn!",
-   "Đẩy gót đứng lên!",
-   "Đừng khoá gối gắt!"
+   "Đạp sàn đứng lên!",
+   "Siết mông ở đỉnh!",
+   "Gối theo mũi chân!"
   ],
   "breath": "Hít vào khi hạ, thở ra khi đẩy!"
  },
@@ -233,9 +233,9 @@
   "id": "rdl",
   "verb": "Siết!",
   "barks": [
-   "Đẩy hông ra sau!",
-   "Tạ trượt sát chân!",
-   "Lưng thẳng, đừng cong!"
+   "Đẩy hông về trước!",
+   "Siết mông khi đứng lên!",
+   "Giữ cột sống trung lập!"
   ],
   "breath": "Hít vào khi hạ, thở ra khi lên!"
  },
@@ -243,9 +243,9 @@
   "id": "hipthrust",
   "verb": "Bật hông!",
   "barks": [
+   "Đẩy gót xuống sàn!",
    "Siết mông ở đỉnh!",
-   "Đẩy hông cao lên!",
-   "Cằm gập, đừng ưỡn cổ!"
+   "Vai hông gối thẳng hàng!"
   ],
   "breath": "Thở ra khi bật hông!"
  },
@@ -255,7 +255,7 @@
   "barks": [
    "Đẩy gót xuống sàn!",
    "Siết mông ở đỉnh!",
-   "Đừng ưỡn lưng dưới!"
+   "Vai hông gối thẳng hàng!"
   ],
   "breath": "Thở ra khi đẩy hông lên!"
  },
@@ -263,9 +263,9 @@
   "id": "legext",
   "verb": "Đá lên!",
   "barks": [
-   "Duỗi hết gối!",
-   "Siết đùi ở đỉnh!",
-   "Hạ tạ thật chậm!"
+   "Duỗi gối nâng tạ lên!",
+   "Siết đùi trước một giây!",
+   "Mông áp chặt ghế!"
   ],
   "breath": "Thở ra khi đá lên!"
  },
@@ -273,9 +273,9 @@
   "id": "legcurl",
   "verb": "Móc vào!",
   "barks": [
-   "Móc gót sát mông!",
-   "Hông ép chặt đệm!",
-   "Trả ra thật chậm!"
+   "Co gối kéo về mông!",
+   "Ép chặt đùi sau!",
+   "Hông ép sát ghế!"
   ],
   "breath": "Thở ra khi móc!"
  },
@@ -283,9 +283,9 @@
   "id": "kickback",
   "verb": "Đá lên!",
   "barks": [
-   "Đá thẳng ra sau!",
-   "Siết mông ở đỉnh!",
-   "Đừng vồng lưng dưới!"
+   "Đá gót chân ra sau!",
+   "Siết chặt mông ở đỉnh!",
+   "Hông giữ vuông!"
   ],
   "breath": "Thở ra khi đá!"
  },
@@ -293,9 +293,9 @@
   "id": "lunge",
   "verb": "Xuống, lên!",
   "barks": [
-   "Hạ gối sau sát sàn!",
-   "Gối trước đừng vượt mũi chân!",
-   "Đạp gót bước tiếp!"
+   "Hạ hông thẳng xuống!",
+   "Đạp mạnh chân trước!",
+   "Gồng core, lưng thẳng!"
   ],
   "breath": "Thở ra khi đạp lên!"
  },
@@ -303,9 +303,9 @@
   "id": "curl",
   "verb": "Cuốn!",
   "barks": [
-   "Khuỷu ghim sát sườn!",
-   "Siết đỉnh một nhịp!",
-   "Đừng đánh hông!"
+   "Cuốn tạ lên gần vai!",
+   "Khuỷu tay sát thân!",
+   "Siết bắp tay một giây!"
   ],
   "breath": "Thở ra khi cuốn!"
  },
@@ -313,9 +313,9 @@
   "id": "bbcurl",
   "verb": "Cuốn!",
   "barks": [
-   "Khuỷu sát sườn!",
-   "Đừng văng người!",
-   "Hạ thật chậm!"
+   "Cuốn tạ lên!",
+   "Khuỷu sát thân!",
+   "Siết tay trước ở đỉnh!"
   ],
   "breath": "Thở ra khi cuốn!"
  },
@@ -323,9 +323,9 @@
   "id": "hammer",
   "verb": "Cuốn!",
   "barks": [
-   "Khuỷu ghim sát sườn!",
-   "Giữ tạ hướng vào nhau!",
-   "Đừng đánh hông!"
+   "Cuốn tạ lên gần vai!",
+   "Khuỷu tay sát thân!",
+   "Siết cơ ở đỉnh!"
   ],
   "breath": "Thở ra khi cuốn lên!"
  },
@@ -333,9 +333,9 @@
   "id": "cablecurl",
   "verb": "Cuốn!",
   "barks": [
-   "Khuỷu ghim sát sườn!",
-   "Siết chặt ở đỉnh!",
-   "Hạ chậm, giữ căng!"
+   "Cuốn cáp lên ngực!",
+   "Khuỷu tay sát thân!",
+   "Siết tay trước ở đỉnh!"
   ],
   "breath": "Thở ra khi cuốn lên!"
  },
@@ -343,9 +343,9 @@
   "id": "pushdown",
   "verb": "Đẩy!",
   "barks": [
-   "Khuỷu ghim sát sườn!",
-   "Xoè dây, siết tay sau!",
-   "Trả lên thật chậm!"
+   "Duỗi khuỷu đẩy dây xuống!",
+   "Siết tay sau một giây!",
+   "Cùi chỏ kẹp sát thân!"
   ],
   "breath": "Thở ra khi đẩy xuống!"
  },
@@ -353,9 +353,9 @@
   "id": "triext",
   "verb": "Đẩy!",
   "barks": [
-   "Khuỷu hướng trần nhà!",
-   "Duỗi thẳng hết tay!",
-   "Cố định khuỷu tay!"
+   "Duỗi thẳng khuỷu tay!",
+   "Cùi chỏ kẹp gần đầu!",
+   "Siết tam đầu ở đỉnh!"
   ],
   "breath": "Thở ra khi duỗi tay!"
  },
@@ -363,9 +363,9 @@
   "id": "assistdip",
   "verb": "Đẩy!",
   "barks": [
-   "Thân thẳng, dồn tay sau!",
-   "Hạ tới khuỷu vuông góc!",
-   "Đừng đánh đà!"
+   "Đẩy tay cầm xuống!",
+   "Duỗi khuỷu lên đỉnh!",
+   "Siết tam đầu một giây!"
   ],
   "breath": "Thở ra khi đẩy lên!"
  },
@@ -373,9 +373,9 @@
   "id": "closegrip",
   "verb": "Đẩy!",
   "barks": [
-   "Khuỷu sát sườn!",
-   "Đẩy thẳng hết tay!",
-   "Đừng bung khuỷu ra!"
+   "Duỗi khuỷu đẩy thẳng ra!",
+   "Cùi chỏ khép sát thân!",
+   "Siết tam đầu một giây!"
   ],
   "breath": "Thở ra khi đẩy!"
  },
@@ -383,9 +383,9 @@
   "id": "plank",
   "verb": "Siết!",
   "barks": [
-   "Thẳng như tấm ván!",
-   "Đừng võng lưng xuống!",
-   "Siết chặt mông với bụng!"
+   "Giữ thân một đường thẳng!",
+   "Siết chặt bụng và mông!",
+   "Ấn mạnh cẳng tay xuống sàn!"
   ],
   "breath": "Thở đều, đừng nín thở!"
  },
@@ -393,9 +393,9 @@
   "id": "deadbug",
   "verb": "Siết!",
   "barks": [
-   "Ép lưng sát sàn!",
-   "Tay chân đối bên!",
-   "Hạ thật chậm!"
+   "Duỗi tay chân đối bên!",
+   "Ép lưng dưới sát thảm!",
+   "Gối kia giữ chín mươi độ!"
   ],
   "breath": "Thở ra khi duỗi tay chân!"
  },
@@ -403,8 +403,8 @@
   "id": "crunch",
   "verb": "Cuốn!",
   "barks": [
-   "Đừng kéo cổ!",
-   "Cuộn vai lên!",
+   "Cuộn thân lên!",
+   "Kéo ngực về xương chậu!",
    "Siết bụng ở đỉnh!"
   ],
   "breath": "Thở ra khi cuộn lên!"
@@ -413,9 +413,9 @@
   "id": "cablecrunch",
   "verb": "Siết!",
   "barks": [
-   "Cuộn bụng xuống!",
-   "Đừng kéo bằng tay!",
-   "Hông giữ yên!"
+   "Cuộn lồng ngực về chậu!",
+   "Siết bụng thật mạnh!",
+   "Hông đứng yên trên gối!"
   ],
   "breath": "Thở ra khi cuộn xuống!"
  },
@@ -423,9 +423,9 @@
   "id": "hangingknee",
   "verb": "Nâng!",
   "barks": [
-   "Cuốn gối lên ngực!",
-   "Siết bụng dưới vào!",
-   "Đừng lắc lấy đà!"
+   "Kéo gối lên bằng bụng!",
+   "Gối lên ngang hông!",
+   "Cuộn chậu, siết bụng!"
   ],
   "breath": "Thở ra khi nâng gối!"
  },
@@ -433,9 +433,9 @@
   "id": "russian",
   "verb": "Siết!",
   "barks": [
-   "Xoay bằng thân!",
-   "Chạm sàn mỗi bên!",
-   "Giữ chân trên không!"
+   "Xoay cả lồng ngực!",
+   "Đưa tạ sát bên hông!",
+   "Siết bụng liên tục!"
   ],
   "breath": "Thở ra mỗi lần xoay!"
  },
@@ -443,9 +443,9 @@
   "id": "pallof",
   "verb": "Đẩy!",
   "barks": [
-   "Đừng để xoay người!",
-   "Siết chặt bụng!",
-   "Về thật chậm!"
+   "Đẩy thẳng ra trước!",
+   "Gồng bụng thật mạnh!",
+   "Giữ thân vuông trước!"
   ],
   "breath": "Thở ra khi đẩy!"
  },
@@ -453,9 +453,9 @@
   "id": "treadmill",
   "verb": "Bước chắc!",
   "barks": [
-   "Buông tay vịn ra!",
-   "Tiếp gót đẩy mũi chân!",
-   "Lưng thẳng, mắt nhìn trước!"
+   "Mắt nhìn thẳng phía trước!",
+   "Đạp mũi chân đẩy người!",
+   "Bước ngắn vừa phải thôi!"
   ],
   "breath": "Thở đều theo nhịp bước!"
  },
@@ -463,9 +463,9 @@
   "id": "bike",
   "verb": "Đạp!",
   "barks": [
-   "Đạp tròn cả vòng!",
-   "Đừng lắc hông!",
-   "Tăng kháng lực lên!"
+   "Đạp tròn đều nhịp!",
+   "Gối thẳng hàng mũi chân!",
+   "Giữ hông ổn định!"
   ],
   "breath": "Thở đều theo nhịp!"
  },
@@ -473,9 +473,9 @@
   "id": "elliptical",
   "verb": "Giữ đều!",
   "barks": [
-   "Đừng kiễng gót!",
-   "Đẩy đều tay chân!",
-   "Thẳng lưng, mắt nhìn trước!"
+   "Đạp xuống, quét ra sau!",
+   "Tay kéo đẩy theo chân!",
+   "Mắt nhìn trước, thân thẳng!"
   ],
   "breath": "Hít thở sâu và đều!"
  },
@@ -483,9 +483,9 @@
   "id": "farmer",
   "verb": "Bước chắc!",
   "barks": [
-   "Vai kéo ra sau!",
-   "Đừng nghiêng người!",
-   "Siết chặt bụng!"
+   "Bước ngắn, đều chân!",
+   "Siết core, thân thẳng!",
+   "Vai hạ, đừng nhún vai!"
   ],
   "breath": "Thở đều khi đi!"
  },
@@ -493,9 +493,9 @@
   "id": "battlerope",
   "verb": "Quật dây!",
   "barks": [
-   "Hạ thấp trọng tâm!",
-   "Quật đều hai tay!",
-   "Siết chặt core!"
+   "Luân phiên hai tay!",
+   "Đánh sóng đều tay!",
+   "Siết core, giữ thân!"
   ],
   "breath": "Thở theo nhịp quật!"
  },
@@ -503,9 +503,9 @@
   "id": "chestdip",
   "verb": "day",
   "barks": [
+   "Ép thanh xuống nâng người!",
    "Ngực hướng xuống trước!",
-   "Khuỷu chín mươi độ là đủ!",
-   "Đừng nhún vai, giữ vai hạ!"
+   "Vai giữ hạ xuống!"
   ],
   "breath": "Hít vào khi hạ xuống, thở ra khi đẩy người lên!"
  },
@@ -513,9 +513,9 @@
   "id": "deadlift",
   "verb": "nang",
   "barks": [
-   "Đạp sàn, kéo thanh sát người!",
-   "Vai và hông lên cùng lúc, đừng ngả lưng quá mức!",
-   "Khóa đỉnh bằng mông, siết mông vào!"
+   "Đạp sàn thật mạnh!",
+   "Thanh đi sát người!",
+   "Đứng thẳng, siết mông!"
   ],
   "breath": "Hít sâu gồng bụng trước khi kéo, thở ra có kiểm soát qua đoạn khó!"
  },
@@ -523,9 +523,9 @@
   "id": "pullup",
   "verb": "keo",
   "barks": [
-   "Kéo khuỷu tay xuống hông!",
-   "Ngực hướng lên xà, đừng rướn cổ!",
-   "Thân chắc, đừng đung đưa lấy đà!"
+   "Kéo khuỷu xuống về hông!",
+   "Siết lưng và xô ở đỉnh!",
+   "Thở ra khi kéo lên!"
   ],
   "breath": "Thở ra khi kéo lên, hít vào khi hạ xuống!"
  },
@@ -534,8 +534,8 @@
   "verb": "day",
   "barks": [
    "Đẩy thẳng lên đỉnh đầu!",
-   "Giữ core chắc, đừng ngả người ra sau!",
-   "Đừng đẩy tạ chệch về trước!"
+   "Siết chặt core!",
+   "Khóa khuỷu tự nhiên!"
   ],
   "breath": "Hít vào sâu khi hạ tạ xuống, thở ra mạnh khi đẩy tạ lên!"
  },
@@ -543,9 +543,9 @@
   "id": "bulgarian",
   "verb": "dap",
   "barks": [
-   "Chân trước chịu lực, đạp mạnh qua gót!",
-   "Gối trước theo mũi chân, đừng đổ vào trong!",
-   "Hạ thẳng người, ngực mở đừng gập người!"
+   "Đạp mạnh qua gót trước!",
+   "Siết mông chân trước!",
+   "Đứng lên theo đường thẳng!"
   ],
   "breath": "Hít vào khi hạ xuống, thở ra khi đứng lên!"
  },
@@ -553,9 +553,9 @@
   "id": "hipabduct",
   "verb": "bathong",
   "barks": [
-   "Mở bằng cơ mông ngoài!",
-   "Đừng ngả người lấy đà!",
-   "Siết đỉnh, không giật máy!"
+   "Mở gối có kiểm soát!",
+   "Siết mông ngoài ở đỉnh!",
+   "Lưng tựa đệm, thân yên!"
   ],
   "breath": "Thở ra khi mở gối, hít vào khi khép về!"
  },
@@ -563,9 +563,9 @@
   "id": "latlunge",
   "verb": "buocchac",
   "barks": [
-   "Giữ gót chân chạm đất!",
-   "Đầu gối đừng vượt mũi chân!",
-   "Lưng thẳng, đừng gù người!"
+   "Dồn hông ra sau!",
+   "Trọng tâm vào chân gập!",
+   "Gối theo mũi chân!"
   ],
   "breath": "Thở ra khi bước ngang hạ hông xuống, hít vào khi đẩy hông trở về!"
  },
@@ -573,9 +573,9 @@
   "id": "stepup",
   "verb": "buocchac",
   "barks": [
-   "Đạp mạnh qua gót chân trên bục!",
-   "Không dùng chân dưới lấy đà!",
-   "Duỗi thẳng hông gối ở đỉnh!"
+   "Đạp mạnh qua gót trên!",
+   "Duỗi hông ở đỉnh!",
+   "Thân người đứng cao!"
   ],
   "breath": "Thở ra khi đạp lên bục, hít vào khi hạ xuống chậm!"
  },
@@ -583,9 +583,9 @@
   "id": "sumosquat",
   "verb": "xuonglen",
   "barks": [
-   "Đầu gối mở theo mũi chân!",
-   "Đừng chụm gối vào trong!",
-   "Đạp qua gót, siết mông lên!"
+   "Hạ hông giữa hai chân!",
+   "Mở gối theo mũi chân!",
+   "Ngực mở, siết core!"
   ],
   "breath": "Hít vào gồng bụng khi hạ xuống, thở ra đạp sàn khi đứng lên!"
  },
@@ -593,9 +593,9 @@
   "id": "chinup",
   "verb": "keo",
   "barks": [
-   "Kéo khuỷu về sườn, cằm vượt xà!",
-   "Đừng đu người, đừng đá chân!",
-   "Hạ chậm hai ba giây, không thả rơi!"
+   "Kéo khuỷu về phía sườn!",
+   "Siết xô và tay trước!",
+   "Cằm vượt qua thanh xà!"
   ],
   "breath": "Thở ra khi kéo người lên, hít vào khi hạ xuống!"
  },
@@ -603,9 +603,9 @@
   "id": "inclinecurl",
   "verb": "cuon",
   "barks": [
-   "Khuỷu ép sát thân, đừng đưa ra trước!",
-   "Cổ tay thẳng, đừng bẻ ăn gian!",
-   "Hạ chậm hai đến ba giây, đừng thả rơi!"
+   "Cuốn tạ theo cung tròn!",
+   "Siết tay trước ở đỉnh!",
+   "Cổ tay giữ thẳng!"
   ],
   "breath": "Thở ra khi cuốn tạ lên, hít vào khi hạ tạ xuống!"
  },
@@ -613,9 +613,9 @@
   "id": "preacher",
   "verb": "cuon",
   "barks": [
-   "Khuỷu tì chặt, đừng nhấc khỏi đệm!",
-   "Siết cơ tay trước ở đỉnh!",
-   "Hạ chậm, đừng thả rơi tạ!"
+   "Cuốn thanh tạ lên!",
+   "Siết mạnh cơ tay trước!",
+   "Khuỷu ép chặt đệm!"
   ],
   "breath": "Thở ra khi cuốn tạ lên, hít vào khi hạ xuống chậm!"
  },
@@ -623,9 +623,9 @@
   "id": "dip",
   "verb": "day",
   "barks": [
-   "Cùi chỏ hướng ra sau, giữ sát thân!",
-   "Đừng nhún vai lên tai!",
-   "Xuống tới chín mươi độ thôi, đừng quá sâu!"
+   "Duỗi khuỷu đẩy người lên!",
+   "Cùi chỏ sát thân!",
+   "Siết tam đầu một giây!"
   ],
   "breath": "Hít vào khi hạ người xuống, thở ra khi đẩy lên!"
  },
@@ -633,9 +633,9 @@
   "id": "cgbench",
   "verb": "day",
   "barks": [
-   "Khuỷu khép ba mươi độ, đừng xòe ngang!",
-   "Chạm nhẹ ngực dưới, đừng nảy thanh!",
-   "Duỗi tay siết tam đầu một giây!"
+   "Đẩy thanh lên trên vai!",
+   "Siết tam đầu ở đỉnh!",
+   "Khuỷu ép sát thân!"
   ],
   "breath": "Hít vào khi hạ thanh chậm, thở ra khi đẩy lên!"
  },
@@ -643,9 +643,9 @@
   "id": "skullcrush",
   "verb": "day",
   "barks": [
-   "Chỉ gập khuỷu thôi, cánh tay trên giữ yên!",
-   "Khuỷu giữ gần nhau, đừng xoè ngang!",
-   "Đừng thả thanh quá nhanh, hạ chậm về trán!"
+   "Duỗi khuỷu đưa thanh lên!",
+   "Siết tay sau ở đỉnh!",
+   "Khuỷu giữ gần nhau!"
   ],
   "breath": "Hít vào khi hạ thanh xuống, thở ra khi duỗi tay đẩy lên!"
  },
@@ -653,9 +653,9 @@
   "id": "ohcable",
   "verb": "day",
   "barks": [
-   "Khuỷu giữ gần nhau, đừng xòe ra ngoài!",
-   "Vai hạ xuống, đừng nhô vai!",
-   "Siết mạnh cơ tam đầu một giây ở đỉnh!"
+   "Duỗi khuỷu đưa dây lên!",
+   "Siết mạnh tay sau!",
+   "Khuỷu giữ ổn định!"
   ],
   "breath": "Thở ra khi duỗi tay lên, hít vào khi hạ dây chậm xuống!"
  },
@@ -663,9 +663,9 @@
   "id": "scable",
   "verb": "day",
   "barks": [
-   "Cùi chỏ kẹp sát thân, đừng trôi ra trước!",
-   "Đừng nhún vai, giữ vai ổn định!",
-   "Cổ tay thẳng, đừng gập cổ tay!"
+   "Duỗi khuỷu đẩy tay xuống!",
+   "Siết cơ tay sau một giây!",
+   "Cùi chỏ giữ sát thân!"
   ],
   "breath": "Hít vào khi tay đi lên, thở ra khi đẩy xuống!"
  },
@@ -673,9 +673,9 @@
   "id": "abwheel",
   "verb": "keo",
   "barks": [
-   "Siết bụng chống võng lưng!",
-   "Tay duỗi thẳng, đừng gập khuỷu!",
-   "Chỉ lăn xa khi còn kiểm soát!"
+   "Giữ thân thành đường thẳng!",
+   "Siết mông khóa hông!",
+   "Tay duỗi thẳng, kéo bằng core!"
   ],
   "breath": "Hít vào khi lăn ra, thở ra khi kéo bánh xe về!"
  },
@@ -683,9 +683,9 @@
   "id": "revcrunch",
   "verb": "cuon",
   "barks": [
-   "Cuộn chậu lên, đừng chỉ nhấc đùi!",
-   "Nhấc mông khỏi ghế, siết bụng một giây!",
-   "Đừng vung chân lấy đà!"
+   "Cuộn chậu lên!",
+   "Kéo gối về phía ngực!",
+   "Siết mạnh bụng dưới!"
   ],
   "breath": "Thở ra khi cuộn chậu lên, hít vào khi hạ xuống chậm!"
  },
@@ -693,9 +693,9 @@
   "id": "sideplank",
   "verb": "giudeu",
   "barks": [
-   "Nâng hông lên cao, đừng tụt hông!",
-   "Khuỷu ngay dưới vai, chồng thẳng!",
-   "Thân thẳng, đừng xoay ngực!"
+   "Nâng hông thật cao!",
+   "Siết mông giữa, hông vững!",
+   "Thẳng một đường, đẩy sàn!"
   ],
   "breath": "Hít sâu trước khi nâng hông lên, thở đều trong suốt lúc giữ!"
  }

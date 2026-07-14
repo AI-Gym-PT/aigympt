@@ -1,0 +1,352 @@
+{
+ "machinechest": [
+  "Set sau nhớ đừng ưỡn lưng nhé, ép lưng và đầu áp sát tựa lưng cho mình!",
+  "Lần tới đừng khóa cứng khuỷu ở đỉnh, duỗi gần hết là dừng thôi!",
+  "Nhớ đừng giật tạ hay thả tạ rơi quá nhanh, hạ có kiểm soát về gần ngực nhé!"
+ ],
+ "dbpress": [
+  "Set sau nhớ đừng ưỡn lưng quá mức, giữ đầu, vai và mông áp sát ghế nhé!",
+  "Chú ý cổ tay hay bị gập ra sau đó, giữ cổ tay thẳng trên trục cẳng tay!",
+  "Set tới đừng xoè khuỷu quá rộng hay hạ tạ quá sâu, và tuyệt đối không thả rơi hay đập tạ nhé!"
+ ],
+ "bench": [
+  "Set sau nhớ đừng ưỡn lưng quá mức, giữ đầu vai mông áp sát ghế nhé!",
+  "Cổ tay đang gập ra sau kìa, set sau giữ cổ tay thẳng trên thanh đòn cho chắc!",
+  "Đừng thả tạ quá nhanh cho nảy thanh, set sau hạ có kiểm soát và khuỷu chỉ mở bốn mươi lăm đến bảy mươi lăm độ thôi!"
+ ],
+ "incline": [
+  "Set sau chỉnh ghế dốc thấp lại khoảng ba mươi đến bốn mươi lăm độ thôi, dốc cao quá là vai gánh hết đó!",
+  "Nhớ giữ cổ tay thẳng, đừng để cổ tay gập ngửa ra sau nhé!",
+  "Set tới đừng xòe khuỷu quá rộng hay hạ tạ quá sâu, và đừng thả tạ rơi quá nhanh nhé!"
+ ],
+ "pecdeck": [
+  "Set sau nhớ đừng mở tay ra sau thân quá mức, mở đến khi ngực căng nhẹ là dừng nhé!",
+  "Lần tới giữ vai ổn định, đừng nhún vai hay chồm vai ra trước nhé!",
+  "Nhớ giữ lưng và đầu áp sát ghế, đừng ưỡn lưng rời khỏi ghế nha!"
+ ],
+ "fly": [
+  "Set sau nhớ đừng chọn tạ quá nặng rồi giật người nhé, nhẹ hơn một nấc mà kiểm soát tốt là được!",
+  "Lần tới giữ vai ổn định, đừng nhún vai hay chồm vai ra trước nha!",
+  "Chú ý đừng kéo tay quá ra sau thân và cũng đừng khóa cứng khuỷu tay đấy!"
+ ],
+ "latpull": [
+  "Set sau nhớ đừng ngả người quá nhiều, thân chỉ hơi ngả khoảng hai mươi độ thôi nhé!",
+  "Đừng giật lưng lấy đà, kéo bằng lưng xô cho có kiểm soát nha!",
+  "Tuyệt đối không kéo thanh ra sau gáy, luôn kéo về ngực trên cho an toàn vai nhé!"
+ ],
+ "cablerow": [
+  "Set sau đừng ngả người ra sau quá nhiều nhé, giữ thân ổn định rồi kéo bằng lưng thôi!",
+  "Nhớ đừng giật người lấy quán tính, kéo chậm và chủ động cho cơ lưng ăn tạ nhé!",
+  "Lần tới đừng nhún vai hay gù lưng kéo bằng tay, hạ vai xuống và mở ngực ra nhé!"
+ ],
+ "chestrow": [
+  "Set sau nhớ giữ ngực áp đệm, đừng nhấc ngực khỏi đệm hay ngả người ra sau để kéo nhé!",
+  "Chú ý đừng giật người lấy quán tính và đừng nhún vai, kéo chậm chắc bằng lưng thôi!",
+  "Đừng kéo bằng tay, hãy dẫn động bằng khuỷu và trả tay cầm ra từ từ, không thả tạ rơi nhanh!"
+ ],
+ "dbrow": [
+  "Set sau nhớ đừng xoay thân để kéo nặng hơn, giữ hông và vai song song sàn nhé!",
+  "Đừng nhún vai lên tai, hạ vai xuống rồi mới kéo bằng khuỷu tay!",
+  "Set sau tránh giật tạ hay thả rơi quá nhanh, và giữ lưng phẳng đừng cong lưng nhé!"
+ ],
+ "machinerow": [
+  "Set sau kéo bằng lưng nhé, đừng giật tay cầm bằng quán tính!",
+  "Nhớ giữ ngực áp đệm, đừng ưỡn hay bật người ra sau nhé!",
+  "Trả tạ về từ từ hai đến ba giây thôi, đừng thả rơi và đừng nhún vai lên tai!"
+ ],
+ "straightarm": [
+  "Set sau nhớ giữ tay gần thẳng, đừng gập khuỷu nhiều kẻo thành bài pulldown khác nhé!",
+  "Lần tới đừng đung đưa thân người lấy đà, giữ thân cố định và kéo bằng cơ xô nha!",
+  "Nhớ giữ vai hạ xuống, đừng nhún vai co cổ hay ưỡn lưng quá mức nhé!"
+ ],
+ "assistpullup": [
+  "Set sau nhớ đừng dùng quán tính hay đạp chân để lấy đà kéo lên nhé!",
+  "Đừng rướn cổ để đưa cằm qua xà, cũng đừng nhún vai co cổ nha!",
+  "Lúc xuống hạ người có kiểm soát, đừng thả rơi quá nhanh đấy!"
+ ],
+ "backext": [
+  "Set sau nhớ đừng ưỡn lưng quá cao ở đỉnh, dừng khi thân thẳng hàng với chân là đủ nhé!",
+  "Đừng gập hay vo tròn lưng khi hạ xuống, giữ cột sống trung lập cho mình nha!",
+  "Không giật người lấy đà nữa nhé, lên xuống có kiểm soát mới ăn cơ lưng dưới và mông!"
+ ],
+ "machineshoulder": [
+  "Set sau nhớ đừng ưỡn lưng quá mức, giữ lưng áp sát đệm và siết core cho mình nhé!",
+  "Lần tới đừng nhún vai hay rướn cổ lên theo tạ, giữ vai thấp và cổ trung lập thôi!",
+  "Nhớ giữ cổ tay thẳng, đừng để cổ tay bẻ gập ra sau khi đẩy nhé!"
+ ],
+ "dbshoulder": [
+  "Set sau nhớ đừng ưỡn lưng quá mức, giữ lưng trên và đầu áp sát đệm ghế nhé!",
+  "Chú ý đừng nhún vai hay rướn cổ ra trước khi đẩy tạ lên!",
+  "Cổ tay hay bị bẻ gập ra sau đó, set tới giữ cổ tay thẳng và không khóa cứng khuỷu nhé!"
+ ],
+ "latraise": [
+  "Set sau nhớ đừng nhún vai lên cao, giữ vai hạ xuống để cơ vai giữa làm việc nhé!",
+  "Đừng vung người lấy đà, giữ core chắc và thân đứng yên trong suốt set!",
+  "Set sau chỉ nâng đến ngang vai thôi, đừng nâng quá cao và giữ cổ tay thẳng, đừng bẻ cổ tay!"
+ ],
+ "cablelatraise": [
+  "Set sau giữ vai hạ xuống, đừng nhún vai lên cao khi nâng nhé!",
+  "Thân người đứng yên, đừng vung người lấy đà; nâng tới ngang vai là dừng thôi!",
+  "Nhớ giữ cổ tay thẳng, đừng bẻ cổ tay nhé!"
+ ],
+ "reardelt": [
+  "Set sau nhớ đừng nhún vai lên cao, giữ vai hạ xuống và để khuỷu tay dẫn đường nhé!",
+  "Lần tới đừng vung tạ lấy đà, nâng chậm có kiểm soát thì cơ vai sau mới ăn nha!",
+  "Nhớ đừng kéo quá cao hay quá ra sau, chỉ mở tới ngang vai và giữ cổ tay thẳng nhé!"
+ ],
+ "facepull": [
+  "Set sau nhớ giữ vai thấp, đừng nhún vai lên cao nhé!",
+  "Kéo dây về ngang mặt thôi, đừng kéo quá thấp xuống ngực nha!",
+  "Đứng yên thân người, đừng ngả người lấy đà và đừng bẻ cổ tay đấy!"
+ ],
+ "legpress": [
+  "Set sau nhớ đừng chụm gối vào trong, mở gối theo hướng mũi chân nhé!",
+  "Lần tới đừng để nhấc mông hay cong lưng khi hạ, giữ lưng và mông áp sát đệm thôi!",
+  "Nhớ đừng khóa cứng gối ở đỉnh, duỗi gần thẳng rồi hạ lại là được nhé!"
+ ],
+ "goblet": [
+  "Set sau nhớ đừng chụm gối vào trong, mở gối theo hướng mũi chân nhé!",
+  "Chú ý đừng cúi gập người làm ngực sụp xuống, giữ ngực mở và lưng trung lập!",
+  "Đừng nhấc gót hay đưa tạ ra xa người, giữ tạ sát ngực và gót bám chắc sàn nhé!"
+ ],
+ "smithsquat": [
+  "Set sau nhớ đừng chụm gối vào trong, mở gối theo hướng mũi chân nhé!",
+  "Gót chân đang nhấc khỏi sàn kìa, set sau giữ cả bàn chân bám chắc sàn nhé!",
+  "Đừng để lưng gù mất trung lập, và đừng đặt chân quá sát thanh đòn nhé!"
+ ],
+ "rdl": [
+  "Set sau giữ cột sống trung lập, đừng để lưng gù khi hạ tạ nhé!",
+  "Nhớ chỉ chùng gối nhẹ thôi, gập gối nhiều quá là thành squat mất rồi!",
+  "Giữ tạ trượt sát chân, và lên tới đỉnh thì đứng thẳng thôi, đừng ngửa lưng quá mức!"
+ ],
+ "hipthrust": [
+  "Set sau nhớ đừng ưỡn lưng quá mức ở đỉnh, hạ xương sườn xuống và cuộn nhẹ xương chậu nhé!",
+  "Lần tới đặt bàn chân gần thân hơn, để cẳng chân gần thẳng đứng khi lên đỉnh nha!",
+  "Nhớ mở gối theo hướng mũi chân, đừng chụm gối vào trong và đừng nhấc gót đẩy bằng mũi chân nhé!"
+ ],
+ "glutebridge": [
+  "Set sau nhớ đừng ưỡn lưng quá mức ở đỉnh, đẩy hông bằng lực mông thôi nhé!",
+  "Đạp bằng gót và giữa bàn chân, đừng đẩy bằng mũi chân hay nhấc gót lên nha!",
+  "Giữ gối mở theo hướng mũi chân, đừng chụm gối vào trong và đừng đặt chân quá xa mông đấy!"
+ ],
+ "legext": [
+  "Set sau nhớ đừng nhấc mông khỏi ghế, lưng và mông áp sát ghế suốt cả set nhé!",
+  "Đừng khóa gối hay giật mạnh ở đỉnh, duỗi gần thẳng rồi siết cơ là đủ nha!",
+  "Không đá bằng quán tính và không thả tạ rơi quá nhanh, hạ chậm hai tới ba giây nhé!"
+ ],
+ "legcurl": [
+  "Set sau nhớ đừng ưỡn lưng dưới quá mức, gồng core và giữ cột sống trung lập nhé!",
+  "Lần tới đừng nhấc hông khỏi ghế để lấy đà, hông áp ghế suốt bài cho mình!",
+  "Nhớ đừng thả tạ rơi mất kiểm soát, hạ chậm hai đến ba giây nhé!"
+ ],
+ "kickback": [
+  "Set sau nhớ đừng ưỡn lưng dưới quá mức, gồng core giữ thân người ổn định nhé!",
+  "Chú ý đừng xoay hông mở người ra, giữ hai bên hông vuông góc với hướng đá!",
+  "Đừng vung chân lấy đà hay đá quá cao, đá vừa đủ biên độ và tập trung cảm nhận cơ mông!"
+ ],
+ "lunge": [
+  "Set sau nhớ đừng để gối trước đổ vào trong, giữ gối thẳng hàng bàn chân nhé!",
+  "Bước hơi dài và mất kiểm soát rồi, set sau bước vừa phải và giữ gót chân trước bám sàn nhé!",
+  "Đừng ngả người quá mức hay võng lưng, giữ thân chỉ nghiêng trước nhẹ thôi!"
+ ],
+ "curl": [
+  "Set sau nhớ đừng đung đưa người để lấy đà, đứng vững rồi cuốn bằng tay trước thôi nhé!",
+  "Đừng để khuỷu tay trôi ra trước hay tách khỏi thân, khóa chặt cùi chỏ vào hông nha!",
+  "Không nhún vai hoặc bẻ cổ tay nữa nhé, vai hạ xuống và cổ tay giữ thẳng!"
+ ],
+ "bbcurl": [
+  "Set sau nhớ đừng đung đưa người hay ngả lưng để lấy đà, đứng vững rồi cuốn bằng tay trước thôi nhé!",
+  "Lần tới giữ khuỷu tay sát thân, đừng để khuỷu trôi ra trước hoặc dang sang hai bên nhé!",
+  "Nhớ hạ thanh đòn chậm hai đến ba giây, đừng thả rơi tạ xuống mất kiểm soát!"
+ ],
+ "hammer": [
+  "Set sau đừng đung đưa người hay ngả lưng để lấy đà, đứng vững và chỉ cuốn bằng tay thôi nhé!",
+  "Chú ý khuỷu tay hay trôi ra trước hoặc dang sang hai bên, giữ khuỷu ép sát thân người!",
+  "Hạ tạ chậm hai đến ba giây có kiểm soát, đừng thả rơi và cũng đừng khóa cứng khuỷu ở dưới nhé!"
+ ],
+ "cablecurl": [
+  "Set sau nhớ đừng đung đưa người hay ngả lưng ra sau để lấy đà nhé!",
+  "Khuỷu tay đang trôi ra trước và dang sang hai bên kìa, set sau ghim khuỷu sát thân nhé!",
+  "Xuống gần hết biên độ nhưng đừng khóa cứng khuỷu, và đừng để tạ nghỉ giữa rep!"
+ ],
+ "pushdown": [
+  "Set sau nhớ kẹp cùi chỏ sát thân, đừng để chỏ trôi ra trước quá sớm nhé!",
+  "Đừng dùng quán tính hay đổ người theo tạ, chỉ khớp khuỷu tay được di chuyển thôi!",
+  "Giữ cổ tay trung lập, đừng gập cổ tay khi đẩy nhé!"
+ ],
+ "triext": [
+  "Set sau nhớ đừng để cùi chỏ xòe ngang, kẹp sát gần đầu thì tam đầu mới ăn nhé!",
+  "Lần tới siết core lại, đừng ưỡn lưng bung bụng khi đẩy tạ lên nha!",
+  "Nhớ giữ cổ tay trung lập, đừng gập cổ tay ra sau nhé!"
+ ],
+ "assistdip": [
+  "Set sau nhớ giữ cùi chỏ hướng ra sau và sát thân, đừng để xòe ngang nhé!",
+  "Giữ vai hạ xuống, đừng nhún vai hay để vai dâng cao nha!",
+  "Đừng thả rơi quá nhanh hay xuống quá sâu, khuỷu gập khoảng chín mươi độ là dừng đấy!"
+ ],
+ "closegrip": [
+  "Set sau nhớ đừng để khuỷu xòe ngang, giữ cùi chỏ khép ba mươi tới bốn lăm độ nhé!",
+  "Đừng nhô vai hay cuộn vai ra trước, ép lưng và bả vai áp sát ghế cho mình nha!",
+  "Không thả tạ quá nhanh hay bật nảy nữa nhé, trả tay về chậm hai giây có kiểm soát!"
+ ],
+ "plank": [
+  "Hiệp sau siết bụng và mông vào, đừng thả lỏng làm võng lưng nhé!",
+  "Nhớ giữ hông đúng tầm, đừng nâng mông lên quá cao!",
+  "Giữ vai xa tai và thở đều, đừng nhún vai lên sát tai hay nín thở nhé!"
+ ],
+ "deadbug": [
+  "Set sau nhớ đừng để lưng dưới nhấc khỏi thảm, nếu bị ưỡn thì giảm biên độ lại nhé!",
+  "Lần tới hạ tay chân chậm và có kiểm soát, đừng hạ quá thấp hay quá nhanh nha!",
+  "Nhớ thở đều, đừng gồng cổ nhún vai hay nín thở nhé!"
+ ],
+ "crunch": [
+  "Set sau nhớ đừng giật người lấy quán tính, cuộn thân từ từ bằng cơ bụng nhé!",
+  "Đừng kéo đầu hay gồng cổ, cứ thả lỏng cổ và mắt nhìn lên nha!",
+  "Chỉ nhấc vai và lưng trên khỏi thảm thôi, đừng ngồi dậy quá cao thành sit-up và đừng để bàn chân bật khỏi sàn đấy!"
+ ],
+ "cablecrunch": [
+  "Set sau nhớ đừng kéo bằng tay biến thành lat pulldown, dẫn động bằng bụng nhé!",
+  "Đừng gập hông quá nhiều hay ngồi hẳn xuống gót, giữ hông cố định trên gối và cuộn cột sống nha!",
+  "Không ngửa cổ hay gồng cổ quá mức, cổ thả lỏng trung tính cho mình nhé!"
+ ],
+ "hangingknee": [
+  "Set sau nhớ đừng đu đưa người lấy quán tính, treo yên ổn định rồi mới kéo gối nhé!",
+  "Lần tới đừng để võng lưng mất gồng bụng, hơi cuộn chậu sau và giữ bụng căng suốt rep!",
+  "Nhớ đừng thả chân rơi tự do, hạ chân xuống chậm và có kiểm soát nhé!"
+ ],
+ "russian": [
+  "Set sau nhớ đừng gù lưng sập ngực, giữ ngực mở và lưng thẳng khi ngả người ra sau nhé!",
+  "Chú ý đừng chỉ vung tay qua lại, phải xoay cả vai và lồng ngực thì cơ liên sườn mới ăn!",
+  "Đừng xoay quá nhanh lấy quán tính, về giữa có kiểm soát rồi mới đổi bên nhé!"
+ ],
+ "pallof": [
+  "Set sau nhớ đừng để thân xoay theo cáp, giữ hông và vai vuông về trước nhé!",
+  "Đừng ưỡn lưng bung xương sườn, hạ sườn xuống và giữ bụng căng suốt rep!",
+  "Set sau đừng nhún vai hay để dây kéo giật tay về, thu tay chậm và có kiểm soát nhé!"
+ ],
+ "treadmill": [
+  "Lần sau bỏ tay khỏi tay vịn nhé, bám chặt tay vịn là mất gần hết hiệu quả đó!",
+  "Nhớ ngẩng đầu nhìn thẳng, đừng cúi đầu nhìn xuống hay rướn người gập lưng quá mức!",
+  "Bước đừng dài quá, và tăng dốc từ từ không,năm đến một% mỗi ba phút thôi, đừng tăng dốc quá nhanh!"
+ ],
+ "bike": [
+  "Nhớ đừng khóa gối ở điểm thấp, chỉnh yên cho gối còn hơi gập một chút nhé!",
+  "Lần sau đừng nhún hông lắc chậu hay gù lưng nhô vai, giữ thân ổn định và tay chỉ tựa nhẹ thôi nha!",
+  "Đừng tăng lực cản quá nặng quá sớm, tăng từ từ mỗi hai đến ba phút khi còn thấy thoải mái nhé!"
+ ],
+ "elliptical": [
+  "Nhớ giữ mắt nhìn trước, đừng cúi đầu nhìn xuống và đừng gù lưng nhô vai nhé!",
+  "Đừng dồn quá nhiều trọng lượng lên tay cầm, tay chỉ tựa nhẹ thôi nha!",
+  "Bàn chân áp đều lên pedal, đừng nhón gót đạp bằng mũi chân và đừng tăng lực cản quá nhanh đấy!"
+ ],
+ "farmer": [
+  "Set sau nhớ đừng thả rơi tạ khi kết thúc quãng đi, gập hông hạ tạ xuống có kiểm soát nhé!",
+  "Đừng cúi gập hay gù lưng khi đặt tạ, giữ lưng trung lập và siết core nha!",
+  "Không để tạ va vào chân nhé, giữ tạ sát thân nhưng cách đùi một chút cho an toàn!"
+ ],
+ "battlerope": [
+  "Set sau nhớ đừng nhún vai hay gồng căng cổ, thả lỏng vai và giữ nhịp thở đều nhé!",
+  "Lần tới đừng chỉ vẩy cổ tay, phải tạo sóng từ vai xuống dây cho sóng chạy tới điểm neo!",
+  "Nhớ giữ tư thế athletic: gối chùng, hông hơi ra sau, đừng đứng quá thẳng hoặc gù lưng nhé!"
+ ],
+ "chestdip": [
+  "Set sau nhớ đừng nhún vai rụt cổ, giữ vai hạ xuống và ngực mở nhé!",
+  "Chú ý giữ thân hơi nghiêng ra trước, thân quá thẳng là thành đẩy tay sau mất!",
+  "Đừng xuống quá sâu gây căng vai, và đừng đung đưa lấy quán tính nhé!"
+ ],
+ "deadlift": [
+  "Set sau nhớ đừng cong lưng dưới khi hạ tạ, giữ lưng trung lập và bụng vẫn gồng nhé!",
+  "Thanh đang rời xa người rồi, set sau giữ thanh trượt sát đùi rồi sát ống chân nhé!",
+  "Đừng chùng gối quá sớm làm thanh vòng ra trước, từ đỉnh cứ đẩy hông ra sau trước đã!"
+ ],
+ "pullup": [
+  "Set sau giữ thân người chắc, đừng đung đưa dùng quán tính để kéo nhé!",
+  "Nhớ kéo ngực hướng lên xà, đừng rướn cằm cho qua chuyện!",
+  "Hạ xuống hai đến ba giây có kiểm soát và xuống hết biên độ, đừng thả rơi hay kéo nửa vời!"
+ ],
+ "ohp": [
+  "Set sau nhớ đừng ngả người ra sau, siết core và siết mông để giữ thân thẳng nhé!",
+  "Lần tới đẩy tạ theo đường thẳng lên trên giữa đầu, đừng đẩy chệch ra trước nha!",
+  "Nhớ giữ khuỷu tay hơi trước thanh tạ, đừng xòe khuỷu quá rộng và đừng dùng đà nhé!"
+ ],
+ "bulgarian": [
+  "Set sau nhớ giữ gối trước theo hướng mũi chân, đừng để gối đổ vào trong nhé!",
+  "Giữ ngực mở và lưng trung lập, đừng cúi gập người hay cong lưng nha!",
+  "Lực chính phải đến từ chân trước, đừng đẩy mạnh bằng chân sau đấy!"
+ ],
+ "hipabduct": [
+  "Set sau nhớ đừng ngả người ra sau lấy đà, giữ lưng tựa đệm và ngực mở nhé!",
+  "Đừng mở quá mạnh làm giật máy, mở gối vừa đủ biên độ và có kiểm soát nha!",
+  "Không thả tạ rơi khi khép về nhé, khép chậm khoảng hai giây để giữ căng cơ mông!"
+ ],
+ "latlunge": [
+  "Set sau nhớ dồn trọng tâm về chân đang gập, đừng đổ trọng tâm sang chân còn lại nhé!",
+  "Lần tới đừng gù lưng hay cúi người quá nhiều, giữ lưng thẳng và ngực mở thôi!",
+  "Nhớ giữ gót chân chạm đất, đừng để đầu gối vượt quá mũi chân nhé!"
+ ],
+ "stepup": [
+  "Set sau nhớ đừng đạp chân dưới lấy đà, dồn hết lực vào chân đặt trên bục nhé!",
+  "Chú ý đừng đá gối chân còn lại lên cao và đừng đưa cả hai chân lên bục!",
+  "Hạ chân xuống chậm có kiểm soát, đừng rơi quá nhanh và đừng đổ người ra trước nhé!"
+ ],
+ "sumosquat": [
+  "Set sau nhớ đừng chụm gối vào trong, luôn mở gối theo hướng mũi chân nhé!",
+  "Đừng gù lưng cúi người quá nhiều, giữ ngực mở và lưng trung lập suốt rep!",
+  "Set sau đừng nhấc gót khỏi sàn hay rút hông lên trước, đạp qua gót và giữa bàn chân để lên đều nhé!"
+ ],
+ "chinup": [
+  "Set sau siết bụng giữ thân người thẳng, đừng đu người lấy đà nhé!",
+  "Nhớ đừng đá chân để lấy quán tính, kéo bằng tay trước và xô thôi!",
+  "Hạ người chậm hai đến ba giây có kiểm soát, đừng thả rơi quá nhanh nhé!"
+ ],
+ "inclinecurl": [
+  "Set sau nhớ giữ khuỷu tay gần thân, đừng nhấc khuỷu lên cao hay đưa ra trước nhé!",
+  "Lần tới đừng bẻ cổ tay để ăn gian, giữ cổ tay thẳng suốt rep nha!",
+  "Nhớ hạ tạ chậm hai đến ba giây, đừng thả rơi tạ hay dùng quán tính đung đưa người nhé!"
+ ],
+ "preacher": [
+  "Set sau nhớ giữ khuỷu tay tì chắc trên đệm, đừng nhấc khuỷu lên nhé!",
+  "Cổ tay giữ thẳng, đừng bẻ cổ tay ra sau nha!",
+  "Hạ tạ chậm có kiểm soát, đừng thả rơi quá nhanh và đừng khóa cứng khuỷu ở dưới đấy!"
+ ],
+ "dip": [
+  "Set sau nhớ đừng nhún vai lên tai, luôn giữ vai hạ xuống và siết bả vai nhé!",
+  "Đừng xuống quá sâu gây đau vai, chỉ hạ tới khi khuỷu khoảng chín mươi độ thôi nha!",
+  "Không để khuỷu xòe rộng hay vung người lấy đà nữa nhé, cùi chỏ hướng ra sau và core siết chặt!"
+ ],
+ "cgbench": [
+  "Set sau đừng cầm quá hẹp làm gập cổ tay, nắm hẹp hơn vai một chút và giữ cổ tay thẳng nhé!",
+  "Lần tới cho thanh chạm nhẹ ngực dưới thôi, đừng để thanh chạm quá cao và khuỷu xòe ngang!",
+  "Nhớ đừng nảy thanh trên ngực hay nhấc mông khỏi ghế, giữ mông và chân ổn định nhé!"
+ ],
+ "skullcrush": [
+  "Set sau nhớ đừng xoè khuỷu ra rộng, giữ hai khuỷu gần nhau và hướng lên trần nhé!",
+  "Chú ý cánh tay trên phải giữ yên, đừng đưa cả cánh tay ra sau quá nhiều, chỉ gập khuỷu thôi!",
+  "Đừng thả thanh rơi quá nhanh hay để cổ tay gập, hạ chậm hai đến ba giây có kiểm soát nhé!"
+ ],
+ "ohcable": [
+  "Set sau nhớ đừng để khuỷu xòe rộng ra ngoài, giữ hai khuỷu gần nhau và hướng lên trần nhé!",
+  "Đừng ưỡn lưng dùng quán tính, siết core và giữ thân ổn định, đừng vung người!",
+  "Set sau đừng thả dây quá nhanh hay kéo bằng vai, hạ chậm và giữ vai hạ xuống nhé!"
+ ],
+ "scable": [
+  "Set sau giữ cùi chỏ cố định sát thân, đừng để chỏ trôi ra trước nhé!",
+  "Đừng dùng quán tính đổ người theo tạ, tay còn lại bám khung máy cho vững vào!",
+  "Giữ cổ tay thẳng, đừng gập cổ tay khi đẩy xuống nhé!"
+ ],
+ "abwheel": [
+  "Set sau nhớ đừng để võng lưng, giảm biên độ lại và siết bụng siết mông mạnh hơn nhé!",
+  "Lần tới giữ tay duỗi thẳng, đừng gập khuỷu kẻo core mất lực chính nha!",
+  "Nhớ mắt nhìn xuống sàn, cổ giữ trung lập, đừng ngẩng cổ nhìn lên nhé!"
+ ],
+ "revcrunch": [
+  "Set sau nhớ đừng vung chân lấy quán tính, cuộn chậu bằng cơ bụng thôi nhé!",
+  "Đừng hạ quá sâu làm võng lưng, giữ lưng dưới ép nhẹ vào ghế nha!",
+  "Tay chỉ bám ghế để ổn định thân trên, đừng dùng tay giật người đấy!"
+ ],
+ "sideplank": [
+  "Set sau nhớ đừng để tụt hông, siết liên sườn và mông giữa, thà giữ ngắn mà đúng nhé!",
+  "Đừng đặt vai lệch khỏi khuỷu, khuỷu tay phải nằm ngay dưới vai để đỡ áp lực khớp nha!",
+  "Không xoay ngực hay ngửa cổ nhé, giữ thân thẳng và cổ trung lập cho mình!"
+ ]
+}
