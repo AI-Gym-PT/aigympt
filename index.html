@@ -1423,7 +1423,8 @@ function startCountdown(){
   document.getElementById('cdNum').textContent='💪';
   // CHUAN BI: doc chu anh 1 (setup cues) co nghi giua cac cau -> du thoi gian bo may vao tui + vao tu the.
   // Set 1 cua bai: doc HET; set sau: nhac ngau nhien 1-2 cau (user da biet).
-  const cues=(ex.setup&&ex.setup.length)?ex.setup:(ex.cues||[]);
+  const def=EXERCISES.find(e=>e.id===ex.id)||{}; // S.ex dung khi tap KHONG copy setup/cues -> tra cuu dinh nghia goc
+  const cues=(def.setup&&def.setup.length)?def.setup:(def.cues||[]);
   let idxs=[];
   if(cues.length){
     if(isFirst) idxs=cues.map((_,i)=>i).slice(0,7);                       // set 1: het (toi da 7 cho khoi qua dai)
