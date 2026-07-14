@@ -984,6 +984,13 @@ const POS_TEXT={
   shin:'📍 Đặt điện thoại: kẹp vào ống chân/vớ cao (chân chuyển động, hông đứng yên). Không tiện thì dùng chế độ 👆 Chạm tay.',
   chest:'📍 Đặt điện thoại: kẹp túi áo ngực / nhét cạp áo sát ngực — bài này THÂN TRÊN chuyển động, để túi quần máy không thấy gì. Không có túi áo thì dùng chế độ 👆 Chạm tay.',
 };
+// cau HLV NOI luc chuan bi (khop clip pp_<pos> trong gen_voice) — nhac dat may dung cho de dem chuan
+const POS_SAY={
+  pocket:'Bỏ điện thoại vào túi quần ngay nhé, để máy đếm cho chuẩn!',
+  wrist:'Đeo điện thoại lên cẳng tay ngay nhé, để máy đếm cho chuẩn!',
+  shin:'Kẹp điện thoại vào ống chân ngay nhé, để máy đếm cho chuẩn!',
+  chest:'Kẹp điện thoại vào túi áo ngực ngay nhé, để máy đếm cho chuẩn!',
+};
 // note rieng tung bai, noi them sau text vi tri
 const POS_NOTE={
   russian:'Máy đếm 1 nhịp = 1 cặp xoay trái+phải.',
@@ -1430,12 +1437,32 @@ function startCountdown(){
     if(isFirst) idxs=cues.map((_,i)=>i).slice(0,7);                       // set 1: het (toi da 7 cho khoi qua dai)
     else{ const pick=Math.min(2,cues.length); idxs=[...cues.keys()].sort(()=>Math.random()-0.5).slice(0,pick).sort((a,b)=>a-b); } // set sau: 1-2 ngau nhien
   }
-  const CD_SEC=isFirst?10:6;
   Voice.unlock(); // mo audio (den tu cu cham btnGo) de doc duoc do dai clip
-  // chuoi noi: intro + tung cue. KHE NGHI THEO DO DAI CLIP THAT -> khong cat cau dai, nhip tu nhien.
-  const items=[{keys:[`ex_${ex.id}`,'cb'], text:`Chuẩn bị bài ${ex.name}!`, label:isFirst?'Vào tư thế theo hướng dẫn…':'Chuẩn bị…'}];
-  idxs.forEach(ci=>items.push({keys:['su_'+ex.id+'_'+ci], text:cues[ci], label:cues[ci]}));
-  speakSeq(items, 0, 2000, ()=>startCd(CD_SEC));
+  // ---- LUONG CHUAN BI 3 CHANG ----
+  // 1) nhac DAT MAY dung vi tri + dem LEN 1..5 (thoi gian bo may vao tui/deo tay)
+  // 2) doc lan luot cac o chu anh 1 (nghi theo do dai clip that)
+  // 3) dem NGUOC 5..1 -> vao rep 1
+  const needPos=(S.mode==='sensor' && !ex.timeEx), pos=needPos?posOf(ex.id):null;
+  const intro=[{keys:[`ex_${ex.id}`,'cb'], text:`Chuẩn bị bài ${ex.name}!`, label:'Chuẩn bị…'}];
+  if(needPos) intro.push({keys:['pp_'+pos], text:POS_SAY[pos], label:POS_SAY[pos]});
+  speakSeq(intro, 0, 700, ()=>countUp(5, ()=>{
+    document.getElementById('cdNum').textContent='👂';
+    const items=idxs.map(ci=>({keys:['su_'+ex.id+'_'+ci], text:cues[ci], label:cues[ci]}));
+    speakSeq(items, 0, 2000, ()=>startCd(5));
+  }));
+}
+// dem LEN 1..sec: cua so de user bo dien thoai vao dung vi tri (dem xuoi cho biet con bao lau)
+function countUp(sec, doneFn){
+  if(S.phase!=='countdown') return;
+  const el=document.getElementById('cdNum');
+  document.getElementById('cdLabel').textContent='Đặt điện thoại vào đúng vị trí…';
+  for(let i=1;i<=sec;i++){
+    after((i-1)*1000, ()=>{ if(S.phase!=='countdown')return;
+      el.textContent=i;
+      if(!Voice.play(['n'+i],true,String(i))) speak(String(i),true);
+      updatePocket(); });
+  }
+  after(sec*1000, ()=>{ if(S.phase==='countdown') doneFn(); });
 }
 // doc lan luot: chỉ đọc câu sau khi câu trước phát XONG + nghỉ `pause` ms (theo do dai clip that)
 function speakSeq(items, k, pause, doneFn){
@@ -1466,7 +1493,7 @@ function startCd(sec){
     const remain=Math.ceil((cdEnd-Date.now())/1000);
     if(remain<=0){ clearTimers(); startSet(); updatePocket(); return; }
     if(remain!==n){ n=remain; document.getElementById('cdNum').textContent=n;
-      if(n<=3){ if(!Voice.play(['n'+n],true,String(n))) speak(String(n),true); } // chi hô 3,2,1 cho đỡ ồn
+      if(!Voice.play(['n'+n],true,String(n))) speak(String(n),true); // hô đủ 5,4,3,2,1 rồi vào rep 1
       updatePocket(); }
   };
   S._tick=cdTick;
