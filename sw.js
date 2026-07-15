@@ -1,5 +1,5 @@
 /* AI Gym PT service worker — cache de mo nhanh + chay offline */
-const CACHE = 'aigympt-v6';   // v6: Goi B — giong co hon (master compressor + fade + jitter/escalation + bag-shuffle + praise+2 + interj)
+const CACHE = 'aigympt-v7';   // v7: Goi C — biet nhin/im (flow + phan hoi voi) + goi TEN user bang giong (bank ten)
 const CORE = ['./', './index.html', './manifest.json', './icon-192.png', './icon-512.png'];
 
 self.addEventListener('install', e => {

@@ -1176,6 +1176,7 @@ document.querySelectorAll('#moodBtns button').forEach(b=>b.addEventListener('cli
   const txt=MOOD_ACK[m]||''; const keys=[];
   if(Voice.has('mood_'+m)) keys.push('mood_'+m);
   keys.push(...greetKeys());
+  const nc=nameCall('nm_chien'); if(nc) keys.push(...nc); // "...Chiến thôi, Khoa!"
   if(keys.length) sayKeys(txt, keys, true); else if(txt) speak(txt, true);
 }));
 function answerRpe(m){
@@ -1187,6 +1188,26 @@ function answerRpe(m){
   if(Voice.has('rpe_'+m)) sayKeys(txt,['rpe_'+m],true); else if(txt) speak(txt,true);
 }
 document.querySelectorAll('#rpeBtns button').forEach(b=>b.addEventListener('click',()=>answerRpe(b.dataset.rpe)));
+
+/* ===== GOI C: goi TEN user bang giong (bank ten thu san, ghep [cau dan]+[ten]) ===== */
+let NAMES=null; // ten-thuong (lowercase NFC) -> slug clip
+function loadNames(){
+  fetch('names.json',{cache:'no-cache'}).then(r=>r.ok?r.json():null).then(rows=>{
+    if(!Array.isArray(rows)) return; NAMES={};
+    for(const it of rows){ if(it&&it[0]&&it[1]) NAMES[String(it[0]).normalize('NFC').toLowerCase()]=it[1]; }
+  }).catch(()=>{});
+}
+function nameSlugOf(fullName){ // lay am tiet CUOI (ten goi) roi tra cuu bank
+  if(!NAMES||!fullName) return null;
+  const last=String(fullName).trim().split(/\s+/).pop().normalize('NFC').toLowerCase();
+  return NAMES[last]||null;
+}
+function userNameKey(){ // clip goi ten neu ten user co trong bank + clip ton tai (tu bat, khong can co)
+  const p=getProfile(); if(!p||!p.name) return null;
+  const slug=nameSlugOf(p.name), k=slug&&('name_'+slug);
+  return (k&&Voice.has(k))?k:null;
+}
+function nameCall(carrier){ const nk=userNameKey(); return (nk&&Voice.has(carrier))?[carrier,nk]:null; } // vd ["nm_colen","name_khoa"]
 
 function clearTimers(){ S.timers.forEach(t=>{clearTimeout(t);clearInterval(t)}); S.timers=[]; }
 function after(ms,fn){ const t=setTimeout(fn,ms); S.timers.push(t); return t; }
@@ -1563,6 +1584,8 @@ document.getElementById('btnGo').addEventListener('click',async ()=>{
     warmKeys.push(`bk_${S.selEx}_0`,`bk_${S.selEx}_1`,`bk_${S.selEx}_2`,`br_${S.selEx}`);
     (MISTAKES[S.selEx]||[]).forEach((_,i)=>warmKeys.push(`mk_${S.selEx}_${i}`)); // nhac loi luc nghi
     warmKeys.push('pr_pre','pr_beat','pr_keep','pr_first','pr_live_0','pr_live_1'); // nhac thanh tich + pha ky luc
+    warmKeys.push('flow_0','flow_1','rep_fast_0','rep_fast_1'); // im lang thong minh + phan hoi voi
+    { const nk=userNameKey(); if(nk) warmKeys.push('nm_colen','nm_quadinh',nk); } // goi ten user
     { const bst=bestRepsFor(S.selEx); if(bst!=null && bst<=50) warmKeys.push('n'+bst); } // so ky luc de ghep cau vao bai
     // clip tron cau setDone cho so rep muc tieu (phat cuoi set, nap truoc cho muot)
     if(!S.ex.timeEx && S.selReps>=1 && S.selReps<=50){ for(let v=0;v<3;v++) warmKeys.push(`sdf_${v}_${S.selReps}`); for(let v=0;v<2;v++) warmKeys.push(`sdef_${v}_${S.selReps}`); }
@@ -1666,6 +1689,7 @@ function startSet(){
   openModal('modalGap',false); S._gapN=0; // modal bu nhip cua set TRUOC khong duoc song sang set nay
   hiddenAt = (document.visibilityState==='hidden') ? Date.now() : 0; // set BAT DAU khi man dang tat (nghi het gio luc khoa may) -> danh dau de con hoi bu; clamp theo setStartAt o onReturnVisible
   S.phase='active'; S.reps=0; S.repTimes=[]; S.lastStallLevel=0; S.slowWarned=0; S.safetyWarned=false; S.fastWarned=0;
+  S.flowMode=false; S.flowSaid=false; S.repFbCount=0; S.lastRepFbAt=0; S._realFrom=0; // Goi C: im lang thong minh + phan hoi voi
   S._barkI=null; // xoay vong bark tu dau moi set
   S.bestReps=(S.ex&&!S.ex.timeEx)?bestRepsFor(S.ex.id):null; S.prAnnounced=false; // ky luc cu (tu history da luu, chua co buoi nay) -> bao pha ky luc trong set
   S.setStartAt=Date.now();
@@ -1774,14 +1798,31 @@ function onRep(){
     return;
   }
   // milestone speech — 3 rep cuoi ghep dong tu ho ("Đẩy! Cái cuối!") de punchy
-  if(left===1) coach('lastOne',{},{critical:true, prefix:verbKey()});
+  if(left===1){ const nc=nameCall('nm_colen'); // thi thoang goi ten thay cau cuoi: "Cố lên, Khoa!"
+    if(nc && Math.random()<0.5){ setCoachMsg('Cố lên!'); Voice.play(nc, true); }
+    else coach('lastOne',{},{critical:true, prefix:verbKey()}); }
   else if(left===2) coach('two',{n},{critical:true, prefix:verbKey()});
   else if(left===3&&total>=8) coach('three',{n},{critical:true, prefix:verbKey()});
   else if(n===Math.ceil(total/2)&&total>=6) coach('half',{n},{critical:true});
   else{
     const er=energyRate(n,total); // cuoi set: dem gap hon (cung nang luong)
+    const rmed=realMedian(), rlast=(()=>{ const w=realIntervals(); return w.length?w[w.length-1]:null; })();
+    // (C1) VOI: 1 rep nhanh hon >30% nhip cua CHINH minh -> nhac hạ chậm (tu rep 5, cooldown, khong trùng watchdog tooFast)
+    if(rmed && rlast!=null && n>=5 && rlast < rmed*0.7 && realIntervals().length>=3 && (S.fastWarned||0)===0 && (S.repFbCount||0)<2 && now-(S.lastRepFbAt||0)>6000 && !Voice.criticalActive() && Voice.has('rep_fast_0')){
+      S.lastRepFbAt=now; S.repFbCount=(S.repFbCount||0)+1; S.flowMode=false;
+      speakNum(n,er); after(620,()=>Voice.play(['rep_fast_'+pickIdx('repfast',2)],false));
+    }
+    // (C1) IM LANG THONG MINH: >=4 nhip THAT deu (<13% lech) -> "Đều lắm, cứ vậy" 1 lan roi CHI dem so
+    else if(!S.flowMode && !S.flowSaid && n>=5 && steadyTempo(0.13) && now-(S.lastRepFbAt||0)>4000 && Voice.has('flow_0')){
+      S.flowSaid=true; S.flowMode=true; S.lastRepFbAt=now;
+      speakNum(n,er); after(600,()=>Voice.play(['flow_'+pickIdx('flow',2)],false));
+    }
+    else if(S.flowMode){ // trong luong: chi dem. Thoat khi nhip lech >20% (co su co / duoi)
+      if(rmed && rlast!=null && Math.abs(rlast-rmed)/rmed>0.20) S.flowMode=false;
+      speakNum(n,er);
+    }
     // rep 2: nhac hoi tho 1 lan (dung nhu anh 3 day)
-    if(n===2 && Voice.has('br_'+S.ex.id)){ speakNum(n,er); after(600,()=>Voice.play(['br_'+S.ex.id],false)); }
+    else if(n===2 && Voice.has('br_'+S.ex.id)){ speakNum(n,er); after(600,()=>Voice.play(['br_'+S.ex.id],false)); }
     // dinh ky (cong tan suat cu): thay khen chung bang BARK FORM dung bai
     else if(n%4===0 && Math.random()<0.5 && tempoStable() && barkKey!=null){ speakNum(n,er); const bk=barkKey(); if(bk) after(600,()=>Voice.play([bk],false)); else after(600,()=>coach('praise',{},{critical:false})); }
     // am dem kieu nguoi that: sau 1 rep dep (nhip deu), thi thoang bat "Đó!" — thay cho khen chung
@@ -1802,6 +1843,14 @@ function baseline(){
   const iv=intervals(); if(iv.length<2) return null;
   const s=[...iv].sort((a,b)=>a-b);
   return s[Math.floor(s.length/2)];
+}
+/* nhip chi tinh tu rep THAT (loai nhip tong hop do bu-nhip-bo-tui) */
+function realIntervals(){ return intervals().slice(S._realFrom||0); }
+function realMedian(){ const w=realIntervals(); if(!w.length) return null; const s=[...w].sort((a,b)=>a-b); return s[Math.floor(s.length/2)]; }
+function steadyTempo(tol){ // 4 nhip THAT gan nhat deu trong sai so tol
+  const w=realIntervals(); if(w.length<4) return false;
+  const l4=w.slice(-4), med=[...l4].sort((a,b)=>a-b)[2];
+  return med>0 && l4.every(x=>Math.abs(x-med)/med<=tol);
 }
 function tempoStable(){
   const iv=intervals(); if(iv.length<3) return true;
@@ -1930,7 +1979,14 @@ document.getElementById('btnSkipRest').addEventListener('click',()=>{
 function finishExercise(early,done){
   const cur=S.session.exercises[S.session.exercises.length-1];
   const tot=cur.sets.reduce((a,s)=>a+s.reps,0);
-  if(tot>0) coach('exDone',{ex:S.ex.name, exid:S.ex.id});
+  if(tot>0){ // khen xong bai + ghep goi ten: "...! Quá đỉnh, Khoa!"
+    const i=pickIdx('exDone', PH.exDone.length);
+    const txt=PH.exDone[i].replaceAll('{ex}', S.ex.name);
+    setCoachMsg(txt);
+    const dk='exdone_'+S.ex.id+'_'+i, keys=[]; if(Voice.has(dk)) keys.push(dk);
+    const nk=userNameKey(); if(nk) keys.push('nm_quadinh', nk);
+    if(keys.length) sayKeys(txt, keys, true); else speak(txt, true);
+  }
   else coach('skipSet'); // ca bai 0 rep: dong vien nhe thay vi khen "xuat sac"
   document.getElementById('mnTitle').textContent=`Xong bài ${S.ex.name}! 🎉`;
   document.getElementById('mnSub').textContent=`${cur.sets.length} set · ${tot} rep tổng. Bạn muốn làm gì tiếp?`;
@@ -2477,6 +2533,7 @@ function addReps(n){ // bu nhip im lang: khong doc tung so, khong spam cau co vu
   // -> khong bi nhip gia nen lam baseline sup (canh bao an toan gia) va dong ho stall tuoi moi
   const total=Math.min(S.ex.reps, S.reps+n);
   S.repTimes=[]; for(let i=total;i>=1;i--) S.repTimes.push(now-(i-1)*per);
+  S._realFrom=S.repTimes.length; S.flowMode=false; S.flowSaid=false; // nhip vua dung la TONG HOP (deu tam tap) -> khong tinh vao im-lang/voi cho toi khi co rep THAT moi
   S.reps=total; S.slowWarned=0; S.safetyWarned=false; S.lastStallLevel=0; S.fastWarned=0;
   document.getElementById('repNum').textContent=S.reps;
   document.getElementById('ringFg').style.strokeDashoffset=754*(1-Math.min(1,S.reps/S.ex.reps));
@@ -2722,6 +2779,7 @@ document.addEventListener('keydown',e=>{ if(!LB.el.classList.contains('on'))retu
 /* =================== INIT =================== */
 S.selKg = lastKg[S.selEx]!==undefined ? +lastKg[S.selEx] : 0;
 renderMode(); renderHistory(); renderProfile(); renderCoachPick();
+loadNames(); // bank ten goi (Goi C) — nap som de match luc chao/khen
 Voice.init().then(()=>{ setTimeout(()=>Voice.prefetchAll(),4000); }); // tai ngam bo giong sau 4s
 window.addEventListener('online',()=>{ // mat mang giua chung -> co mang lai thi tai tiep (SW cache hit = re)
   if(!Voice.ok) Voice.init().then(()=>Voice.prefetchAll());
