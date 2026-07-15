@@ -506,6 +506,32 @@ label.f{display:block;margin-top:20px;font-size:13px;font-weight:700;color:var(-
     </div>
   </div>
 
+  <!-- ====== MODAL: hoi trang thai dau buoi (mood) ====== -->
+  <div class="modal" id="modalMood">
+    <div class="sheet">
+      <h2>Hôm nay trong người sao? 💬</h2>
+      <div class="sub">Cho HLV biết để điều chỉnh buổi tập cho hợp nhé.</div>
+      <div id="moodBtns">
+        <button class="btn btn-main" data-mood="sung">😤 Sung, máu lửa!</button>
+        <button class="btn btn-ghost" data-mood="ok">🙂 Bình thường</button>
+        <button class="btn btn-ghost" data-mood="tired">😮‍💨 Hơi mệt</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ====== MODAL: check-in do nang luc nghi (RPE) ====== -->
+  <div class="modal" id="modalRpe">
+    <div class="sheet">
+      <h2>Set vừa rồi thấy sao? 💪</h2>
+      <div class="sub">Nói thật để HLV chỉnh tạ cho chuẩn nhé.</div>
+      <div id="rpeBtns">
+        <button class="btn btn-ghost" data-rpe="light">🪶 Nhẹ, còn sức</button>
+        <button class="btn btn-main" data-rpe="ok">👍 Vừa sức</button>
+        <button class="btn btn-ghost" data-rpe="hard">🥵 Nặng, đuối rồi</button>
+      </div>
+    </div>
+  </div>
+
 </div>
 
 <script>
@@ -1042,7 +1068,7 @@ function lastPerf(exId){
   const h=JSON.parse(localStorage.getItem('gpt_history')||'[]');
   for(let i=h.length-1;i>=0;i--){
     const e=(h[i].exercises||[]).find(x=>x.id===exId&&x.sets&&x.sets.length);
-    if(e) return {kg:e.sets[0].kg||0, reps:e.sets.map(s=>s.reps), target:e.targetReps||0, when:h[i].startedAt};
+    if(e) return {kg:e.sets[0].kg||0, reps:e.sets.map(s=>s.reps), target:e.targetReps||0, when:h[i].startedAt, rpe:e.sets.map(s=>s.rpe||null), mood:h[i].mood||null};
   }
   return null;
 }
@@ -1050,12 +1076,74 @@ function lastPerf(exId){
 function suggestNext(perf, timeEx){
   if(!perf||!perf.reps.length||!perf.target) return null;
   if(!perf.reps.every(r=>r>=perf.target)) return null;
+  if(perf.mood==='tired') return null;                        // buoi truoc bao met -> phong do khong dai dien, khong voi tang
+  if(perf.rpe && perf.rpe.some(x=>x==='hard')) return null;   // set truoc bao nang -> giu nguyen, dung tang
   if(timeEx){ if(perf.target<300) return {reps:Math.min(300,perf.target+5), text:`thử giữ ${Math.min(300,perf.target+5)} giây`}; return null; }
   if(perf.kg>0) return {kg:perf.kg+2.5, text:`thử tăng lên ${fmtKg(perf.kg+2.5)}kg`};
   if(perf.target<50) return {reps:perf.target+1, text:`thử tăng lên ${perf.target+1} rep/set`};
   return null;
 }
 function fmtKg(k){ return (Math.round(k*10)/10).toString().replace(/\.0$/,''); }
+
+/* ===== GOI A: HLV co tri nho (doc tu lich su local, ghep clip thu san) ===== */
+function bestRepsFor(exId){ // ky luc rep cao nhat tren MOI buoi da luu (chi bai dem rep)
+  if(isTimeEx(exId)) return null;
+  const h=getHist(); let best=null;
+  for(const s of h) for(const e of (s.exercises||[])) if(e.id===exId)
+    for(const st of (e.sets||[])) if(st.reps>0 && (best==null||st.reps>best)) best=st.reps;
+  return best;
+}
+function streakDays(){ // so ngay LIEN TIEP co buoi tap, tinh ca hom nay (dang bat dau)
+  const h=getHist(), DAY=86400000;
+  const dk=t=>{const d=new Date(t); return d.getFullYear()*10000+(d.getMonth()+1)*100+d.getDate();};
+  const days=new Set(h.map(s=>dk(s.startedAt)));
+  const base=new Date(); base.setHours(0,0,0,0);
+  let n=1;
+  for(let i=1;i<400;i++){ const d=new Date(base.getTime()-i*DAY);
+    if(days.has(d.getFullYear()*10000+(d.getMonth()+1)*100+d.getDate())) n++; else break; }
+  return n;
+}
+function greetKeys(){ // chao mo buoi: khung gio + streak / vang mat lau
+  const hr=new Date().getHours();
+  const tod = hr<11?0 : hr<14?1 : hr<18?2 : 3;
+  const keys=['gr_m'+tod];
+  const h=getHist();
+  if(h.length){
+    const DAY=86400000, daysSince=Math.floor((Date.now()-h[h.length-1].startedAt)/DAY);
+    if(daysSince>=5) keys.push('gr_comeback_0');
+    else{ const st=streakDays(); if(st>=2 && st<=50) keys.push('gr_streak_pre','n'+st,'gr_streak_post'); }
+  }
+  return keys.filter(k=>Voice.has(k));
+}
+const END_CATG={chest:'tren',back:'tren',shoulder:'tren',bicep:'tren',tricep:'tren',glute:'chan',core:'bung',cardio:'cardio'};
+function endAdviceKey(exs){ // dan do cuoi buoi theo nhom co TROI (nhieu set nhat)
+  const grp={chan:0,tren:0,bung:0,cardio:0};
+  for(const e of exs){ const def=EXERCISES.find(x=>x.id===e.id); if(!def) continue;
+    grp[END_CATG[def.cat]||'tren'] += (e.sets?e.sets.length:0); }
+  let best=null,bv=0; for(const g in grp) if(grp[g]>bv){ bv=grp[g]; best=g; }
+  const k=best&&('cd_'+best+'_0'); return (k&&Voice.has(k))?k:null;
+}
+const MOOD_ACK={sung:'Máu lửa ghê! Vậy hôm nay mình chiến hết mình nào!',ok:'Ổn! Mình vào buổi tập từ từ cho nóng người nhé!',tired:'Hôm nay hơi mệt thì mình tập vừa sức thôi, chất lượng hơn số lượng nha!'};
+const RPE_ACK={light:'Nhẹ hả? Set sau thử tăng thêm một chút nhé!',ok:'Vừa sức là chuẩn rồi, giữ vậy nha!',hard:'Nặng thì set sau cứ giữ nguyên, làm chậm mà chắc thôi!'};
+function openMood(){ if(document.getElementById('modalMood')) openModal('modalMood',true); }
+document.querySelectorAll('#moodBtns button').forEach(b=>b.addEventListener('click',()=>{
+  const m=b.dataset.mood; if(S.session) S.session.mood=m;
+  openModal('modalMood',false);
+  const txt=MOOD_ACK[m]||''; const keys=[];
+  if(Voice.has('mood_'+m)) keys.push('mood_'+m);
+  keys.push(...greetKeys());
+  if(keys.length) sayKeys(txt, keys, true); else if(txt) speak(txt, true);
+}));
+function answerRpe(m){
+  openModal('modalRpe',false);
+  const cur=S.session&&S.session.exercises[S.session.exercises.length-1];
+  if(cur&&cur.sets&&cur.sets.length) cur.sets[cur.sets.length-1].rpe=m; // gan cho set VUA xong -> luu vao history
+  const txt=RPE_ACK[m]||'';
+  if(S.phase==='rest') setCoachMsg(txt);
+  if(Voice.has('rpe_'+m)) sayKeys(txt,['rpe_'+m],true); else if(txt) speak(txt,true);
+}
+document.querySelectorAll('#rpeBtns button').forEach(b=>b.addEventListener('click',()=>answerRpe(b.dataset.rpe)));
+
 function clearTimers(){ S.timers.forEach(t=>{clearTimeout(t);clearInterval(t)}); S.timers=[]; }
 function after(ms,fn){ const t=setTimeout(fn,ms); S.timers.push(t); return t; }
 function every(ms,fn){ const t=setInterval(fn,ms); S.timers.push(t); return t; }
@@ -1395,9 +1483,11 @@ function parseVoice(cands){
 
 /* =================== FLOW =================== */
 document.getElementById('btnStart').addEventListener('click',()=>{
-  if(!S.session){ S.session={startedAt:Date.now(), exercises:[]}; coach('sessionStart'); }
+  const fresh=!S.session;
+  if(fresh){ S.session={startedAt:Date.now(), exercises:[]}; }
   renderSetup(false); show('scr-setup');
   requestWakeLock();
+  if(fresh) openMood(); // hoi trang thai + chao mo buoi (mood ack + chao ghep lien) — thay coach('sessionStart') cu
 });
 document.getElementById('btnBackHome').addEventListener('click',()=>{ releaseWakeLock(); show('scr-home'); }); // ve home = khong tap: nha khoa man hinh (startCountdown se xin lai)
 let goBusy=false;
@@ -1428,6 +1518,8 @@ document.getElementById('btnGo').addEventListener('click',async ()=>{
     if(PTVERB[S.selEx]) warmKeys.push('v_'+PTVERB[S.selEx]);
     warmKeys.push(`bk_${S.selEx}_0`,`bk_${S.selEx}_1`,`bk_${S.selEx}_2`,`br_${S.selEx}`);
     (MISTAKES[S.selEx]||[]).forEach((_,i)=>warmKeys.push(`mk_${S.selEx}_${i}`)); // nhac loi luc nghi
+    warmKeys.push('pr_pre','pr_beat','pr_keep','pr_first','pr_live_0','pr_live_1'); // nhac thanh tich + pha ky luc
+    { const bst=bestRepsFor(S.selEx); if(bst!=null && bst<=50) warmKeys.push('n'+bst); } // so ky luc de ghep cau vao bai
     // clip tron cau setDone cho so rep muc tieu (phat cuoi set, nap truoc cho muot)
     if(!S.ex.timeEx && S.selReps>=1 && S.selReps<=50){ for(let v=0;v<3;v++) warmKeys.push(`sdf_${v}_${S.selReps}`); for(let v=0;v<2;v++) warmKeys.push(`sdef_${v}_${S.selReps}`); }
     Voice.warm(warmKeys);
@@ -1438,6 +1530,7 @@ document.getElementById('btnGo').addEventListener('click',async ()=>{
 
 function startCountdown(){
   clearTimers(); S.phase='countdown';
+  openModal('modalRpe',false); // dong hoi-do-nang neu con mo (het gio nghi truoc khi user tra loi)
   show('scr-count');
   requestWakeLock(); // giu man hinh sang suot buoi tap
   const ex=S.ex, isFirst=(S.setIdx===0);
@@ -1459,6 +1552,15 @@ function startCountdown(){
   // 3) dem NGUOC 5..1 -> vao rep 1
   const needPos=(S.mode==='sensor' && !ex.timeEx), pos=needPos?posOf(ex.id):null;
   const intro=[{keys:[`ex_${ex.id}`,'cb'], text:`Chuẩn bị bài ${ex.name}!`, label:'Chuẩn bị…'}];
+  // NHAC THANH TICH CU (chi set dau, bai dem rep) — "lan truoc lam duoc N cai"
+  if(isFirst && !ex.timeEx){
+    const best=bestRepsFor(ex.id);
+    if(best==null){ if(Voice.has('pr_first')) intro.push({keys:['pr_first'], text:'Bài này mình tập lần đầu — tôi sẽ nhớ kết quả cho bạn nhé!', label:'Lần đầu tập bài này'}); }
+    else if(best<=50 && Voice.has('pr_pre')){
+      const post = best < ex.reps ? 'pr_beat' : 'pr_keep'; // best<target -> ep set nay la vuot; best>=target -> giu phong do (app tu ket set khi dat target)
+      intro.push({keys:['pr_pre','n'+best,post], text:`Lần trước bài này bạn làm được ${best} cái.`, label:'Nhớ thành tích cũ'});
+    }
+  }
   if(needPos) intro.push({keys:['pp_'+pos], text:POS_SAY[pos], label:POS_SAY[pos]});
   speakSeq(intro, 0, 700, ()=>countUp(5, ()=>{
     document.getElementById('cdNum').textContent='👂';
@@ -1521,6 +1623,7 @@ function startSet(){
   hiddenAt = (document.visibilityState==='hidden') ? Date.now() : 0; // set BAT DAU khi man dang tat (nghi het gio luc khoa may) -> danh dau de con hoi bu; clamp theo setStartAt o onReturnVisible
   S.phase='active'; S.reps=0; S.repTimes=[]; S.lastStallLevel=0; S.slowWarned=0; S.safetyWarned=false; S.fastWarned=0;
   S._barkI=null; // xoay vong bark tu dau moi set
+  S.bestReps=(S.ex&&!S.ex.timeEx)?bestRepsFor(S.ex.id):null; S.prAnnounced=false; // ky luc cu (tu history da luu, chua co buoi nay) -> bao pha ky luc trong set
   S.setStartAt=Date.now();
   show('scr-work');
   document.getElementById('wEx').textContent=S.ex.name;
@@ -1619,6 +1722,13 @@ function onRep(){
   document.getElementById('ringFg').style.strokeDashoffset = 754*(1-Math.min(1,n/total));
   updateTempoUI(); updatePocket();
   if(n>=total){ finishSet(false); return; }
+  // PHA KY LUC ngay trong set: vuot ky luc cu (>=5) -> reo len 1 lan/set, uu tien cao
+  if(S.bestReps && S.bestReps>=5 && !S.prAnnounced && n>S.bestReps){
+    S.prAnnounced=true; speakNum(n);
+    const pk='pr_live_'+pickIdx('prlive',2);
+    if(Voice.has(pk)) after(700,()=>Voice.play([pk],false));
+    return;
+  }
   // milestone speech — 3 rep cuoi ghep dong tu ho ("Đẩy! Cái cuối!") de punchy
   if(left===1) coach('lastOne',{},{critical:true, prefix:verbKey()});
   else if(left===2) coach('two',{n},{critical:true, prefix:verbKey()});
@@ -1733,7 +1843,11 @@ function finishSet(early){
   // dong ho nghi tinh theo thoi gian thuc (Date.now) — khong le nhip khi tab bi throttle/tat man hinh
   const endAt=Date.now()+S.ex.rest*1000;
   document.getElementById('restNum').textContent=S.ex.rest;
-  after(4500,()=>{ if(S.phase==='rest') coach('restStart',{t:S.ex.rest}); });
+  // HOI DO NANG (RPE) — chi 1 lan/bai (sau set dau), khong hoi khi dang bo tui / dang hoi bu nhip.
+  // Neu hoi RPE thi ack thay luon cau "nghi X giay"; khong hoi thi giu cau nghi nhu cu.
+  const askRpe = (!S.ex.timeEx && done>0 && S.setIdx===0 && document.getElementById('modalRpe') && !pocketEl.classList.contains('on'));
+  if(askRpe) after(1800,()=>{ if(S.phase==='rest' && !document.getElementById('modalGap').classList.contains('on') && !pocketEl.classList.contains('on')) openModal('modalRpe',true); });
+  else after(4500,()=>{ if(S.phase==='rest') coach('restStart',{t:S.ex.rest}); });
   // NHAC LOI CAN TRANH (anh 3) — lap day khoang chet giua 2 set, xoay vong theo so set da tap.
   // Moc 11s: sau khi cau "Nghi X giay" da phat xong. Chi nhac khi con du cho truoc luc "chuan bi vao set".
   const mk=(MISTAKES[S.ex.id]||[]);
@@ -1859,7 +1973,12 @@ function endSession(){
     localStorage.setItem('gpt_history',JSON.stringify(h.slice(-50)));
   }
   show('scr-sum');
-  coach('sessionEnd');
+  // ket buoi + DAN DO theo nhom co troi (ghep lien sau cau ket)
+  const ei=pickIdx('sessionEnd', PH.sessionEnd.length);
+  const endTxt=PH.sessionEnd[ei];
+  setCoachMsg(endTxt + (pfName?' 💪':''));
+  const endKeys=['p_sessionEnd_'+ei]; const adv=endAdviceKey(exs); if(adv) endKeys.push(adv);
+  sayKeys(endTxt, endKeys, true);
   S.session=null;
 }
 document.getElementById('btnHome').addEventListener('click',()=>{ renderHistory(); show('scr-home'); });

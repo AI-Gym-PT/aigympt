@@ -1,5 +1,5 @@
 /* AI Gym PT service worker — cache de mo nhanh + chay offline */
-const CACHE = 'aigympt-v4';   // v4: cau ho doi theo anh 2 (bk_*.mp3 thu lai) + them clip nhac loi mk_*.mp3
+const CACHE = 'aigympt-v5';   // v5: Goi A — HLV co tri nho (pr_/gr_/cd_/mood_/rpe_ clips + nhac thanh tich/chao/dan do)
 const CORE = ['./', './index.html', './manifest.json', './icon-192.png', './icon-512.png'];
 
 self.addEventListener('install', e => {
