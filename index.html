@@ -713,7 +713,7 @@ const PH = {
   three: ['Còn 3 cái nữa thôi, bung sức đi!','Ba cái cuối, gồng lên nào!'],
   two: ['Còn 2 cái! Cố lên!','Hai cái nữa là xong, chiến!'],
   lastOne: ['Còn 1 cái cuối! Tất cả cho cái này!','Cái cuối cùng! Bung hết đi!!'],
-  praise: ['Đẹp lắm, nhịp đều tăm tắp!','Form chuẩn đấy, giữ vậy nhé!','Quá mượt! Tiếp tục nào!','Nhịp này đỉnh đấy!'],
+  praise: ['Đẹp lắm, nhịp đều tăm tắp!','Form chuẩn đấy, giữ vậy nhé!','Quá mượt! Tiếp tục nào!','Nhịp này đỉnh đấy!','Đấy, chuẩn bài đấy!','Ngon, cứ nhịp này nhé!'],
   slowing: ['Chậm lại rồi đó, hít sâu, giữ nhịp nhé!','Đuối chưa? Thở đều, từng cái một thôi!','Mỏi là đang lớn đó! Giữ nhịp, cố lên!'],
   tooFast: ['Nhanh quá rồi! Hạ tạ hai đến ba giây có kiểm soát, đừng dùng đà!','Chậm nhịp xuống nào! Kiểm soát lúc hạ, đừng thả rơi tạ!'],
   stall1: ['Ê ê, đừng dừng! Còn chút nữa thôi, lên nào!','Nghỉ tay hả? Vào lại đi, sắp xong rồi!','Cố lên! Đứng dậy làm nốt, tôi tin bạn làm được!'],
@@ -733,11 +733,21 @@ const PARTS = {
   stall2: [['Nghe này: chỉ còn','cái nữa thôi. Một cái một, làm được mà!'],['Đừng bỏ cuộc lúc này! Còn','cái nữa là xong set, chiến đi!'],['Bạn mạnh hơn bạn nghĩ đấy! Còn','cái cuối, lên!']],
 };
 const PARTS_FILES = { setDone:['sdp_','sds_'], setDoneEarly:['sdep_','sdes_'], stall2:['st2p_','st2s_'] };
-const lastPick = {};
+const INTERJ = ['interj_0','interj_1','interj_2']; // am dem nguoi that: "Đó!", "Chuẩn!", "Rồi, đẹp!"
+/* TUI XAO BAI: phat HET moi bien the (thu tu xao) roi moi lap lai -> khong nghe trung cau trong 1 phien.
+   Trong bo nho (reset khi reload); tu xay lai khi so bien the doi (them clip moi). */
+const _bag = {};
 function pickIdx(key, len){
-  let i = Math.floor(Math.random()*len);
-  if(len>1 && i===lastPick[key]) i=(i+1)%len;
-  lastPick[key]=i;
+  if(len<=1) return 0;
+  let b=_bag[key];
+  if(!b || b.len!==len || !b.order.length){
+    const last = b && b.last;
+    const order=[...Array(len).keys()];
+    for(let i=order.length-1;i>0;i--){ const j=Math.floor(Math.random()*(i+1)); [order[i],order[j]]=[order[j],order[i]]; }
+    if(order[0]===last && len>1){ [order[0],order[1]]=[order[1],order[0]]; } // dau tui moi khong lap clip vua dung
+    b={len, order, last}; _bag[key]=b;
+  }
+  const i=b.order.shift(); b.last=i;
   return i;
 }
 function pick(key, vars={}){
@@ -783,9 +793,21 @@ const Voice = {
       const AC = window.AudioContext||window.webkitAudioContext;
       if(AC){ try{ this.ctx=new AC(); }catch(e){} }
     }
+    this._ensureMaster();
     // iOS dung state phi chuan 'interrupted' sau cuoc goi/khoa may/Siri —
     // check !== 'running' de moi truong hop deu duoc resume (nhu howler/Tone.js)
     if(this.ctx && this.ctx.state!=='running') this.ctx.resume().catch(()=>{});
+  },
+  master:null,
+  _ensureMaster(){ // chuoi mixing: nguon -> master gain -> compressor -> loa. Dinh loudness cau ghep thanh 1 khoi, khong vo tieng.
+    if(!this.ctx || this.master) return;
+    try{
+      const g=this.ctx.createGain(); g.gain.value=1.0;
+      const comp=this.ctx.createDynamicsCompressor();
+      comp.threshold.value=-20; comp.knee.value=24; comp.ratio.value=3; comp.attack.value=0.004; comp.release.value=0.18;
+      g.connect(comp); comp.connect(this.ctx.destination);
+      this.master=g;
+    }catch(e){ this.master=null; }
   },
   has(k){ return this.ok && this.files.has(k+'.mp3'); },
   /* CAT KHOANG LANG: clip TTS co ~0.5-1s im lang o dau/duoi lam cau ghep bi keo le.
@@ -852,7 +874,7 @@ const Voice = {
     this.curSrcs=[];
     if(this.cur){ try{this.cur.pause()}catch(e){} this.cur=null; }
   },
-  play(keys, critical=false, fbText=''){
+  play(keys, critical=false, fbText='', opts={}){
     if(!voiceOn) return true;
     keys = keys.filter(k=>this.has(k));
     if(!keys.length) return false;
@@ -863,20 +885,35 @@ const Voice = {
     const t = ++this.token;
     this.criticalPlaying = critical;
     this.criticalUntil = Date.now()+8000; // tam tinh khi con dang tai; se tinh lai chinh xac sau
+    // TOC DO 1 GIA TRI cho CA CAU (khong per-clip -> cau ghep khong nhay cao do): rate ro rang (cao trao)
+    // hoac jitter nhe +-1.5% de cung 1 clip khong bao gio giong het chinh no (pha "van tay" may).
+    const rate = opts.rate || (1 + (Math.random()*2-1)*0.015);
     if(this.ctx){
       // FIX GIAT: tai + giai ma XONG CA CAU (song song, 1 vong mang) roi moi phat,
       // cac manh ghep noi nhau tren timeline am thanh -> lien mach tuyet doi
       Promise.all(keys.map(k=>this.buffer(k))).then(clips=>{
         if(t!==this.token) return;
         this.unlock(); // ctx co the vua bi suspend (iOS) trong luc tai
+        this._ensureMaster();
+        const dest=this.master||this.ctx.destination;
         const GAP=0.02; // khe ho toi thieu giua cac manh ghep con lai (dong tu+so)
         let at=this.ctx.currentTime+0.03, total=0;
         clips.forEach((c,i)=>{
           const src=this.ctx.createBufferSource();
-          src.buffer=c.b; src.connect(this.ctx.destination);
+          src.buffer=c.b; src.playbackRate.value=rate;
+          const real=c.dur/rate; // thoi gian THUC = thoi luong buffer / toc do
+          // fade 6ms 2 dau moi manh -> xoa tieng 'bụp' o moi noi (concatenative click)
+          if(real>0.04 && this.ctx.createGain){
+            const g=this.ctx.createGain(); src.connect(g); g.connect(dest);
+            const F=0.006, s0=at, s1=at+real;
+            g.gain.setValueAtTime(0.0001, s0);
+            g.gain.linearRampToValueAtTime(1, s0+F);
+            g.gain.setValueAtTime(1, s1-F);
+            g.gain.linearRampToValueAtTime(0.0001, s1);
+          } else src.connect(dest);
           if(i===clips.length-1) src.onended=()=>{ if(t===this.token){ this.criticalPlaying=false; this.curSrcs=[]; } };
           src.start(at, c.off, c.dur); // chi phat doan co tieng (da cat im lang)
-          at+=c.dur+GAP; total+=c.dur+GAP;
+          at+=real+GAP; total+=real+GAP;
           this.curSrcs.push(src);
         });
         this.criticalUntil = Date.now()+total*1000+1200; // han chot chinh xac theo tong thoi luong cau
@@ -921,9 +958,16 @@ function speak(text, critical=false){
 function sayKeys(text, keys, critical=true){
   if(!Voice.play(keys, critical, text)) speak(text, critical); // fbText=text: clip loi giua chung -> Voice tu doc TTS
 }
-function speakNum(n){
-  if(Voice.play(['n'+n], false, String(n))) return; // co file thi phat (loi thi TTS), khong co file thi TTS luon
+function speakNum(n, rate){
+  if(Voice.play(['n'+n], false, String(n), rate?{rate}:{})) return; // co file thi phat (loi thi TTS), khong co file thi TTS luon
   speak(String(n), false);
+}
+/* cung nang luong: dem cang ve cuoi set cang gap (nhanh + cao hon) — mo phong PT gan giong cuoi set.
+   rate 1.0 o nua dau -> tang dan toi ~1.09 o rep cuoi. Chi ap cho bai dem rep. */
+function energyRate(n, total){
+  if(!total || total<4) return 1;
+  const p=Math.max(0, (n/total - 0.5) / 0.5); // 0 o giua set, 1 o cuoi
+  return 1 + Math.min(1,p)*0.09;
 }
 const FULL_KEY = {setDone:'sdf', setDoneEarly:'sdef', stall2:'st2f'}; // clip tron cau co so
 function coach(key, vars={}, {show=true, critical=true, prefix=null}={}){
@@ -1507,7 +1551,7 @@ document.getElementById('btnGo').addEventListener('click',async ()=>{
     for(let s=1;s<=Math.min(S.ex.sets,10);s++) for(let i=0;i<4;i++) warmKeys.push(`setstart_s${s}_${i}`);
     // milestone + khen + dong vien + ket set + nghi
     ['half_0','half_1','half_2','three_0','three_1','two_0','two_1',
-     'p_lastOne_0','p_lastOne_1','p_praise_0','p_praise_1','p_praise_2','p_praise_3',
+     'p_lastOne_0','p_lastOne_1','p_praise_0','p_praise_1','p_praise_2','p_praise_3','p_praise_4','p_praise_5','interj_0','interj_1','interj_2',
      'p_slowing_0','p_slowing_1','p_slowing_2','p_tooFast_0','p_tooFast_1','p_stall1_0','p_stall1_1','p_stall1_2',
      'st2p_0','st2p_1','st2p_2','st2s_0','st2s_1','st2s_2',
      'sdp_0','sdp_1','sdp_2','sds_0','sds_1','sds_2','sdep_0','sdep_1','sdes_0','sdes_1',
@@ -1735,13 +1779,16 @@ function onRep(){
   else if(left===3&&total>=8) coach('three',{n},{critical:true, prefix:verbKey()});
   else if(n===Math.ceil(total/2)&&total>=6) coach('half',{n},{critical:true});
   else{
+    const er=energyRate(n,total); // cuoi set: dem gap hon (cung nang luong)
     // rep 2: nhac hoi tho 1 lan (dung nhu anh 3 day)
-    if(n===2 && Voice.has('br_'+S.ex.id)){ speakNum(n); after(600,()=>Voice.play(['br_'+S.ex.id],false)); }
+    if(n===2 && Voice.has('br_'+S.ex.id)){ speakNum(n,er); after(600,()=>Voice.play(['br_'+S.ex.id],false)); }
     // dinh ky (cong tan suat cu): thay khen chung bang BARK FORM dung bai
-    else if(n%4===0 && Math.random()<0.5 && tempoStable() && barkKey!=null){ speakNum(n); const bk=barkKey(); if(bk) after(600,()=>Voice.play([bk],false)); else after(600,()=>coach('praise',{},{critical:false})); }
+    else if(n%4===0 && Math.random()<0.5 && tempoStable() && barkKey!=null){ speakNum(n,er); const bk=barkKey(); if(bk) after(600,()=>Voice.play([bk],false)); else after(600,()=>coach('praise',{},{critical:false})); }
+    // am dem kieu nguoi that: sau 1 rep dep (nhip deu), thi thoang bat "Đó!" — thay cho khen chung
+    else if(n>=4 && n%4===2 && Math.random()<0.35 && tempoStable() && INTERJ.some(k=>Voice.has(k))){ speakNum(n,er); const ij=INTERJ.filter(k=>Voice.has(k)); after(560,()=>Voice.play([ij[Math.floor(Math.random()*ij.length)]],false)); }
     // thi thoang ho dong tu ngay truoc so ("Đẩy! Năm!") — thua thoi, khong them luot
     else if(n>=3 && n%5===3 && Math.random()<0.5) sayVerbNum(n);
-    else speakNum(n);
+    else speakNum(n,er);
   }
 }
 
