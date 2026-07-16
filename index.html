@@ -734,6 +734,7 @@ const PARTS = {
 };
 const PARTS_FILES = { setDone:['sdp_','sds_'], setDoneEarly:['sdep_','sdes_'], stall2:['st2p_','st2s_'] };
 const INTERJ = ['interj_0','interj_1','interj_2']; // am dem nguoi that: "Đó!", "Chuẩn!", "Rồi, đẹp!"
+const POCKET_TIP = 'Muốn tắt màn hình mà vẫn đếm thì bấm nút Mặt Trăng. Đừng bấm nút nguồn, máy sẽ ngưng đếm nhé.'; // clip p_pockettip_0
 /* TUI XAO BAI: phat HET moi bien the (thu tu xao) roi moi lap lai -> khong nghe trung cau trong 1 phien.
    Trong bo nho (reset khi reload); tu xay lai khi so bien the doi (them clip moi). */
 const _bag = {};
@@ -1120,7 +1121,8 @@ function calcVol(sess){
 function lastPerf(exId){
   const h=JSON.parse(localStorage.getItem('gpt_history')||'[]');
   for(let i=h.length-1;i>=0;i--){
-    const e=(h[i].exercises||[]).find(x=>x.id===exId&&x.sets&&x.sets.length);
+    const ms=(h[i].exercises||[]).filter(x=>x.id===exId&&x.sets&&x.sets.length);
+    const e=ms[ms.length-1]; // 1 buoi co the tap CUNG bai 2 lan (doi ta) -> lay lan GAN NHAT, khong phai lan dau
     if(e) return {kg:e.sets[0].kg||0, reps:e.sets.map(s=>s.reps), target:e.targetReps||0, when:h[i].startedAt, rpe:e.sets.map(s=>s.rpe||null), mood:h[i].mood||null};
   }
   return null;
@@ -1575,6 +1577,7 @@ document.getElementById('btnGo').addEventListener('click',async ()=>{
     lastKg[S.selEx]=S.selKg; localStorage.setItem('gpt_lastkg',JSON.stringify(lastKg));
     S.session.exercises.push({id:S.selEx, name:S.ex.name, targetSets:S.selSets, targetReps:S.selReps, kg:S.selKg, rest:S.selRest, sets:[]});
     S.setIdx=0;
+    S.prAnnounced=false; // "Kỷ lục mới" chi ho 1 lan cho MOI BAI (khong lap lai o set 2/3)
     // nap truoc (giai ma san) toan bo cau se dung trong bai nay -> phat khong tre
     const warmKeys=[`ex_${S.ex.id}`,'cb','batdau'];
     for(let i=1;i<=Math.min(S.ex.reps,50);i++) warmKeys.push('n'+i);
@@ -1628,28 +1631,48 @@ function startCountdown(){
   // 3) dem NGUOC 5..1 -> vao rep 1
   const needPos=(S.mode==='sensor' && !ex.timeEx), pos=needPos?posOf(ex.id):null;
   const intro=[{keys:[`ex_${ex.id}`,'cb'], text:`Chuẩn bị bài ${ex.name}!`, label:'Chuẩn bị…'}];
-  // NHAC THANH TICH CU (chi set dau, bai dem rep) — "lan truoc lam duoc N cai"
+  // NHAC THANH TICH CU (chi set dau, bai dem rep). Cau clip la "LAN TRUOC..." nen PHAI lay buoi GAN NHAT
+  // (khong phai ky luc moi buoi — se noi sai su that neu buoi truoc tap kem hon ky luc), va chi noi khi
+  // MUC TA GIONG NHAU, khong thi so sanh khong cong bang (30 cai @5kg vs 10 cai @20kg).
   if(isFirst && !ex.timeEx){
-    const best=bestRepsFor(ex.id);
-    if(best==null){ if(Voice.has('pr_first')) intro.push({keys:['pr_first'], text:'Bài này mình tập lần đầu — tôi sẽ nhớ kết quả cho bạn nhé!', label:'Lần đầu tập bài này'}); }
-    else if(best<=50 && Voice.has('pr_pre')){
-      const post = best < ex.reps ? 'pr_beat' : 'pr_keep'; // best<target -> ep set nay la vuot; best>=target -> giu phong do (app tu ket set khi dat target)
-      intro.push({keys:['pr_pre','n'+best,post], text:`Lần trước bài này bạn làm được ${best} cái.`, label:'Nhớ thành tích cũ'});
+    const lp=lastPerf(ex.id);
+    if(lp==null){ if(Voice.has('pr_first')) intro.push({keys:['pr_first'], text:'Bài này mình tập lần đầu — tôi sẽ nhớ kết quả cho bạn nhé!', label:'Lần đầu tập bài này'}); }
+    else{
+      const best=Math.max(0, ...lp.reps);
+      const cungTa = Math.abs((lp.kg||0)-(ex.kg||0)) < 0.01;
+      if(best>=1 && best<=50 && cungTa && Voice.has('pr_pre')){
+        const post = best < ex.reps ? 'pr_beat' : 'pr_keep'; // best<target -> ep set nay la vuot; best>=target -> giu phong do (app tu ket set khi dat target)
+        intro.push({keys:['pr_pre','n'+best,post], text:`Lần trước bài này bạn làm được ${best} cái.`, label:'Nhớ thành tích cũ'});
+      }
     }
   }
   if(needPos) intro.push({keys:['pp_'+pos], text:POS_SAY[pos], label:POS_SAY[pos]});
-  speakSeq(intro, 0, 700, ()=>quietPause(3000, ()=>{
+  // MEO NUT BO TUI: doc trong CHUAN BI (co khoang lang, speakSeq cho phat xong) — truoc day de o startSet
+  // thi bi chinh cau "Bắt đầu!"/so dem huy speechSynthesis, ma flag da burn -> khong bao gio nghe duoc.
+  if(needPos && pos==='pocket'){
+    try{
+      if(!localStorage.getItem('gpt_pocketVoice') && Voice.has('p_pockettip_0')){
+        localStorage.setItem('gpt_pocketVoice','1');
+        intro.push({keys:['p_pockettip_0'], text:POCKET_TIP, label:'Mẹo: nút 🌙 Bỏ túi'});
+      }
+    }catch(e){}
+  }
+  const doCues=()=>{
     document.getElementById('cdNum').textContent='👂';
     const items=idxs.map(ci=>({keys:['su_'+ex.id+'_'+ci], text:cues[ci], label:cues[ci]}));
     speakSeq(items, 0, 2000, ()=>startCd(5));
-  }));
+  };
+  speakSeq(intro, 0, 700, ()=> needPos
+    ? quietPause(3000, 'Đặt điện thoại vào đúng vị trí…', '📱', doCues)   // sensor: can thoi gian bo may vao tui/deo tay
+    : quietPause(1200, 'Vào tư thế nào…', '🧍', doCues));                 // tap/demo/bai giu: may van tren tay -> khong noi doi
 }
-// IM LANG ~3s: cua so de user bo dien thoai vao dung vi tri. Khong dem, khong noi gi —
-// user muon yen tinh de thao tac, tieng noi quay lai o chang doc tu the chuan bi.
-function quietPause(ms, doneFn){
+// IM LANG: cua so yen tinh de user thao tac. Khong dem, khong noi gi.
+// Nhan/icon/do dai TUY ca: bo may vao tui (sensor) vs chi vao tu the (tap/demo/bai giu) —
+// khong duoc bao "dat dien thoai" o mode Cham (user PHAI cam may de cham man hinh).
+function quietPause(ms, label, icon, doneFn){
   if(S.phase!=='countdown') return;
-  document.getElementById('cdLabel').textContent='Đặt điện thoại vào đúng vị trí…';
-  document.getElementById('cdNum').textContent='📱';
+  document.getElementById('cdLabel').textContent=label;
+  document.getElementById('cdNum').textContent=icon;
   updatePocket();
   after(ms, ()=>{ if(S.phase==='countdown') doneFn(); });
 }
@@ -1678,8 +1701,15 @@ function startCd(sec){
   let n=sec; document.getElementById('cdNum').textContent=n;
   if(!Voice.play(['n'+n],true,String(n))) speak(String(n),true); // ho SO DAU (5) ngay — truoc day bi nuot vi remain===n o tick dau
   const cdEnd=Date.now()+sec*1000; // theo thoi gian thuc, chong throttle
+  let lastSeen=Date.now();
   const cdTick=()=>{
     if(S.phase!=='countdown') return;
+    const now2=Date.now();
+    // TRANG BI DONG BANG (tat man/chuyen app/cuoc goi) giua luc dem nguoc: timer ngung, quay lai thi
+    // remain am -> se nhay THANG vao set khi may con tren tay => rep ma + mat dem nguoc. Phat hien buoc
+    // nhay thoi gian -> DEM NGUOC LAI TU DAU cho user kip vao tu the.
+    if(now2-lastSeen>2000){ clearTimers(); startCd(sec); return; }
+    lastSeen=now2;
     const remain=Math.ceil((cdEnd-Date.now())/1000);
     if(remain<=0){ clearTimers(); startSet(); updatePocket(); return; }
     if(remain!==n){ n=remain; document.getElementById('cdNum').textContent=n;
@@ -1697,7 +1727,9 @@ function startSet(){
   S.phase='active'; S.reps=0; S.repTimes=[]; S.lastStallLevel=0; S.slowWarned=0; S.safetyWarned=false; S.fastWarned=0;
   S.flowMode=false; S.flowSaid=false; S.repFbCount=0; S.lastRepFbAt=0; S._realFrom=0; // Goi C: im lang thong minh + phan hoi voi
   S._barkI=null; // xoay vong bark tu dau moi set
-  S.bestReps=(S.ex&&!S.ex.timeEx)?bestRepsFor(S.ex.id):null; S.prAnnounced=false; // ky luc cu (tu history da luu, chua co buoi nay) -> bao pha ky luc trong set
+  S.bestReps=(S.ex&&!S.ex.timeEx)?bestRepsFor(S.ex.id):null; // ky luc MOI BUOI da luu (chua gom buoi nay) -> moc de bao "ky luc moi"
+  // KHONG reset S.prAnnounced o day: no reset o btnGo (moi BAI). Neu reset moi set thi set 2, set 3 se
+  // lai ho "Kỷ lục mới!" vs cung 1 moc cu -> noi sai/lap.
   S.setStartAt=Date.now();
   show('scr-work');
   document.getElementById('wEx').textContent=S.ex.name;
@@ -1761,10 +1793,7 @@ function startSet(){
       if(!used && (seen<8 || S.pocketArm)){
         bp.classList.remove('hint'); void bp.offsetWidth; bp.classList.add('hint'); // reset de replay animation moi set tren cung element
         if(!S.pocketArm) localStorage.setItem('gpt_pocketSeen', seen+1);
-        if(posOf(S.ex.id)==='pocket' && !localStorage.getItem('gpt_pocketVoice')){
-          localStorage.setItem('gpt_pocketVoice','1');
-          speak('Muốn tắt màn hình mà vẫn đếm thì bấm nút Mặt Trăng. Đừng bấm nút nguồn, máy sẽ ngưng đếm nhé.', false); // kenh duy nhat xuyen qua tui quan; critical:false -> nhuong tieng dem rep
-        }
+        // (cau meo bang GIONG da chuyen len chang CHUAN BI — o day bi "Bắt đầu!"/so dem huy speechSynthesis ngay)
       }
       S.pocketArm=false; // tieu thu co arm sau khi da glow
       if(!localStorage.getItem('gpt_pocketTip')){ localStorage.setItem('gpt_pocketTip','1');
@@ -1805,7 +1834,7 @@ function onRep(){
   }
   // milestone speech — 3 rep cuoi ghep dong tu ho ("Đẩy! Cái cuối!") de punchy
   if(left===1){ const nc=nameCall('nm_colen'); // thi thoang goi ten thay cau cuoi: "Cố lên, Khoa!"
-    if(nc && Math.random()<0.5){ setCoachMsg('Cố lên!'); Voice.play(nc, true); }
+    if(nc && Math.random()<0.5){ setCoachMsg('Cố lên!'); Voice.play(nc, true, 'Cố lên! Cái cuối!'); } // fbText: clip loi/chua tai -> van co TTS bao rep cuoi
     else coach('lastOne',{},{critical:true, prefix:verbKey()}); }
   else if(left===2) coach('two',{n},{critical:true, prefix:verbKey()});
   else if(left===3&&total>=8) coach('three',{n},{critical:true, prefix:verbKey()});
@@ -1922,6 +1951,7 @@ function watchdog(){
 /* ---- finish set ---- */
 function finishSet(early){
   clearTimers(); Demo.stop(); Sensor.stop(); SLOG.save();
+  openModal('modalGap',false); // hoi bu nhip cua set VUA XONG khong duoc treo de len man nghi (chan nut Bo qua nghi)
   S.phase='rest';
   const dur=Math.max(0, Math.round((Date.now()-S.setStartAt)/1000)); // chot chan: khong bao gio ghi thoi luong AM vao lich su (kcal am)
   const cur=S.session.exercises[S.session.exercises.length-1];
@@ -2083,7 +2113,7 @@ function endSession(){
   // save history
   if(exs.length){
     const h=JSON.parse(localStorage.getItem('gpt_history')||'[]');
-    h.push({startedAt:sess.startedAt, exercises:exs, kcal, vol});
+    h.push({startedAt:sess.startedAt, exercises:exs, kcal, vol, mood:sess.mood||null}); // mood PHAI luu, khong thi guard 'buoi met' trong suggestNext la code chet
     localStorage.setItem('gpt_history',JSON.stringify(h.slice(-50)));
   }
   show('scr-sum');
@@ -2795,6 +2825,7 @@ Voice.init().then(()=>{ setTimeout(()=>Voice.prefetchAll(),4000); }); // tai nga
 window.addEventListener('online',()=>{ // mat mang giua chung -> co mang lai thi tai tiep (SW cache hit = re)
   if(!Voice.ok) Voice.init().then(()=>Voice.prefetchAll());
   else Voice.prefetchAll();
+  if(!NAMES) loadNames(); // bank ten tai hong luc offline -> thu lai, khong thi ca phien mat goi ten
 });
 if(!getProfile()) setTimeout(()=>openProfileModal(true),600); // lan dau vao: hoi ho so
 // PWA: dang ky service worker (that bai em tren cert tu ky/iOS cu — app van chay binh thuong)

@@ -1,5 +1,5 @@
 /* AI Gym PT service worker — cache de mo nhanh + chay offline */
-const CACHE = 'aigympt-v10';  // v10: va lo hong quang nghi im lang khi dinh hoi RPE ma user vua bam Bo tui
+const CACHE = 'aigympt-v11';  // v11: audit — va 8 loi (mood khong luu, rep ma khi tat man giua dem nguoc, "lan truoc" noi sai, ky luc lap, meo Bo tui bi giet...)
 const CORE = ['./', './index.html', './manifest.json', './icon-192.png', './icon-512.png'];
 
 self.addEventListener('install', e => {
