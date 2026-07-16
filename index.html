@@ -1023,6 +1023,15 @@ function sayMistake(i){
   setCoachMsg(t);
   sayKeys(t, ['mk_'+id+'_'+i], true);
 }
+/* HIEU LENH VAO SET: dem nguoc 5..1 xong -> ho "Bắt đầu!" dut khoat roi moi vao rep 1.
+   Man hinh van hien cau day du ("Set 2 bắt đầu! ..."), rieng AUDIO la tieng ho ngan cho punchy. */
+function sayGo(){
+  const i=pickIdx('setStart', PH.setStart.length);
+  const txt=PH.setStart[i].replaceAll('{s}', S.setIdx+1);
+  setCoachMsg(txt);
+  if(Voice.has('batdau')) sayKeys(txt, ['batdau'], true);
+  else coach('setStart',{s:S.setIdx+1}); // chua co clip -> quay ve cau cu
+}
 function setCoachMsg(t){
   document.getElementById('coachMsg').textContent = t;
   document.getElementById('restMsg').textContent = t;
@@ -1567,7 +1576,7 @@ document.getElementById('btnGo').addEventListener('click',async ()=>{
     S.session.exercises.push({id:S.selEx, name:S.ex.name, targetSets:S.selSets, targetReps:S.selReps, kg:S.selKg, rest:S.selRest, sets:[]});
     S.setIdx=0;
     // nap truoc (giai ma san) toan bo cau se dung trong bai nay -> phat khong tre
-    const warmKeys=[`ex_${S.ex.id}`,'cb'];
+    const warmKeys=[`ex_${S.ex.id}`,'cb','batdau'];
     for(let i=1;i<=Math.min(S.ex.reps,50);i++) warmKeys.push('n'+i);
     for(let s=1;s<=Math.min(S.ex.sets,10);s++) for(let i=0;i<4;i++) warmKeys.push(`setstart_s${s}_${i}`);
     // milestone + khen + dong vien + ket set + nghi
@@ -1667,6 +1676,7 @@ function startCd(sec){
   if(S.mode==='sensor' && !S.ex.timeEx && !Sensor.on) Sensor.start();
   document.getElementById('cdLabel').textContent='Sẵn sàng — giữ yên nào!';
   let n=sec; document.getElementById('cdNum').textContent=n;
+  if(!Voice.play(['n'+n],true,String(n))) speak(String(n),true); // ho SO DAU (5) ngay — truoc day bi nuot vi remain===n o tick dau
   const cdEnd=Date.now()+sec*1000; // theo thoi gian thuc, chong throttle
   const cdTick=()=>{
     if(S.phase!=='countdown') return;
@@ -1705,7 +1715,7 @@ function startSet(){
     document.querySelector('.tempo').style.display='none';
     const mb2=document.getElementById('modeBadge');
     mb2.style.display='block'; mb2.textContent='⏱ Giữ tư thế'; mb2.style.color='var(--sub)';
-    coach('setStart',{s:S.setIdx+1});
+    sayGo();
     const target=S.ex.reps;
     S.holdT0=Date.now(); // moc tren S de mpResume dich duoc khi pause (man hinh tat van tinh gio — nguoi tap van dang giu)
     let saidHalf=false, lastSpoken=0, lastBark=0;
@@ -1761,7 +1771,7 @@ function startSet(){
         toast('💡 Cho điện thoại vào túi? Bấm nút 🌙 Bỏ túi (đang sáng) để tắt màn hình mà VẪN đếm rep — đừng bấm nút nguồn nhé!', 7000); }
     }catch(e){} // private mode co the throw — khong duoc lam chet startSet
   }
-  coach('setStart',{s:S.setIdx+1});
+  sayGo();
   if(S.mode==='sensor' && !Sensor.on) Sensor.start(); // du phong (binh thuong da bat tu dem nguoc)
   if(S.mode==='demo') Demo.start();
   every(1000, watchdog);
