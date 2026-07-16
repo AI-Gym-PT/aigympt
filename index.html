@@ -1614,7 +1614,7 @@ function startCountdown(){
   }
   Voice.unlock(); // mo audio (den tu cu cham btnGo) de doc duoc do dai clip
   // ---- LUONG CHUAN BI 3 CHANG ----
-  // 1) nhac DAT MAY dung vi tri + dem LEN 1..5 (thoi gian bo may vao tui/deo tay)
+  // 1) nhac DAT MAY dung vi tri + IM LANG ~3s (cua so bo may vao tui/deo tay — khong dem, do user yeu cau)
   // 2) doc lan luot cac o chu anh 1 (nghi theo do dai clip that)
   // 3) dem NGUOC 5..1 -> vao rep 1
   const needPos=(S.mode==='sensor' && !ex.timeEx), pos=needPos?posOf(ex.id):null;
@@ -1629,24 +1629,20 @@ function startCountdown(){
     }
   }
   if(needPos) intro.push({keys:['pp_'+pos], text:POS_SAY[pos], label:POS_SAY[pos]});
-  speakSeq(intro, 0, 700, ()=>countUp(5, ()=>{
+  speakSeq(intro, 0, 700, ()=>quietPause(3000, ()=>{
     document.getElementById('cdNum').textContent='👂';
     const items=idxs.map(ci=>({keys:['su_'+ex.id+'_'+ci], text:cues[ci], label:cues[ci]}));
     speakSeq(items, 0, 2000, ()=>startCd(5));
   }));
 }
-// dem LEN 1..sec: cua so de user bo dien thoai vao dung vi tri (dem xuoi cho biet con bao lau)
-function countUp(sec, doneFn){
+// IM LANG ~3s: cua so de user bo dien thoai vao dung vi tri. Khong dem, khong noi gi —
+// user muon yen tinh de thao tac, tieng noi quay lai o chang doc tu the chuan bi.
+function quietPause(ms, doneFn){
   if(S.phase!=='countdown') return;
-  const el=document.getElementById('cdNum');
   document.getElementById('cdLabel').textContent='Đặt điện thoại vào đúng vị trí…';
-  for(let i=1;i<=sec;i++){
-    after((i-1)*1000, ()=>{ if(S.phase!=='countdown')return;
-      el.textContent=i;
-      if(!Voice.play(['n'+i],true,String(i))) speak(String(i),true);
-      updatePocket(); });
-  }
-  after(sec*1000, ()=>{ if(S.phase==='countdown') doneFn(); });
+  document.getElementById('cdNum').textContent='📱';
+  updatePocket();
+  after(ms, ()=>{ if(S.phase==='countdown') doneFn(); });
 }
 // doc lan luot: chỉ đọc câu sau khi câu trước phát XONG + nghỉ `pause` ms (theo do dai clip that)
 function speakSeq(items, k, pause, doneFn){
