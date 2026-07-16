@@ -1948,7 +1948,12 @@ function finishSet(early){
   // HOI DO NANG (RPE) — chi 1 lan/bai (sau set dau), khong hoi khi dang bo tui / dang hoi bu nhip.
   // Neu hoi RPE thi ack thay luon cau "nghi X giay"; khong hoi thi giu cau nghi nhu cu.
   const askRpe = (!S.ex.timeEx && done>0 && S.setIdx===0 && document.getElementById('modalRpe') && !pocketEl.classList.contains('on'));
-  if(askRpe) after(1800,()=>{ if(S.phase==='rest' && !document.getElementById('modalGap').classList.contains('on') && !pocketEl.classList.contains('on')) openModal('modalRpe',true); });
+  if(askRpe) after(1800,()=>{
+    if(S.phase!=='rest') return;
+    const hoiDuoc = !document.getElementById('modalGap').classList.contains('on') && !pocketEl.classList.contains('on');
+    if(hoiDuoc) openModal('modalRpe',true);
+    else coach('restStart',{t:S.ex.rest}); // vua bo tui/dang hoi bu nhip -> khong hoi RPE nua, tra lai cau nghi cho khoi im lang
+  });
   else after(4500,()=>{ if(S.phase==='rest') coach('restStart',{t:S.ex.rest}); });
   // NHAC LOI CAN TRANH (anh 3) — lap day khoang chet giua 2 set, xoay vong theo so set da tap.
   // Moc 11s: sau khi cau "Nghi X giay" da phat xong. Chi nhac khi con du cho truoc luc "chuan bi vao set".
