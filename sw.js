@@ -1,5 +1,5 @@
 /* AI Gym PT service worker — cache de mo nhanh + chay offline */
-const CACHE = 'aigympt-v12';  // v12: audit tiep — tran goi y theo bai (cardio 1800s), ky luc TACH THEO MUC TA, ket buoi dong modal treo
+const CACHE = 'aigympt-v13';  // v13: audit voice/mixing — clip NGAN trong set + fit-check (het cat nua cau), TTS guard 2 chieu, prefetch gen token
 const CORE = ['./', './index.html', './manifest.json', './icon-192.png', './icon-512.png'];
 
 self.addEventListener('install', e => {

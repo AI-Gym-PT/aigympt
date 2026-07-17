@@ -771,6 +771,7 @@ function curPersona(){ return PERSONAS.find(p=>p.id===coachId())||PERSONAS[0]; }
 /* Uu tien file mp3 thu san (voice/<persona>/) — fallback TTS trinh duyet */
 const Voice = {
   ok:false, files:null, base:'voice/', ctx:null, bufs:new Map(), MAX_BUFS:140,
+  _prefetchGen:0,
   cur:null, curSrcs:[], token:0, criticalPlaying:false,
   async init(){
     this.base = curPersona().base; // chon thu muc theo HLV dang chon
@@ -783,6 +784,7 @@ const Voice = {
     const p=PERSONAS.find(x=>x.id===id); if(!p) return;
     try{ localStorage.setItem('gpt_coach',id); }catch(e){}
     this.stop(); this.bufs.clear(); this.ok=false; this.files=null;
+    this._prefetchGen++; // giet vong prefetch cua HLV cu truoc khi mo vong moi (khong thi 2 vong chay chong, tranh bang thong)
     this._prefetching=false; this._prefetchDone=false;
     await this.init();
     if(this.ok){ this.prefetchAll(); this.play(['p_voiceon_0'], true); } // chao bang giong moi
@@ -844,9 +846,11 @@ const Voice = {
   prefetchAll(){
     if(!this.ok || this._prefetching || this._prefetchDone) return;
     this._prefetching=true;
+    const gen = ++this._prefetchGen; // the he: doi HLV giua chung -> vong CU phai tu chet, khong duoc ghi de trang thai
     const names=[...this.files];
     let i=0, alive=2, fails=0;
     const step=()=>{
+      if(gen!==this._prefetchGen) return; // vong doi cu: dung han (truoc day no chay tiep + ghi de _prefetchDone cua vong moi)
       if(i>=names.length){
         if(--alive===0){
           this._prefetching=false;
@@ -879,9 +883,12 @@ const Voice = {
     if(!voiceOn) return true;
     keys = keys.filter(k=>this.has(k));
     if(!keys.length) return false;
-    if(!critical && this.criticalActive()) return true; // so dem khong chen ngang cau co vu
+    // so dem khong chen ngang cau co vu — phai nhuong CA 2 engine: clip (criticalActive) LAN TTS (speakingCritical).
+    // Truoc day chi biet criticalActive -> khi cau coach roi xuong TTS fallback (wifi chap), so dem ke tiep chem no.
+    if(!critical && (this.criticalActive() || speakingCritical)) return true;
     this.unlock();
-    try{ if('speechSynthesis' in window) speechSynthesis.cancel(); }catch(e){}
+    // chi huy TTS khi minh duoc quyen: cau critical thi duoc, so dem thuong thi khong.
+    if(critical || !speakingCritical){ try{ if('speechSynthesis' in window) speechSynthesis.cancel(); }catch(e){} }
     this.stop();
     const t = ++this.token;
     this.criticalPlaying = critical;
@@ -963,6 +970,28 @@ function speakNum(n, rate){
   if(Voice.play(['n'+n], false, String(n), rate?{rate}:{})) return; // co file thi phat (loi thi TTS), khong co file thi TTS luon
   speak(String(n), false);
 }
+/* CLIP PHU sau tieng dem (bark/flow/pr/interj/tho): rep KE TIEP goi Voice.play -> stop() nguon cu,
+   nen clip nao khong lot khoang trong truoc rep do se bi CAT NUA CAU. Do truoc, khong lot thi IM —
+   tha khong noi con hon noi nua cau. */
+function sayAfter(key, delayMs){
+  if(!key || !Voice.has(key) || S.phase!=='active') return;
+  const med=realMedian()||baseline()||2500;
+  const go=()=>{ if(S.phase==='active') Voice.play([key],false); };
+  if(!Voice.ctx){ after(delayMs, go); return; }
+  Voice.buffer(key).then(c=>{
+    if(S.phase!=='active') return;
+    if(delayMs + (c.dur||0)*1000 <= med-150) after(delayMs, go); // lot -> phat; khong thi bo han
+  }).catch(()=>{});
+}
+/* Cau canh bao TRONG SET: man hinh hien cau DAY DU, nhung AUDIO dung clip NGAN (<1.5s).
+   Clip dai chiem kenh critical -> nuot lien 2-3 tieng dem rep. */
+function coachShort(key, shortPrefix){
+  const arr=PH[key], i=pickIdx(key, arr.length);
+  setCoachMsg(arr[i]);
+  const sk=shortPrefix+pickIdx(shortPrefix,2);
+  if(Voice.has(sk)) sayKeys(arr[i], [sk], true);
+  else sayKeys(arr[i], ['p_'+key+'_'+i], true); // chua co clip ngan -> giu cau cu (text khop audio)
+}
 /* cung nang luong: dem cang ve cuoi set cang gap (nhanh + cao hon) — mo phong PT gan giong cuoi set.
    rate 1.0 o nua dau -> tang dan toi ~1.09 o rep cuoi. Chi ap cho bai dem rep. */
 function energyRate(n, total){
@@ -1011,7 +1040,9 @@ function barkKey(){ // xoay vong 3 bark cua bai
 }
 function sayVerbNum(n){ // "Đẩy! Ba!" — ho dong tu roi so
   const v=verbKey();
-  if(v && Voice.play([v,'n'+n], true)) return;
+  // fbText=so: nhanh ctx cua play() LUON return true dong bo, nen speakNum() duoi la code chet —
+  // khong truyen fbText thi clip loi (mat mang) = IM LANG, mat han tieng dem rep do.
+  if(v && Voice.play([v,'n'+n], true, String(n))) return;
   speakNum(n);
 }
 /* nguong "nhanh qua" theo nhip RIENG cua bai (anh 3): duoi 60% nhip toi thieu = dung da, khong the co pha ha co kiem soat.
@@ -1833,9 +1864,8 @@ function onRep(){
   if(n>=total){ finishSet(false); return; }
   // PHA KY LUC ngay trong set: vuot ky luc cu (>=5) -> reo len 1 lan/set, uu tien cao
   if(S.bestReps && S.bestReps>=5 && !S.prAnnounced && n>S.bestReps){
-    S.prAnnounced=true; speakNum(n);
-    const pk='pr_live_'+pickIdx('prlive',2);
-    if(Voice.has(pk)) after(700,()=>Voice.play([pk],false));
+    S.prAnnounced=true; speakNum(n, energyRate(n,total));
+    sayAfter('pr_live_s'+pickIdx('prlive',2), 700); // clip NGAN: cau 4.15s khong bao gio lot khe giua 2 rep
     return;
   }
   // milestone speech — 3 rep cuoi ghep dong tu ho ("Đẩy! Cái cuối!") de punchy
@@ -1851,23 +1881,24 @@ function onRep(){
     // (C1) VOI: 1 rep nhanh hon >30% nhip cua CHINH minh -> nhac hạ chậm (tu rep 5, cooldown, khong trùng watchdog tooFast)
     if(rmed && rlast!=null && n>=5 && rlast < rmed*0.7 && realIntervals().length>=3 && (S.fastWarned||0)===0 && (S.repFbCount||0)<2 && now-(S.lastRepFbAt||0)>6000 && !Voice.criticalActive() && Voice.has('rep_fast_0')){
       S.lastRepFbAt=now; S.repFbCount=(S.repFbCount||0)+1; S.flowMode=false;
-      speakNum(n,er); after(620,()=>Voice.play(['rep_fast_'+pickIdx('repfast',2)],false));
+      S.lastStallAt=now; // chan watchdog (tooFast/slowing) ban de cung noi dung ngay sau
+      speakNum(n,er); sayAfter('rep_fast_s'+pickIdx('repfast',2), 620);
     }
     // (C1) IM LANG THONG MINH: >=4 nhip THAT deu (<13% lech) -> "Đều lắm, cứ vậy" 1 lan roi CHI dem so
     else if(!S.flowMode && !S.flowSaid && n>=5 && steadyTempo(0.13) && now-(S.lastRepFbAt||0)>4000 && Voice.has('flow_0')){
       S.flowSaid=true; S.flowMode=true; S.lastRepFbAt=now;
-      speakNum(n,er); after(600,()=>Voice.play(['flow_'+pickIdx('flow',2)],false));
+      speakNum(n,er); sayAfter('flow_s'+pickIdx('flow',2), 600);
     }
     else if(S.flowMode){ // trong luong: chi dem. Thoat khi nhip lech >20% (co su co / duoi)
       if(rmed && rlast!=null && Math.abs(rlast-rmed)/rmed>0.20) S.flowMode=false;
       speakNum(n,er);
     }
     // rep 2: nhac hoi tho 1 lan (dung nhu anh 3 day)
-    else if(n===2 && Voice.has('br_'+S.ex.id)){ speakNum(n,er); after(600,()=>Voice.play(['br_'+S.ex.id],false)); }
+    else if(n===2 && Voice.has('br_'+S.ex.id)){ speakNum(n,er); sayAfter('br_'+S.ex.id, 600); }
     // dinh ky (cong tan suat cu): thay khen chung bang BARK FORM dung bai
-    else if(n%4===0 && Math.random()<0.5 && tempoStable() && barkKey!=null){ speakNum(n,er); const bk=barkKey(); if(bk) after(600,()=>Voice.play([bk],false)); else after(600,()=>coach('praise',{},{critical:false})); }
+    else if(n%4===0 && Math.random()<0.5 && tempoStable() && barkKey!=null){ speakNum(n,er); const bk=barkKey(); if(bk) sayAfter(bk,600); else after(600,()=>coach('praise',{},{critical:false})); }
     // am dem kieu nguoi that: sau 1 rep dep (nhip deu), thi thoang bat "Đó!" — thay cho khen chung
-    else if(n>=4 && n%4===2 && Math.random()<0.35 && tempoStable() && INTERJ.some(k=>Voice.has(k))){ speakNum(n,er); const ij=INTERJ.filter(k=>Voice.has(k)); after(560,()=>Voice.play([ij[Math.floor(Math.random()*ij.length)]],false)); }
+    else if(n>=4 && n%4===2 && Math.random()<0.35 && tempoStable() && INTERJ.some(k=>Voice.has(k))){ speakNum(n,er); const ij=INTERJ.filter(k=>Voice.has(k)); sayAfter(ij[Math.floor(Math.random()*ij.length)], 560); }
     // thi thoang ho dong tu ngay truoc so ("Đẩy! Năm!") — thua thoi, khong them luot
     else if(n>=3 && n%5===3 && Math.random()<0.5) sayVerbNum(n);
     else speakNum(n,er);
@@ -1933,7 +1964,7 @@ function watchdog(){
     const med=baseline();
     if(med && med<fastThr(S.ex.id) && now-S.lastStallAt>7000){
       S.fastWarned=(S.fastWarned||0)+1; S.lastStallAt=now;
-      coach('tooFast');
+      coachShort('tooFast','tooFast_s'); // clip dai 4.47s giu kenh critical -> nuot 2-3 tieng dem
     }
   }
   // slowing (still moving but slower)
@@ -1977,7 +2008,13 @@ function finishSet(early){
     if(Voice.has('n'+done)) sayKeys(txt,[early?'sdep_0':'sdp_0','n'+done,early?'sdet_0':'sdt_0'],true);
     else speak(txt,true);
   }
-  else coach(early?'setDoneEarly':'setDone',{n:done});
+  else{
+    // cau "cái cuối!" (~3s, vua ban o rep cuoi) se bi coach('setDone') chem ngay giua chung ->
+    // cho no noi xong (theo criticalUntil) roi moi khen. Kep 2.5s de khong tre man nghi.
+    const cho=Math.min(2500, Math.max(0, Voice.criticalUntil-1200-Date.now()));
+    if(cho>80) after(cho, ()=>{ if(S.phase==='rest') coach(early?'setDoneEarly':'setDone',{n:done}); });
+    else coach(early?'setDoneEarly':'setDone',{n:done});
+  }
   // dong ho nghi tinh theo thoi gian thuc (Date.now) — khong le nhip khi tab bi throttle/tat man hinh
   const endAt=Date.now()+S.ex.rest*1000;
   document.getElementById('restNum').textContent=S.ex.rest;
