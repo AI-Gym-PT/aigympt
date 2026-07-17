@@ -1,5 +1,5 @@
 /* AI Gym PT service worker — cache de mo nhanh + chay offline */
-const CACHE = 'aigympt-v11';  // v11: audit — va 8 loi (mood khong luu, rep ma khi tat man giua dem nguoc, "lan truoc" noi sai, ky luc lap, meo Bo tui bi giet...)
+const CACHE = 'aigympt-v12';  // v12: audit tiep — tran goi y theo bai (cardio 1800s), ky luc TACH THEO MUC TA, ket buoi dong modal treo
 const CORE = ['./', './index.html', './manifest.json', './icon-192.png', './icon-512.png'];
 
 self.addEventListener('install', e => {

@@ -1133,7 +1133,8 @@ function suggestNext(perf, timeEx){
   if(!perf.reps.every(r=>r>=perf.target)) return null;
   if(perf.mood==='tired') return null;                        // buoi truoc bao met -> phong do khong dai dien, khong voi tang
   if(perf.rpe && perf.rpe.some(x=>x==='hard')) return null;   // set truoc bao nang -> giu nguyen, dung tang
-  if(timeEx){ if(perf.target<300) return {reps:Math.min(300,perf.target+5), text:`thử giữ ${Math.min(300,perf.target+5)} giây`}; return null; }
+  // tran theo CHINH bai do (cardio 1800s, bai giu 300s) — hard-code 300 lam cardio >300s khong bao gio duoc goi y
+  if(timeEx){ const mx=repMax(), t=Math.min(mx, perf.target+5); if(perf.target<mx) return {reps:t, text:`thử giữ ${t} giây`}; return null; }
   if(perf.kg>0) return {kg:perf.kg+2.5, text:`thử tăng lên ${fmtKg(perf.kg+2.5)}kg`};
   if(perf.target<50) return {reps:perf.target+1, text:`thử tăng lên ${perf.target+1} rep/set`};
   return null;
@@ -1141,11 +1142,16 @@ function suggestNext(perf, timeEx){
 function fmtKg(k){ return (Math.round(k*10)/10).toString().replace(/\.0$/,''); }
 
 /* ===== GOI A: HLV co tri nho (doc tu lich su local, ghep clip thu san) ===== */
-function bestRepsFor(exId){ // ky luc rep cao nhat tren MOI buoi da luu (chi bai dem rep)
+function bestRepsFor(exId, kg){ // ky luc rep cao nhat tren MOI buoi da luu (chi bai dem rep).
+  // Truyen kg -> CHI tinh set CUNG MUC TA: 30 cai@5kg khong phai "ky luc" de so voi hom nay tap 20kg
+  // (neu khong loc, HLV vua khong bao gio ho duoc "ky luc moi" o ta nang, vua ho nham khi ha ta nhe).
   if(isTimeEx(exId)) return null;
   const h=getHist(); let best=null;
   for(const s of h) for(const e of (s.exercises||[])) if(e.id===exId)
-    for(const st of (e.sets||[])) if(st.reps>0 && (best==null||st.reps>best)) best=st.reps;
+    for(const st of (e.sets||[])){
+      if(kg!==undefined && Math.abs((st.kg||0)-(kg||0))>=0.01) continue;
+      if(st.reps>0 && (best==null||st.reps>best)) best=st.reps;
+    }
   return best;
 }
 function streakDays(){ // so ngay LIEN TIEP co buoi tap, tinh ca hom nay (dang bat dau)
@@ -1598,7 +1604,7 @@ document.getElementById('btnGo').addEventListener('click',async ()=>{
     warmKeys.push('pr_pre','pr_beat','pr_keep','pr_first','pr_live_0','pr_live_1'); // nhac thanh tich + pha ky luc
     warmKeys.push('flow_0','flow_1','rep_fast_0','rep_fast_1'); // im lang thong minh + phan hoi voi
     { const nk=userNameKey(); if(nk) warmKeys.push('nm_colen','nm_quadinh',nk); } // goi ten user
-    { const bst=bestRepsFor(S.selEx); if(bst!=null && bst<=50) warmKeys.push('n'+bst); } // so ky luc de ghep cau vao bai
+    { const bst=bestRepsFor(S.selEx, S.selKg); if(bst!=null && bst<=50) warmKeys.push('n'+bst); } // so ky luc de ghep cau vao bai
     // clip tron cau setDone cho so rep muc tieu (phat cuoi set, nap truoc cho muot)
     if(!S.ex.timeEx && S.selReps>=1 && S.selReps<=50){ for(let v=0;v<3;v++) warmKeys.push(`sdf_${v}_${S.selReps}`); for(let v=0;v<2;v++) warmKeys.push(`sdef_${v}_${S.selReps}`); }
     Voice.warm(warmKeys);
@@ -1727,7 +1733,7 @@ function startSet(){
   S.phase='active'; S.reps=0; S.repTimes=[]; S.lastStallLevel=0; S.slowWarned=0; S.safetyWarned=false; S.fastWarned=0;
   S.flowMode=false; S.flowSaid=false; S.repFbCount=0; S.lastRepFbAt=0; S._realFrom=0; // Goi C: im lang thong minh + phan hoi voi
   S._barkI=null; // xoay vong bark tu dau moi set
-  S.bestReps=(S.ex&&!S.ex.timeEx)?bestRepsFor(S.ex.id):null; // ky luc MOI BUOI da luu (chua gom buoi nay) -> moc de bao "ky luc moi"
+  S.bestReps=(S.ex&&!S.ex.timeEx)?bestRepsFor(S.ex.id, S.ex.kg):null; // ky luc MOI BUOI da luu (chua gom buoi nay) -> moc de bao "ky luc moi"
   // KHONG reset S.prAnnounced o day: no reset o btnGo (moi BAI). Neu reset moi set thi set 2, set 3 se
   // lai ho "Kỷ lục mới!" vs cung 1 moc cu -> noi sai/lap.
   S.setStartAt=Date.now();
@@ -2095,6 +2101,7 @@ document.getElementById('btnEndSet').addEventListener('click',()=>{ if(S.phase==
 /* ---- end session ---- */
 function endSession(){
   clearTimers(); Demo.stop(); Sensor.stop(); pocketOff(); releaseWakeLock();
+  openModal('modalGap',false); openModal('modalRpe',false); // khong de modal treo len man tong ket
   S.phase='idle'; S.freeRest=false; S._tick=null;
   const sess=S.session;
   const exs=sess.exercises.filter(e=>e.sets.length);
