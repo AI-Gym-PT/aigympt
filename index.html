@@ -2368,6 +2368,19 @@ const Sensor={
     this.lastCount=-1e9; this.lastCommit=-1e9; this.lastEmitLead=0;
     this.gaitHold=0; this.orientHold=0;
     this.cycleActive=false; this.sawPos=false; this.sawNeg=false; this.leadSign=0; this.cyclePeak=0; this.cycleStart=0; this.lobeSign=0;
+    // NGUONG THICH NGHI ve mac dinh: user loay hoay luc dem nguoc lam ampEMA/noiseFloor bi THOI PHONG
+    // -> rep THAT dau tien khong vuot noi nguong.
+    this.ampEMA=0.6; this.noiseFloor=0.05; this.sm=0; this.rms2=0; this.rmsP=0;
+    // XOA VONG DEM: heavy() (moi 0.3s, chi can filled>=50) tinh TRUC CHINH bang PCA tu vong dem 6s.
+    // Con du lieu loay hoay trong dem -> truc bi dat theo huong LOAY HOAY -> rep that chieu len truc sai
+    // = bien do gan 0 -> mat 1-2 rep dau (do duoc: bench dem rep dau o giay 7.5 thay vi 2.5).
+    // Xoa dem + tra truc ve mac dinh; GIU gvec/gPrev (hieu chinh huong trong luc — thu duoc tu luc dem nguoc,
+    // day moi la gia tri that cua viec bat cam bien som).
+    this.ringA=new Array(this.W); this.ringG=new Array(this.W); this.ringT=new Float64Array(this.W);
+    this.head=0; this.filled=0; this.kHeavy=0;
+    this.u=[0,0,1]; this.meanVec=[0,0,0]; this.axisSeed=false; // axisSeed=false -> tu gieo lai truc tu trong luc o mau dau tien cua set
+    this.gf=null; this.uR=[1,0,0]; this.meanG=[0,0,0]; this.kAlt=0; this.chanSw=0;
+    this.locked=false; this.conf=0; this.lockCnt=0;
   },
   sMul(){ return this.sens==='soft'?0.72:this.sens==='hard'?1.35:1.0; },
   onMotion(e){

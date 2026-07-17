@@ -1,5 +1,5 @@
 /* AI Gym PT service worker — cache de mo nhanh + chay offline */
-const CACHE = 'aigympt-v14';  // v14: het REP MA dau set (armForSet + van an dinh 1s), tieng "Một" khong bi nuot, cho dat may 6s
+const CACHE = 'aigympt-v15';  // v15: armForSet xoa CA vong dem+truc+nguong -> khong mat 1-2 rep dau khi user loay hoay luc dem nguoc
 const CORE = ['./', './index.html', './manifest.json', './icon-192.png', './icon-512.png'];
 
 self.addEventListener('install', e => {
