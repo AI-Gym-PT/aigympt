@@ -966,9 +966,11 @@ function speak(text, critical=false){
 function sayKeys(text, keys, critical=true){
   if(!Voice.play(keys, critical, text)) speak(text, critical); // fbText=text: clip loi giua chung -> Voice tu doc TTS
 }
-function speakNum(n, rate){
-  if(Voice.play(['n'+n], false, String(n), rate?{rate}:{})) return; // co file thi phat (loi thi TTS), khong co file thi TTS luon
-  speak(String(n), false);
+function speakNum(n, rate, critical){
+  // critical=true cho REP 1: cau "Bắt đầu!" vua phat con giu kenh -> tieng "Một" bi nuot, user tuong
+  // may khong bat duoc nhip. Rep 1 la so QUAN TRONG NHAT (bao hieu may da dem duoc) -> uu tien.
+  if(Voice.play(['n'+n], !!critical, String(n), rate?{rate}:{})) return; // co file thi phat (loi thi TTS), khong co file thi TTS luon
+  speak(String(n), !!critical);
 }
 /* CLIP PHU sau tieng dem (bark/flow/pr/interj/tho): rep KE TIEP goi Voice.play -> stop() nguon cu,
    nen clip nao khong lot khoang trong truoc rep do se bi CAT NUA CAU. Do truoc, khong lot thi IM —
@@ -1700,7 +1702,7 @@ function startCountdown(){
     speakSeq(items, 0, 2000, ()=>startCd(5));
   };
   speakSeq(intro, 0, 700, ()=> needPos
-    ? quietPause(3000, 'Đặt điện thoại vào đúng vị trí…', '📱', doCues)   // sensor: can thoi gian bo may vao tui/deo tay
+    ? quietPause(6000, 'Đặt điện thoại vào đúng vị trí…', '📱', doCues)   // sensor: 3s KHONG DU de bo may vao tui/deo tay (user bao) -> 6s
     : quietPause(1200, 'Vào tư thế nào…', '🧍', doCues));                 // tap/demo/bai giu: may van tren tay -> khong noi doi
 }
 // IM LANG: cua so yen tinh de user thao tac. Khong dem, khong noi gi.
@@ -1761,13 +1763,14 @@ function startSet(){
   clearTimers(); S._tick=null;
   openModal('modalGap',false); S._gapN=0; // modal bu nhip cua set TRUOC khong duoc song sang set nay
   hiddenAt = (document.visibilityState==='hidden') ? Date.now() : 0; // set BAT DAU khi man dang tat (nghi het gio luc khoa may) -> danh dau de con hoi bu; clamp theo setStartAt o onReturnVisible
+  S.setStartAt=Date.now(); // dat TRUOC phase='active' de van an-dinh (repGrace) co moc dung ngay tu su kien dau tien
+  if(S.mode==='sensor' && !S.ex.timeEx && Sensor.on) Sensor.armForSet(); // xoa chu ky dang do tu luc chuan bi -> khong con rep ma o rep 1
   S.phase='active'; S.reps=0; S.repTimes=[]; S.lastStallLevel=0; S.slowWarned=0; S.safetyWarned=false; S.fastWarned=0;
   S.flowMode=false; S.flowSaid=false; S.repFbCount=0; S.lastRepFbAt=0; S._realFrom=0; // Goi C: im lang thong minh + phan hoi voi
   S._barkI=null; // xoay vong bark tu dau moi set
   S.bestReps=(S.ex&&!S.ex.timeEx)?bestRepsFor(S.ex.id, S.ex.kg):null; // ky luc MOI BUOI da luu (chua gom buoi nay) -> moc de bao "ky luc moi"
   // KHONG reset S.prAnnounced o day: no reset o btnGo (moi BAI). Neu reset moi set thi set 2, set 3 se
   // lai ho "Kỷ lục mới!" vs cung 1 moc cu -> noi sai/lap.
-  S.setStartAt=Date.now();
   show('scr-work');
   document.getElementById('wEx').textContent=S.ex.name;
   document.getElementById('wSet').textContent=`${S.setIdx+1}/${S.ex.sets}`;
@@ -1853,6 +1856,10 @@ function renderDots(){
 function onRep(){
   if(S.phase!=='active') return;
   if(S.ex && S.ex.timeEx) return; // bai giu thoi gian: S.reps la dong ho giay cua tt(), khong nguon rep nao duoc dung vao
+  // VAN AN DINH: 1s dau set bo qua tin hieu cam bien — du am dat may/vao tu the hay bi dem thanh "rep 1" ma
+  // (user: "vua vao set chua kip tap da nhay 1"). Rep that khong the xong duoi 1s (nhip chuan >=3s/rep).
+  // Chi ap cho cam bien: che do Cham la user chu dong bam, Demo la mo phong.
+  if(S.mode==='sensor' && Date.now()-S.setStartAt < 1000) return;
   S.reps++;
   const now=Date.now();
   S.repTimes.push(now);
@@ -1901,7 +1908,7 @@ function onRep(){
     else if(n>=4 && n%4===2 && Math.random()<0.35 && tempoStable() && INTERJ.some(k=>Voice.has(k))){ speakNum(n,er); const ij=INTERJ.filter(k=>Voice.has(k)); sayAfter(ij[Math.floor(Math.random()*ij.length)], 560); }
     // thi thoang ho dong tu ngay truoc so ("Đẩy! Năm!") — thua thoi, khong them luot
     else if(n>=3 && n%5===3 && Math.random()<0.5) sayVerbNum(n);
-    else speakNum(n,er);
+    else speakNum(n, er, n===1); // rep 1: uu tien, khong de "Bắt đầu!" nuot mat tieng "Một"
   }
 }
 
@@ -2351,6 +2358,16 @@ const Sensor={
     this.locked=false; this.lockCnt=0; this.conf=0; this.lowConf=0; this.fastRej=0; this.fastIv=0; this.provOpp=0; this.intervals=[];
     this.cycleActive=false; this.sawPos=false; this.sawNeg=false; this.cyclePeak=0; this.lobeSign=0;
     if(this.bstate!=='RUN') this.bstate='EMPTY'; // nhip da xac lap thi giu — khong bat re-bootstrap lam mat rep ke tiep
+  },
+  /* VAO SET: cam bien da chay tu luc dem nguoc (de hieu chinh truc/nen), nhung may trang thai cung chay ->
+     dong tac dat may/chinh tu the tao 1 chu ky DANG DO, chu ky do hoan tat ngay khi set bat dau = REP MA.
+     Xoa sach chu ky + moc commit dang do, GIU nguyen hieu chinh (ring buffer, truc, ampEMA, noiseFloor). */
+  armForSet(){
+    this.reset();
+    this.bstate='EMPTY';
+    this.lastCount=-1e9; this.lastCommit=-1e9; this.lastEmitLead=0;
+    this.gaitHold=0; this.orientHold=0;
+    this.cycleActive=false; this.sawPos=false; this.sawNeg=false; this.leadSign=0; this.cyclePeak=0; this.cycleStart=0; this.lobeSign=0;
   },
   sMul(){ return this.sens==='soft'?0.72:this.sens==='hard'?1.35:1.0; },
   onMotion(e){
