@@ -1,5 +1,5 @@
 /* AI Gym PT service worker — cache de mo nhanh + chay offline */
-const CACHE = 'aigympt-v20';  // v20: canh-vao-set-som (nhan biet user tap that giua luc doc tu the -> vao dem + cong bu rep, khong mat rep, khong false-trigger khi rung/chinh tu the)
+const CACHE = 'aigympt-v21';  // v21: thiet ke lai prep 4 chang (xem anh -> cat may -> giong chinh tu the hands-free -> giu yen+3-2-1); bai lan dau doc het cue, nut "Dat may & vao set"/"Bo qua"; clip gy "Giu yen nao"
 const CORE = ['./', './index.html', './manifest.json', './icon-192.png', './icon-512.png'];
 
 self.addEventListener('install', e => {

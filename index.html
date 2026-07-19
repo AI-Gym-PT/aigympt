@@ -324,8 +324,12 @@ label.f{display:block;margin-top:20px;font-size:13px;font-weight:700;color:var(-
   <section class="screen" id="scr-count">
     <div class="center">
       <div class="sub" id="cdLabel" style="font-size:16px;font-weight:700"></div>
+      <img id="cdImg" alt="tư thế chuẩn bị" style="display:none;width:min(74vw,240px);max-height:220px;object-fit:contain;border-radius:14px;background:var(--card2)">
       <div class="bignum" id="cdNum">3</div>
-      <div class="sub">Vào vị trí, chuẩn bị nào!</div>
+      <div id="cdCues" style="display:none;text-align:left;max-width:320px;width:100%;font-size:14.5px;line-height:1.75;color:var(--txt)"></div>
+      <div class="sub" id="cdSub">Vào vị trí, chuẩn bị nào!</div>
+      <button class="btn btn-main" id="cdGo" style="display:none;width:auto;padding:14px 28px;margin-top:4px">Sẵn sàng ▶</button>
+      <div class="sub" id="cdSkip" style="display:none;text-decoration:underline;cursor:pointer;margin-top:2px">Bỏ qua phần dẫn</div>
     </div>
   </section>
 
@@ -1714,94 +1718,129 @@ document.getElementById('btnGo').addEventListener('click',async ()=>{
   } finally { goBusy=false; }
 });
 
+// PREP 4 CHANG (thu tu vat ly nhu PT that): XEM ANH+cue KHI CON NHIN MAN -> CAT MAY -> GIONG CHINH
+// TU THE hands-free (may da khuat) -> GIU YEN + dem 3-2-1 (cua so hieu chinh) -> Bat dau. Cam bien chi
+// bat SAU khi cat may (khong rep ma tu viec cam may doc cue). Cue tu the doc bang GIONG luc user dang
+// vao tu the (tay ranh) -> de chinh + giong PT that hon; bai LAN DAU doc HET, bai quen doc gon.
 function startCountdown(){
-  clearTimers(); S.phase='countdown'; S.prepWatch=false; S._fromPrep=0;
+  clearTimers(); S.phase='countdown'; S.prepWatch=false; S._fromPrep=0; S._keepSensor=false; S._prepReps=0; S._prep='intro'; S._prepSeq=(S._prepSeq||0)+1;
   openModal('modalRpe',false); // dong hoi-do-nang neu con mo (het gio nghi truoc khi user tra loi)
   show('scr-count');
   requestWakeLock(); // giu man hinh sang suot buoi tap
   const ex=S.ex, isFirst=(S.setIdx===0);
-  document.getElementById('cdLabel').textContent=`${ex.name} · Set ${S.setIdx+1}/${ex.sets}`;
-  document.getElementById('cdNum').textContent='💪';
-  // CHUAN BI: doc chu anh 1 (setup cues) co nghi giua cac cau -> du thoi gian bo may vao tui + vao tu the.
-  // Set 1 cua bai: doc HET; set sau: nhac ngau nhien 1-2 cau (user da biet).
-  const def=EXERCISES.find(e=>e.id===ex.id)||{}; // S.ex dung khi tap KHONG copy setup/cues -> tra cuu dinh nghia goc
-  const cues=(def.setup&&def.setup.length)?def.setup:(def.cues||[]);
-  let idxs=[];
-  if(cues.length){
-    if(isFirst) idxs=cues.map((_,i)=>i).slice(0,7);                       // set 1: het (toi da 7 cho khoi qua dai)
-    else{ const pick=Math.min(2,cues.length); idxs=[...cues.keys()].sort(()=>Math.random()-0.5).slice(0,pick).sort((a,b)=>a-b); } // set sau: 1-2 ngau nhien
+  const sensorReps=(S.mode==='sensor' && !ex.timeEx); // luong day du: cat may + hieu chinh + dem rep
+  const def=EXERCISES.find(e=>e.id===ex.id)||{};       // S.ex khi tap KHONG copy setup/cues -> tra cuu goc
+  const allCues=(def.setup&&def.setup.length)?def.setup:(def.cues||[]);
+  const lp0=lastPerf(ex.id), isNewEx=(lp0==null);       // bai LAN DAU tap = chua co lich su
+  // SO CAU tu the doc: lan dau + set 1 -> HET (day form, vua nghe vua vao tu the); set 1 bai quen -> 3 cot loi; set sau -> 1 ngau nhien
+  let cueIdxs=[];
+  if(allCues.length){
+    if(isFirst && isNewEx) cueIdxs=allCues.map((_,i)=>i).slice(0,8);
+    else if(isFirst) cueIdxs=allCues.map((_,i)=>i).slice(0,3);
+    else{ const pick=Math.min(1,allCues.length); cueIdxs=[...allCues.keys()].sort(()=>Math.random()-0.5).slice(0,pick).sort((a,b)=>a-b); }
   }
-  Voice.unlock(); // mo audio (den tu cu cham btnGo) de doc duoc do dai clip
-  // ---- LUONG CHUAN BI 3 CHANG ----
-  // 1) nhac DAT MAY dung vi tri + IM LANG ~3s (cua so bo may vao tui/deo tay — khong dem, do user yeu cau)
-  // 2) doc lan luot cac o chu anh 1 (nghi theo do dai clip that)
-  // 3) dem NGUOC 5..1 -> vao rep 1
-  const needPos=(S.mode==='sensor' && !ex.timeEx), pos=needPos?posOf(ex.id):null;
-  const intro=[{keys:[`ex_${ex.id}`,'cb'], text:`Chuẩn bị bài ${ex.name}!`, label:'Chuẩn bị…'}];
-  // NHAC THANH TICH CU (chi set dau, bai dem rep). Cau clip la "LAN TRUOC..." nen PHAI lay buoi GAN NHAT
-  // (khong phai ky luc moi buoi — se noi sai su that neu buoi truoc tap kem hon ky luc), va chi noi khi
-  // MUC TA GIONG NHAU, khong thi so sanh khong cong bang (30 cai @5kg vs 10 cai @20kg).
-  if(isFirst && !ex.timeEx && !ex.uni){ // bai mot-ben: reps lich su la TONG 2 ben, doc len de hieu lam -> thoi
-    const lp=lastPerf(ex.id);
-    if(lp==null){ if(Voice.has('pr_first')) intro.push({keys:['pr_first'], text:'Bài này mình tập lần đầu — tôi sẽ nhớ kết quả cho bạn nhé!', label:'Lần đầu tập bài này'}); }
+  const pos=sensorReps?posOf(ex.id):null;
+  Voice.unlock(); // mo audio (den tu cu cham btnGo)
+  const elImg=document.getElementById('cdImg'), elNum=document.getElementById('cdNum'),
+        elCues=document.getElementById('cdCues'), elLabel=document.getElementById('cdLabel'),
+        elSub=document.getElementById('cdSub'), elGo=document.getElementById('cdGo'), elSkip=document.getElementById('cdSkip');
+  const hide=el=>{ if(el) el.style.display='none'; }, showEl=(el,d)=>{ if(el) el.style.display=(d||'block'); };
+  elLabel.textContent=`${ex.name} · Set ${S.setIdx+1}/${ex.sets}`;
+  const cueHtml=cueIdxs.map(i=>`<div style="margin:4px 0">• ${allCues[i]}</div>`).join('');
+  // GIONG intro: CHI "Chuan bi bai X" + thanh tich cu. Cau tu the doc SAU khi cat may (hands-free).
+  const intro=[{keys:[`ex_${ex.id}`,'cb'], text:`Chuẩn bị bài ${ex.name}!`, label:`${ex.name} · Set ${S.setIdx+1}/${ex.sets}`}];
+  if(isFirst && !ex.timeEx && !ex.uni){ // bai mot-ben: reps lich su la TONG 2 ben -> khong doc
+    if(isNewEx){ if(Voice.has('pr_first')) intro.push({keys:['pr_first'], text:'Bài này mình tập lần đầu — tôi sẽ nhớ kết quả cho bạn nhé!', label:'Lần đầu tập bài này'}); }
     else{
-      const best=Math.max(0, ...lp.reps);
-      const cungTa = Math.abs((lp.kg||0)-(ex.kg||0)) < 0.01;
+      const best=Math.max(0, ...lp0.reps);
+      const cungTa=Math.abs((lp0.kg||0)-(ex.kg||0))<0.01;
       if(best>=1 && best<=50 && cungTa && Voice.has('pr_pre')){
-        const post = best < ex.reps ? 'pr_beat' : 'pr_keep'; // best<target -> ep set nay la vuot; best>=target -> giu phong do (app tu ket set khi dat target)
+        const post=best<ex.reps?'pr_beat':'pr_keep';
         intro.push({keys:['pr_pre','n'+best,post], text:`Lần trước bài này bạn làm được ${best} cái.`, label:'Nhớ thành tích cũ'});
       }
     }
   }
-  if(needPos) intro.push({keys:['pp_'+pos], text:POS_SAY[pos], label:POS_SAY[pos]});
-  // MEO NUT BO TUI: doc trong CHUAN BI (co khoang lang, speakSeq cho phat xong) — truoc day de o startSet
-  // thi bi chinh cau "Bắt đầu!"/so dem huy speechSynthesis, ma flag da burn -> khong bao gio nghe duoc.
-  if(needPos && pos==='pocket'){
-    try{
-      if(!localStorage.getItem('gpt_pocketVoice') && Voice.has('p_pockettip_0')){
-        localStorage.setItem('gpt_pocketVoice','1');
-        intro.push({keys:['p_pockettip_0'], text:POCKET_TIP, label:'Mẹo: nút 🌙 Bỏ túi'});
-      }
-    }catch(e){}
+
+  // ===== CHANG 1: XEM ANH + cue (con nhin man, may con tren tay -> cam bien CHUA bat) =====
+  function stageIntro(){
+    S._prep='intro'; const tok=++S._prepSeq;
+    if(elImg){ elImg.onerror=()=>hide(elImg); elImg.src=`img/${ex.id}_0.jpg`; showEl(elImg,'block'); }
+    hide(elNum);
+    if(cueHtml){ elCues.innerHTML=cueHtml; showEl(elCues,'block'); } else hide(elCues);
+    elSub.textContent=sensorReps?'Xem tư thế — xong bấm để đặt máy':'Xem tư thế — xong bấm Bắt đầu'; showEl(elSub,'block');
+    elGo.textContent=sensorReps?'Đặt máy & vào set ▶':'Bắt đầu ▶'; showEl(elGo,'block'); elGo.onclick=advanceFromIntro;
+    elSkip.textContent='Bỏ qua phần dẫn'; showEl(elSkip,'block'); elSkip.onclick=skipDrill;
+    speakSeq(intro, 0, 500, ()=>{ // noi xong intro -> cho user ngo anh; khong bam thi tu di tiep (khoi treo)
+      const grace=(isFirst&&isNewEx)?6000:(isFirst?2500:1500);
+      after(grace, ()=>{ if(S._prep==='intro') advanceFromIntro(); });
+    }, tok);
   }
-  const doCues=()=>{
-    document.getElementById('cdNum').textContent='👂';
-    // CANH VAO SET SOM: bat cam bien ngay (may da dat xong sau quietPause). Neu user tap luon giua luc
-    // doc tu the -> may nhan ra (2 nhip khoa) -> vao dem + cong bu, khoi mat rep va khoi cho het prep.
-    if(S.mode==='sensor' && !ex.timeEx && !Sensor.on){
-      Sensor.start(); S.prepWatch=true; S._prepReps=0; S._prepArmAt=Date.now(); S.armAt=S._prepArmAt;
-    }
-    const items=idxs.map(ci=>({keys:['su_'+ex.id+'_'+ci], text:cues[ci], label:cues[ci]}));
-    speakSeq(items, 0, 2000, ()=>startCd(5));
-  };
-  speakSeq(intro, 0, 700, ()=> needPos
-    ? quietPause(6000, 'Đặt điện thoại vào đúng vị trí…', '📱', doCues)   // sensor: 3s KHONG DU de bo may vao tui/deo tay (user bao) -> 6s
-    : quietPause(1200, 'Vào tư thế nào…', '🧍', doCues));                 // tap/demo/bai giu: may van tren tay -> khong noi doi
-}
-// IM LANG: cua so yen tinh de user thao tac. Khong dem, khong noi gi.
-// Nhan/icon/do dai TUY ca: bo may vao tui (sensor) vs chi vao tu the (tap/demo/bai giu) —
-// khong duoc bao "dat dien thoai" o mode Cham (user PHAI cam may de cham man hinh).
-function quietPause(ms, label, icon, doneFn){
-  if(S.phase!=='countdown') return;
-  document.getElementById('cdLabel').textContent=label;
-  document.getElementById('cdNum').textContent=icon;
-  updatePocket();
-  after(ms, ()=>{ if(S.phase==='countdown') doneFn(); });
+  function advanceFromIntro(){
+    if(S._prep!=='intro') return;
+    clearTimers(); ++S._prepSeq;
+    if(sensorReps) stagePlace(false); else stageSettle(3);
+  }
+  function skipDrill(){ // "Bo qua phan dan": van cat may + hieu chinh (khong bo qua), chi bo doc cue
+    if(S._prep==='settle') return;
+    clearTimers(); ++S._prepSeq;
+    if(sensorReps){ if(Sensor.on) stageSettle(3); else stagePlace(true); }
+    else stageSettle(3);
+  }
+
+  // ===== CHANG 2: CAT MAY (chi sensor) — bat cam bien o day (may vao vi tri cuoi -> hieu chinh sach) =====
+  function stagePlace(skipCues){
+    S._prep='place'; const tok=++S._prepSeq;
+    hide(elImg); hide(elCues); hide(elGo);
+    showEl(elNum,'block'); elNum.textContent='📱';
+    elLabel.textContent='Cất máy rồi vào tư thế'; elSub.textContent='Đặt máy vào đúng vị trí giúp tôi'; showEl(elSub,'block');
+    showEl(elSkip,'block'); elSkip.textContent='Vào luôn ▶';
+    elSkip.onclick=()=>{ if(S._prep==='place'||S._prep==='cues'){ clearTimers(); ++S._prepSeq; stageSettle(3); } };
+    if(!Sensor.on) Sensor.start(); // BAT o day (khong o chang 1 -> khong rep ma tu viec cam may doc cue)
+    S.prepWatch=true; S._prepReps=0; S._prepArmAt=Date.now(); S.armAt=S._prepArmAt; // canh vao set som
+    const items=[{keys:['pp_'+pos], text:POS_SAY[pos], label:POS_SAY[pos]}];
+    if(pos==='pocket'){ try{ if(!localStorage.getItem('gpt_pocketVoice') && Voice.has('p_pockettip_0')){ localStorage.setItem('gpt_pocketVoice','1'); items.push({keys:['p_pockettip_0'], text:POCKET_TIP, label:'Mẹo: nút 🌙 Bỏ túi'}); } }catch(e){} }
+    speakSeq(items, 0, 400, ()=>{ after(1800, ()=>{ if(S._prep==='place') (skipCues?stageSettle(3):stageCues()); }); }, tok); // cho user dut may vao roi doc cue
+  }
+
+  // ===== CHANG 3: GIONG CHINH TU THE hands-free (may da khuat, user dang vao tu the) =====
+  function stageCues(){
+    S._prep='cues'; const tok=++S._prepSeq;
+    showEl(elNum,'block'); elNum.textContent='👂';
+    if(cueHtml){ elCues.innerHTML=cueHtml; showEl(elCues,'block'); } else hide(elCues);
+    elLabel.textContent='Vào tư thế nào'; hide(elSub);
+    const items=cueIdxs.map(ci=>({keys:['su_'+ex.id+'_'+ci], text:allCues[ci], label:allCues[ci]}));
+    speakSeq(items, 0, 1500, ()=>stageSettle(3), tok);
+  }
+
+  // ===== CHANG 4: GIU YEN + dem 3-2-1 (cua so hieu chinh cam bien; thay 6s im lang chet) =====
+  function stageSettle(sec){
+    S._prep='settle'; clearTimers(); const tok=++S._prepSeq;
+    hide(elImg); hide(elCues); hide(elGo); hide(elSkip); showEl(elNum,'block');
+    if(sensorReps && Voice.has('gy')){ // may da khuat -> dan bang GIONG "giu yen" truoc khi dem
+      elNum.textContent='🔒'; elLabel.textContent='Giữ yên, đang chỉnh máy…';
+      speakSeq([{keys:['gy'], text:'Giữ yên nào, tôi chỉnh máy chút…', label:'Giữ yên, đang chỉnh máy…'}], 0, 200, ()=>startCd(sec), tok);
+    } else startCd(sec);
+  }
+
+  stageIntro();
 }
 // doc lan luot: chỉ đọc câu sau khi câu trước phát XONG + nghỉ `pause` ms (theo do dai clip that)
-function speakSeq(items, k, pause, doneFn){
+// tok: token cua chang prep hien tai. Khi user bam nut/skip hoac vao-set-som -> chang chuyen ->
+// S._prepSeq tang -> chuoi giong cu bail (chong timer/promise mo coi doc de len sau khi da chuyen).
+function speakSeq(items, k, pause, doneFn, tok){
   if(S.phase!=='countdown') return;
+  if(tok!==undefined && tok!==S._prepSeq) return;
   if(k>=items.length){ doneFn(); return; }
   const it=items[k];
   if(it.label!=null){ const el=document.getElementById('cdLabel'); if(el) el.textContent=it.label; }
   const keys=(voiceOn?it.keys:[]).filter(x=>Voice.has(x));
-  const nextFixed=()=>{ if(voiceOn && it.text) speak(it.text, true); after(3200, ()=>speakSeq(items,k+1,pause,doneFn)); };
+  const nextFixed=()=>{ if(tok!==undefined && tok!==S._prepSeq) return; if(voiceOn && it.text) speak(it.text, true); after(3200, ()=>speakSeq(items,k+1,pause,doneFn,tok)); };
   if(keys.length && Voice.ctx){
     Promise.all(keys.map(x=>Voice.buffer(x))).then(clips=>{
-      if(S.phase!=='countdown') return;
+      if(S.phase!=='countdown' || (tok!==undefined && tok!==S._prepSeq)) return;
       Voice.play(keys, true, it.text);
       const total=clips.reduce((a,c)=>a+(c.dur||0),0);
-      after(Math.max(1400, total*1000)+pause, ()=>speakSeq(items,k+1,pause,doneFn));
+      after(Math.max(1400, total*1000)+pause, ()=>speakSeq(items,k+1,pause,doneFn,tok));
     }).catch(nextFixed);
   } else nextFixed();
 }
@@ -1833,7 +1872,7 @@ function startCd(sec){
 }
 
 function startSet(){
-  clearTimers(); S._tick=null; S.prepWatch=false;
+  clearTimers(); S._tick=null; S.prepWatch=false; S._prep='';
   const fromPrep=S._fromPrep||0, keepSensor=S._keepSensor; S._fromPrep=0; S._keepSensor=false;
   openModal('modalGap',false); S._gapN=0; // modal bu nhip cua set TRUOC khong duoc song sang set nay
   hiddenAt = (document.visibilityState==='hidden') ? Date.now() : 0; // set BAT DAU khi man dang tat (nghi het gio luc khoa may) -> danh dau de con hoi bu; clamp theo setStartAt o onReturnVisible
@@ -1958,7 +1997,7 @@ function prepRepDetected(){
 }
 function enterSetFromPrep(credit){
   if(S.phase!=='countdown') return;
-  S.prepWatch=false; clearTimers();      // ngung doc tu the / dem nguoc
+  S.prepWatch=false; clearTimers(); S._prepSeq=(S._prepSeq||0)+1; // ngung doc tu the/dem nguoc + huy chuoi giong prep dang cho
   S._keepSensor=true;                     // startSet: GIU nao cam bien dang khoa (khong armForSet)
   S._fromPrep=credit;                     // cong bu so rep da tap trong prep
   startSet();
