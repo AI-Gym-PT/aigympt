@@ -1715,7 +1715,7 @@ document.getElementById('btnGo').addEventListener('click',async ()=>{
 });
 
 function startCountdown(){
-  clearTimers(); S.phase='countdown';
+  clearTimers(); S.phase='countdown'; S.prepWatch=false; S._fromPrep=0;
   openModal('modalRpe',false); // dong hoi-do-nang neu con mo (het gio nghi truoc khi user tra loi)
   show('scr-count');
   requestWakeLock(); // giu man hinh sang suot buoi tap
@@ -1766,6 +1766,11 @@ function startCountdown(){
   }
   const doCues=()=>{
     document.getElementById('cdNum').textContent='👂';
+    // CANH VAO SET SOM: bat cam bien ngay (may da dat xong sau quietPause). Neu user tap luon giua luc
+    // doc tu the -> may nhan ra (2 nhip khoa) -> vao dem + cong bu, khoi mat rep va khoi cho het prep.
+    if(S.mode==='sensor' && !ex.timeEx && !Sensor.on){
+      Sensor.start(); S.prepWatch=true; S._prepReps=0; S._prepArmAt=Date.now(); S.armAt=S._prepArmAt;
+    }
     const items=idxs.map(ci=>({keys:['su_'+ex.id+'_'+ci], text:cues[ci], label:cues[ci]}));
     speakSeq(items, 0, 2000, ()=>startCd(5));
   };
@@ -1828,14 +1833,15 @@ function startCd(sec){
 }
 
 function startSet(){
-  clearTimers(); S._tick=null;
+  clearTimers(); S._tick=null; S.prepWatch=false;
+  const fromPrep=S._fromPrep||0, keepSensor=S._keepSensor; S._fromPrep=0; S._keepSensor=false;
   openModal('modalGap',false); S._gapN=0; // modal bu nhip cua set TRUOC khong duoc song sang set nay
   hiddenAt = (document.visibilityState==='hidden') ? Date.now() : 0; // set BAT DAU khi man dang tat (nghi het gio luc khoa may) -> danh dau de con hoi bu; clamp theo setStartAt o onReturnVisible
   S.setStartAt=Date.now(); // dat TRUOC phase='active' de van an-dinh (repGrace) co moc dung ngay tu su kien dau tien
-  if(S.mode==='sensor' && !S.ex.timeEx && Sensor.on) Sensor.armForSet(); // xoa chu ky dang do tu luc chuan bi -> khong con rep ma o rep 1
+  if(S.mode==='sensor' && !S.ex.timeEx && Sensor.on && !keepSensor) Sensor.armForSet(); // binh thuong: arm sach. Tu prep: GIU nao dang khoa (dang dem chuan)
   S.phase='active'; S.reps=0; S.repTimes=[]; S.lastStallLevel=0; S.slowWarned=0; S.safetyWarned=false; S.fastWarned=0;
   S.flowMode=false; S.flowSaid=false; S.repFbCount=0; S.lastRepFbAt=0; S._realFrom=0; S._minusTaps=0; // Goi C + danh dau sua tay
-  S.side=1; S.side1Reps=0; S.armAt=S.setStartAt; // bai mot-ben: ben dang tap + moc arm (van an dinh do theo moc nay, ca luc doi ben)
+  S.side=1; S.side1Reps=0; S.armAt=keepSensor?(S._prepArmAt||S.setStartAt):S.setStartAt; // bai mot-ben + moc van an dinh (tu prep thi giu moc cu -> khong chan rep dang tap)
   S._barkI=null; // xoay vong bark tu dau moi set
   S.bestReps=(S.ex&&!S.ex.timeEx&&!S.ex.uni)?bestRepsFor(S.ex.id, S.ex.kg):null; // ky luc cu (bai mot-ben: reps luu la tong 2 ben, so voi dem per-ben se ho nham)
   // KHONG reset S.prAnnounced o day: no reset o btnGo (moi BAI). Neu reset moi set thi set 2, set 3 se
@@ -1925,10 +1931,13 @@ function startSet(){
         toast('💡 Cho điện thoại vào túi? Bấm nút 🌙 Bỏ túi (đang sáng) để tắt màn hình mà VẪN đếm rep — đừng bấm nút nguồn nhé!', 7000); }
     }catch(e){} // private mode co the throw — khong duoc lam chet startSet
   }
-  sayGo();
+  if(!fromPrep) sayGo(); // tu prep: user da tap -> khong hô "Bắt đầu!" nua; addReps se ho so rep da bu
   if(S.mode==='sensor' && !Sensor.on) Sensor.start(); // du phong (binh thuong da bat tu dem nguoc)
   if(S.mode==='demo') Demo.start();
   every(1000, watchdog);
+  if(fromPrep>0){ addReps(fromPrep); // cong bu rep da tap trong luc doc tu the (repTimes sach theo nhip da khoa)
+    if(Sensor.on){ Sensor.resetCycle(); Sensor.lastCount=Sensor.lastCommit=Sensor.tNow; } // chot chu ky: rep vua kich hoat khong bi commit lai (chong +1)
+  }
 }
 
 function renderDots(){
@@ -1938,7 +1947,24 @@ function renderDots(){
 }
 
 /* ---- rep event (from any source) ---- */
+/* CANH PREP: Sensor.commit goi onRep khi khoa duoc 1 rep TRONG luc doc tu the/dem nguoc.
+   Chi coi la "da vao tap" khi nhip DA KHOA (bstate RUN = 2 rep lien tiep khop chu ky+bien do)
+   -> chac chan tap that, khong phai dong tac vao tu the / rung nhe. */
+function prepRepDetected(){
+  S._prepReps=(S._prepReps||0)+1;
+  // Bang chung MANH la dang tap that (khong phai rung/chinh tu the): >=3 nhip lien tiep + nhip DA KHOA
+  // (autocorrelation locked, conf cao). Rung ngau nhien rat kho gia dong thoi ca 3 + khoa duoc autocorr.
+  if(S._prepReps>=3 && Sensor.bstate==='RUN' && Sensor.locked && Sensor.conf>=0.45) enterSetFromPrep(S._prepReps);
+}
+function enterSetFromPrep(credit){
+  if(S.phase!=='countdown') return;
+  S.prepWatch=false; clearTimers();      // ngung doc tu the / dem nguoc
+  S._keepSensor=true;                     // startSet: GIU nao cam bien dang khoa (khong armForSet)
+  S._fromPrep=credit;                     // cong bu so rep da tap trong prep
+  startSet();
+}
 function onRep(){
+  if(S.phase==='countdown' && S.prepWatch){ prepRepDetected(); return; } // dang canh prep -> khong dem that, chi do
   if(S.phase!=='active') return;
   if(S.ex && S.ex.timeEx) return; // bai giu thoi gian: S.reps la dong ho giay cua tt(), khong nguon rep nao duoc dung vao
   // VAN AN DINH: 1s dau set bo qua tin hieu cam bien — du am dat may/vao tu the hay bi dem thanh "rep 1" ma
@@ -2575,7 +2601,7 @@ const Sensor={
     if(agn){ if(!this.gf) this.gf=[agn[0],agn[1],agn[2]]; else { for(let i=0;i<3;i++) this.gf[i]+=0.25*(agn[i]-this.gf[i]); this.gf=_norm3(this.gf); } }
     else if(!this.gf) this.gf=_norm3(this.gvec);
     // gieo truc theo phuong dung (gravity) truoc khi PCA khoa -> rep 1 khong bi mat
-    if(S.phase==='active' && !this.axisSeed){ const gm=Math.hypot(this.gvec[0],this.gvec[1],this.gvec[2]); if(gm>5){ this.u=_norm3(this.gvec); this.meanG=[this.gf[0],this.gf[1],this.gf[2]]; this.axisSeed=true; } }
+    if((S.phase==='active'||S.prepWatch) && !this.axisSeed){ const gm=Math.hypot(this.gvec[0],this.gvec[1],this.gvec[2]); if(gm>5){ this.u=_norm3(this.gvec); this.meanG=[this.gf[0],this.gf[1],this.gf[2]]; this.axisSeed=true; } } // canh prep: gieo truc som de dem duoc rep tap som
     const now=performance.now(); let dt=(now-this.lastT)/1000; this.lastT=now;
     if(!(dt>0)) dt=this.DT; if(dt>0.2) dt=0.2;
     this.acc+=dt; let guard=0;
@@ -2602,7 +2628,8 @@ const Sensor={
     const floor=Math.max(0.35*this.ampEMA,0.15)*this.floorScale*this.sMul();
     const f=document.getElementById('sigFill'); if(f) f.style.width=Math.min(100,Math.abs(this.sm)/(floor*1.6)*100)+'%';
     const Eon=Math.max(0.12, 3*this.noiseFloor)*this.sMul()*this.floorScale;
-    if(S.phase!=='active'){ if(rms<0.6*Eon) this.noiseFloor=0.99*this.noiseFloor+0.01*rms; return; }
+    // CANH PREP: cung xu ly rep khi dang canh (phase countdown + prepWatch) — de bat user tap som.
+    if(S.phase!=='active' && !S.prepWatch){ if(rms<0.6*Eon) this.noiseFloor=0.99*this.noiseFloor+0.01*rms; return; }
     // VAN AN DINH TANG CAM BIEN (thich nghi): dau set = du am dat may/chinh tu the. Truoc day chi chan
     // o onRep -> MAY TRANG THAI van tien (fidget chiem slot PROV, provLead sai) -> rep that 1-2 bi nuot.
     // Nhan dien "dang chinh may": tin hieu DOI DAU lien tuc (fidget ~moi vai mau) khac han rep that (muot,
@@ -2746,12 +2773,12 @@ const Sensor={
     for(let L=lagMin+1;L<lagMax;L++) if(r[L]>r[L-1]&&r[L]>=r[L+1]&&r[L]>=0.85*best){ Pest=L/FS; c=r[L]; break; }
     if(Pest==null){ this.conf=0; return; }
     this.conf=c;
-    if(!this.locked){ if(S.phase==='active'){ if(c>=0.5){ if(++this.lockCnt>=2) this.locked=true; } else this.lockCnt=0; this.Plock=Pest; } } // dem nguoc (di bo toi ghe): khong khoa, khong keo Plock — giu prior cua bai
+    if(!this.locked){ if(S.phase==='active'||S.prepWatch){ if(c>=0.5){ if(++this.lockCnt>=2) this.locked=true; } else this.lockCnt=0; this.Plock=Pest; } } // dem nguoc (di bo toi ghe): khong khoa, khong keo Plock — giu prior cua bai
     else if(Math.abs(Pest-this.Plock)/this.Plock<0.30){ this.Plock+=0.25*(Pest-this.Plock); this.jumpCnt=0; }
     else if(++this.jumpCnt>=2){ this.Plock=Pest; this.jumpCnt=0; }
   },
   chanScan(){ // trong bootstrap: kenh UNG VIEN co diem "nhip x bien do" lon hon han -> doi kenh
-    if(this.bstate==='RUN' || S.phase!=='active' || this.chanSw>=2 || this.filled<150) return; // cho >=3s du lieu, tranh tuong quan gia luc dau
+    if(this.bstate==='RUN' || (S.phase!=='active'&&!S.prepWatch) || this.chanSw>=2 || this.filled<150) return; // cho >=3s du lieu, tranh tuong quan gia luc dau
     if((this.kAlt^=1)!==1) return; // moi 0.6s mot lan cho re
     const rot=this.chan==='t'; // ung vien = kenh con lai
     const ord=this.chronoOf(rot?this.ringG:this.ringA); if(ord.length<50) return;
