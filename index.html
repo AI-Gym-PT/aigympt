@@ -85,8 +85,15 @@ h2{font-size:16.5px;font-weight:700;letter-spacing:-.2px}
 .chip.sel{background:var(--grad);color:var(--on-accent);border-color:transparent;font-weight:700}
 .stepper{display:flex;align-items:center;justify-content:space-between;background:var(--card2);border:1px solid var(--line);border-radius:14px;padding:8px;margin-top:10px}
 .stepper button{width:48px;height:48px;border-radius:11px;border:none;background:var(--card);color:var(--txt);font-size:22px;font-weight:800;cursor:pointer}
-.stepper .val{font-size:25px;font-weight:800;font-variant-numeric:tabular-nums}
+.stepper .val{font-size:25px;font-weight:800;font-variant-numeric:tabular-nums;text-align:center}
 .stepper .val small{display:block;font-size:11px;color:var(--faint);font-weight:600;text-align:center;letter-spacing:.4px}
+.stepper .valnum{width:88px;border:none;background:transparent;color:var(--txt);font-size:25px;font-weight:800;
+  font-variant-numeric:tabular-nums;text-align:center;font-family:inherit;padding:2px 0;border-bottom:1.5px dashed transparent}
+.stepper .valnum:focus{outline:none;border-bottom-color:var(--accent)}
+.pickbar{width:100%;display:flex;align-items:center;justify-content:space-between;gap:10px;background:var(--card2);border:1px solid var(--accent);border-radius:14px;padding:13px 15px;cursor:pointer;font-family:inherit;text-align:left;color:var(--txt)}
+.pickbar .pb-nm{font-size:15px}.pickbar .pb-nm b{font-size:16px}.pickbar .ex-vn{color:var(--sub);font-size:13px}
+.pickbar .pb-chg{flex:0 0 auto;font-size:12.5px;font-weight:700;color:var(--accent);white-space:nowrap}
+.stepper .valnum::-webkit-outer-spin-button,.stepper .valnum::-webkit-inner-spin-button{-webkit-appearance:none;margin:0}
 label.f{display:block;margin-top:20px;font-size:13px;font-weight:700;color:var(--sub);letter-spacing:.2px}
 /* accordion nhom co */
 .cat{background:var(--card2);border:1px solid var(--line);border-radius:14px;margin-top:8px;overflow:hidden;transition:border-color .15s}
@@ -299,11 +306,11 @@ label.f{display:block;margin-top:20px;font-size:13px;font-weight:700;color:var(-
       <div class="gpos" id="gPos"></div>
     </div>
     <label class="f">Số set (hiệp)</label>
-    <div class="stepper"><button id="setMinus">−</button><div class="val"><span id="setVal">3</span><small>set</small></div><button id="setPlus">+</button></div>
+    <div class="stepper"><button id="setMinus">−</button><div class="val"><input id="setVal" class="valnum" type="text" inputmode="numeric" value="3" aria-label="Số set"><small>set</small></div><button id="setPlus">+</button></div>
     <label class="f" id="lblReps">Số rep mỗi set</label>
-    <div class="stepper"><button id="repMinus">−</button><div class="val"><span id="repVal">12</span><small id="repUnit">rep</small></div><button id="repPlus">+</button></div>
+    <div class="stepper"><button id="repMinus">−</button><div class="val"><input id="repVal" class="valnum" type="text" inputmode="numeric" value="12" aria-label="Số rep"><small id="repUnit">rep</small></div><button id="repPlus">+</button></div>
     <label class="f">Mức tạ</label>
-    <div class="stepper"><button id="kgMinus">−</button><div class="val"><span id="kgVal">0</span><small>kg</small></div><button id="kgPlus">+</button></div>
+    <div class="stepper"><button id="kgMinus">−</button><div class="val"><input id="kgVal" class="valnum" type="text" inputmode="decimal" value="0" aria-label="Mức tạ"><small>kg</small></div><button id="kgPlus">+</button></div>
     <div class="sub kghint" id="kgHint"></div>
     <label class="f">Nghỉ giữa set</label>
     <div class="chips" id="restChips"></div>
@@ -373,6 +380,7 @@ label.f{display:block;margin-top:20px;font-size:13px;font-weight:700;color:var(-
       <div class="bignum" id="restNum">60</div>
       <div class="sub" id="restLabel">Chuẩn bị Set 2 · Squat</div>
       <div class="coachbox" style="width:100%;margin-top:22px"><div class="face">🧑‍🏫</div><div class="msg" id="restMsg">Thở đều, uống ngụm nước nhé!</div></div>
+      <div class="sub" style="text-align:center;margin-top:14px"><span id="slogExportRest" style="text-decoration:underline;cursor:pointer;font-size:12px">📋 Xuất log cảm biến (nếu set vừa rồi đếm sai)</span></div>
     </div>
     <button class="btn btn-main" id="btnSkipRest">Bỏ qua nghỉ — vào luôn 💥</button>
   </section>
@@ -1113,8 +1121,9 @@ function bodyWeight(){ const p=getProfile(); return (p&&+p.weight)||+(localStora
 /* Vi tri dat dien thoai de cam bien doc duoc chuyen dong cua bai */
 const POS_WRIST=new Set(["ohp","inclinecurl","preacher","cgbench","skullcrush","ohcable","scable",'machinechest','dbpress','bench','incline','pecdeck','fly','latpull','cablerow','chestrow','dbrow','machinerow','straightarm','assistpullup','machineshoulder','dbshoulder','latraise','cablelatraise','reardelt','facepull','curl','bbcurl','hammer','cablecurl','pushdown','triext','closegrip','pallof']);
 const POS_SHIN=new Set(["hipabduct",'legext','legcurl','kickback']);
+const POS_WAIST=new Set(['rdl','backext']); // gap hong: than TILT ra truoc -> kep cap quan sau lung, doc goc nghieng (kenh xoay)
 const POS_CHEST=new Set(['crunch','cablecrunch','russian']); // bung gap/xoay THAN TREN — dui dung yen, tui quan cam
-function posOf(id){ return POS_WRIST.has(id)?'wrist':POS_SHIN.has(id)?'shin':POS_CHEST.has(id)?'chest':'pocket'; }
+function posOf(id){ return POS_WRIST.has(id)?'wrist':POS_WAIST.has(id)?'waist':POS_SHIN.has(id)?'shin':POS_CHEST.has(id)?'chest':'pocket'; }
 function isTimeEx(id){ const e=EXERCISES.find(x=>x.id===id); return !!(e&&e.time); }
 const CARDIO_IDS=new Set(['treadmill','bike','elliptical','farmer','battlerope']);
 function isCardio(id){ return CARDIO_IDS.has(id); }
@@ -1123,6 +1132,7 @@ const POS_TEXT={
   wrist:'📍 Đặt điện thoại: buộc vào cổ tay/cẳng tay (dây armband đeo sát). Bài này tay chuyển động là chính — để túi quần sẽ đếm thiếu. Chưa có dây đeo thì dùng chế độ 👆 Chạm tay.',
   shin:'📍 Đặt điện thoại: kẹp vào ống chân/vớ cao (chân chuyển động, hông đứng yên). Không tiện thì dùng chế độ 👆 Chạm tay.',
   chest:'📍 Đặt điện thoại: kẹp túi áo ngực / nhét cạp áo sát ngực — bài này THÂN TRÊN chuyển động, để túi quần máy không thấy gì. Không có túi áo thì dùng chế độ 👆 Chạm tay.',
+  waist:'📍 Đặt điện thoại: NHÉT DỌC vào cạp quần SAU LƯNG (thắt lưng) — bài gập hông, thân gập ra trước nên máy đọc GÓC NGHIÊNG. Để túi quần trước hay ống chân sẽ đếm thiếu. Không tiện thì dùng chế độ 👆 Chạm tay.',
 };
 // cau HLV NOI luc chuan bi (khop clip pp_<pos> trong gen_voice) — nhac dat may dung cho de dem chuan
 const POS_SAY={
@@ -1130,6 +1140,7 @@ const POS_SAY={
   wrist:'Đeo điện thoại lên cẳng tay ngay nhé, để máy đếm cho chuẩn!',
   shin:'Kẹp điện thoại vào ống chân ngay nhé, để máy đếm cho chuẩn!',
   chest:'Kẹp điện thoại vào túi áo ngực ngay nhé, để máy đếm cho chuẩn!',
+  waist:'Nhét điện thoại dọc vào cạp quần sau lưng ngay nhé, để máy cảm nhận động tác gập hông cho chuẩn!',
 };
 // note rieng tung bai, noi them sau text vi tri
 const POS_NOTE={
@@ -1422,34 +1433,45 @@ document.getElementById('pfSave').addEventListener('click',()=>{
 
 /* =================== SETUP =================== */
 let openCat = null; // nhom co dang mo (mac dinh: nhom cua bai dang chon)
+let pickedView = false; // true = da chon 1 bai -> chi hien bai do + huong dan (an cac bai khac)
 function renderSetup(isNext=false){
   document.getElementById('setupTitle').textContent = isNext?'Bài tập tiếp theo?':'Hôm nay tập gì?';
-  if(openCat===null){ const cur=EXERCISES.find(e=>e.id===S.selEx); openCat=cur?cur.cat:CATS[0].id; }
-  document.getElementById('exCats').innerHTML = CATS.map(c=>{
-    const exs=EXERCISES.filter(e=>e.cat===c.id);
-    const picked=exs.find(e=>e.id===S.selEx);
-    const isOpen=c.id===openCat;
-    return `<div class="cat ${isOpen?'open':''} ${picked?'haspick':''}" data-cat="${c.id}">
-      <div class="cat-h"><span class="ico">${c.icon}</span>${c.name}
-        ${picked?`<span class="picked">✓ ${engName(picked)}</span>`:`<span class="cnt">${exs.length} bài</span>`}
-        <span class="chev">▼</span></div>
-      <div class="cat-body"><div class="exlist">${exs.map(e=>`<button class="exch ${e.id===S.selEx?'sel':''}" data-id="${e.id}"><b>${engName(e)}</b><span class="ex-vn">${vietName(e)}</span><span class="ex-eq">🔧 ${e.equip||'—'}${e.time?' · ⏱ theo giây':''}</span></button>`).join('')}</div></div>
-    </div>`;
-  }).join('');
-  renderGuide();
+  const box=document.getElementById('exCats'), gc=document.getElementById('guideCard');
+  if(pickedView && S.selEx){
+    // DA CHON: 1 thanh gon + huong dan ngay duoi (khong phai keo qua danh sach)
+    const ex=EXERCISES.find(e=>e.id===S.selEx);
+    box.innerHTML=`<button class="pickbar" id="exChange"><span class="pb-nm">✓ <b>${engName(ex)}</b><span class="ex-vn"> ${vietName(ex)}</span></span><span class="pb-chg">Đổi bài khác ▾</span></button>`;
+    if(gc) gc.style.display='';
+    renderGuide();
+  } else {
+    // DUYET: danh sach theo nhom, MOI NHOM sap xep A-Z (ten tieng Viet)
+    if(openCat===null){ const cur=EXERCISES.find(e=>e.id===S.selEx); openCat=cur?cur.cat:CATS[0].id; }
+    box.innerHTML = CATS.map(c=>{
+      const exs=EXERCISES.filter(e=>e.cat===c.id).slice().sort((a,b)=>vietName(a).localeCompare(vietName(b),'vi',{numeric:true,sensitivity:'base'}));
+      const picked=exs.find(e=>e.id===S.selEx);
+      const isOpen=c.id===openCat;
+      return `<div class="cat ${isOpen?'open':''} ${picked?'haspick':''}" data-cat="${c.id}">
+        <div class="cat-h"><span class="ico">${c.icon}</span>${c.name}
+          ${picked?`<span class="picked">✓ ${engName(picked)}</span>`:`<span class="cnt">${exs.length} bài</span>`}
+          <span class="chev">▼</span></div>
+        <div class="cat-body"><div class="exlist">${exs.map(e=>`<button class="exch ${e.id===S.selEx?'sel':''}" data-id="${e.id}"><b>${engName(e)}</b><span class="ex-vn">${vietName(e)}</span><span class="ex-eq">🔧 ${e.equip||'—'}${e.time?' · ⏱ theo giây':''}</span></button>`).join('')}</div></div>
+      </div>`;
+    }).join('');
+    if(gc) gc.style.display='none'; // duyet: an huong dan cho gon
+  }
   renderKg();
   const tEx=isTimeEx(S.selEx);
   document.getElementById('lblReps').textContent = tEx?'Số giây giữ mỗi set':'Số rep mỗi set';
   document.getElementById('repUnit').textContent = tEx?(UNILATERAL.has(S.selEx)?'giây/bên':'giây'):(UNILATERAL.has(S.selEx)?'rep/bên':'rep');
-  document.getElementById('setVal').textContent=S.selSets;
-  document.getElementById('repVal').textContent=S.selReps;
+  document.getElementById('setVal').value=S.selSets;
+  document.getElementById('repVal').value=S.selReps;
   document.getElementById('restChips').innerHTML = REST_OPTS.map(r=>`<button class="chip ${r===S.selRest?'sel':''}" data-r="${r}">${r}s</button>`).join('');
   document.getElementById('btnGo').textContent='Vào set 1 →';
 }
 /* hien thi muc ta + lich su lan truoc + goi y tang ta */
 let pendingSug=null;
 function renderKg(){
-  document.getElementById('kgVal').textContent=fmtKg(S.selKg);
+  document.getElementById('kgVal').value=fmtKg(S.selKg);
   const perf=lastPerf(S.selEx);
   const el=document.getElementById('kgHint');
   pendingSug=null;
@@ -1517,8 +1539,9 @@ document.getElementById('exCats').addEventListener('click',e=>{
     else if(nowTime&&wasTime && isCardio(S.selEx)&&S.selReps<40) S.selReps=60; // chuyển sang cardio
     else if(nowTime&&wasTime && !isCardio(S.selEx)&&S.selReps>300) S.selReps=30; // cardio(≤1800s) -> giữ tư thế (cap 300s): kéo về mặc định
     else if(!nowTime&&wasTime) S.selReps=12;  // quay về mặc định 12 rep
-    renderSetup(isNext); return;
+    pickedView=true; renderSetup(isNext); return; // chon bai -> hien huong dan, an bai khac
   }
+  if(e.target.closest('.pickbar')){ pickedView=false; const cur=EXERCISES.find(x=>x.id===S.selEx); if(cur) openCat=cur.cat; renderSetup(isNext); return; } // Doi bai khac
   const h=e.target.closest('.cat-h');
   if(h){ const c=h.parentElement.dataset.cat; openCat=(openCat===c)?'':c; renderSetup(isNext); }
 });
@@ -1532,6 +1555,17 @@ function repStep(){ return isCardio(S.selEx)?30:isTimeEx(S.selEx)?5:1; }
 function repMax(){ return isCardio(S.selEx)?1800:isTimeEx(S.selEx)?300:50; }
 document.getElementById('repMinus').onclick=()=>{const st=repStep();S.selReps=Math.max(st,S.selReps-st);renderSetup(true)};
 document.getElementById('repPlus').onclick=()=>{const st=repStep();S.selReps=Math.min(repMax(),S.selReps+st);renderSetup(true)};
+/* TU NHAP: go tay so vao o; chot khi Enter / roi o -> kep khoang hop le roi re-render */
+function bindNum(id, apply){
+  const inp=document.getElementById(id);
+  const commit=()=>{ apply(inp.value); renderSetup(S.session!==null&&S.session.exercises.length>0); };
+  inp.addEventListener('change', commit);
+  inp.addEventListener('keydown', ev=>{ if(ev.key==='Enter'){ ev.preventDefault(); inp.blur(); } });
+  inp.addEventListener('focus', ()=>{ try{ inp.select(); }catch(e){} });
+}
+bindNum('setVal', v=>{ let x=Math.round(parseFloat(v)); if(!isFinite(x)) x=S.selSets; S.selSets=Math.max(1,Math.min(10,x)); });
+bindNum('repVal', v=>{ let x=Math.round(parseFloat(v)); if(!isFinite(x)) x=S.selReps; const st=repStep(); if(isTimeEx(S.selEx)) x=Math.round(x/st)*st; S.selReps=Math.max(st,Math.min(repMax(),x)); });
+bindNum('kgVal',  v=>{ let x=parseFloat(String(v).replace(',','.')); if(!isFinite(x)) x=S.selKg; S.selKg=Math.max(0,Math.min(500,Math.round(x*2)/2)); });
 
 /* voice input */
 const SR = window.SpeechRecognition||window.webkitSpeechRecognition;
@@ -1616,6 +1650,7 @@ function parseVoice(cands){
     micFeedback('Chưa nghe rõ 😅 Em nghe thành “'+primary+'”. Thử nói chậm tên bài, hoặc chọn tay bên dưới.');
     return;
   }
+  if(m.ex) pickedView=true; // mic nhan dung bai -> hien huong dan luon
   renderSetup(true);
   if(m.ex){ // nhan dung ten bai -> CUON toi bai do (nhom da mo + chip sang) de user thay ro app da nhay dung
     const chip=document.querySelector('#exCats .exch.sel');
@@ -1630,7 +1665,7 @@ function parseVoice(cands){
 document.getElementById('btnStart').addEventListener('click',()=>{
   const fresh=!S.session;
   if(fresh){ S.session={startedAt:Date.now(), exercises:[]}; }
-  renderSetup(false); show('scr-setup');
+  pickedView=false; renderSetup(false); show('scr-setup');
   requestWakeLock();
   if(fresh) openMood(); // hoi trang thai + chao mo buoi (mood ack + chao ghep lien) — thay coach('sessionStart') cu
 });
@@ -2146,7 +2181,7 @@ document.getElementById('btnSkipRest').addEventListener('click',()=>{
   if(S.freeRest){ // dang nghi tu do sau khi xong bai -> ve man chon bai
     S.freeRest=false;
     sayKeys('OK! Chọn bài tiếp theo đi, tôi chờ!',['p_picknext_0'],true);
-    renderSetup(true); show('scr-setup');
+    pickedView=false; renderSetup(true); show('scr-setup');
     return;
   }
   S.setIdx++; startCountdown();
@@ -2173,7 +2208,7 @@ function finishExercise(early,done){
 document.getElementById('mnNew').addEventListener('click',()=>{
   openModal('modalNext',false);
   sayKeys('OK! Chọn bài tiếp theo đi, tôi chờ!',['p_picknext_0'],true);
-  renderSetup(true); show('scr-setup');
+  pickedView=false; renderSetup(true); show('scr-setup');
 });
 document.getElementById('mnRest').addEventListener('click',()=>{
   openModal('modalNext',false);
@@ -2188,7 +2223,7 @@ document.getElementById('mnRest').addEventListener('click',()=>{
     if(!S.freeRest) return;
     const remain=Math.max(0,Math.ceil((endAt-Date.now())/1000));
     document.getElementById('restNum').textContent=remain;
-    if(remain<=0){ clearTimers(); S.freeRest=false; sayKeys('Hết giờ nghỉ! Chọn bài tiếp nào!',['p_restover_0'],true); renderSetup(true); show('scr-setup'); }
+    if(remain<=0){ clearTimers(); S.freeRest=false; sayKeys('Hết giờ nghỉ! Chọn bài tiếp nào!',['p_restover_0'],true); pickedView=false; renderSetup(true); show('scr-setup'); }
   };
   S._tick=frTick;
   every(500,frTick);
@@ -2455,7 +2490,7 @@ const Sensor={
     this.gf=null; this.uR=[1,0,0]; this.meanG=[0,0,0]; this.kAlt=0; this.chanSw=0; this.rmsP=0;
     // bai deo CO TAY / kep NGUC: rep = cu XOAY (tay ~120°, than gap ~30-45°) -> kenh xoay; bai bo tui: tinh tien -> kenh gia toc. Sau do tu doi theo nhip ro hon.
     const _pos = S.ex ? posOf(S.ex.id) : 'pocket';
-    this.chan = (_pos==='wrist' || _pos==='chest') ? 'r' : 't';
+    this.chan = (_pos==='wrist' || _pos==='chest' || _pos==='waist') ? 'r' : 't';
     this.acc=0; this.tNow=0; this.lastT=performance.now(); this.kHeavy=0; this.orientHold=0;
     this.sm=0; this.rms2=0; this.ampEMA=0.6; this.noiseFloor=0.05;
     this.locked=false; this.lockCnt=0; this.jumpCnt=0; this.conf=0; this.lowConf=0; this.fastRej=0; this.fastIv=0; this.provOpp=0; this.lastEmitLead=0; this.gaitHold=0;
@@ -2802,6 +2837,7 @@ function updatePocket(){
 }
 document.getElementById('btnPocket').addEventListener('click',pocketOn);
 document.getElementById('slogExport').addEventListener('click',()=>{ SLOG.save(); SLOG.export(); });
+document.getElementById('slogExportRest').addEventListener('click',()=>{ SLOG.save(); SLOG.export(); }); // xuat log ngay sau set (man nghi)
 pocketEl.addEventListener('pointerdown',()=>{
   const now=Date.now();
   if(now-pocketTap<450) pocketOff();
@@ -3106,7 +3142,7 @@ if(!getProfile()) setTimeout(()=>openProfileModal(true),600); // lan dau vao: ho
   if(el) el.textContent=`Buổi tập đang dở: ${nEx} bài, ${nRep} rep đã ghi. Bạn muốn làm gì?`;
   setTimeout(()=>openModal('modalResume',true),400);
 })();
-document.getElementById('resumeCont').addEventListener('click',()=>{ openModal('modalResume',false); renderSetup(true); show('scr-setup'); requestWakeLock(); });
+document.getElementById('resumeCont').addEventListener('click',()=>{ openModal('modalResume',false); pickedView=false; renderSetup(true); show('scr-setup'); requestWakeLock(); });
 document.getElementById('resumeSave').addEventListener('click',()=>{ openModal('modalResume',false); if(S.session) endSession(); });
 document.getElementById('resumeDiscard').addEventListener('click',()=>{ openModal('modalResume',false); S.session=null; clearDraft(); });
 // PWA: dang ky service worker (that bai em tren cert tu ky/iOS cu — app van chay binh thuong)

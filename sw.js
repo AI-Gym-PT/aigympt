@@ -1,5 +1,5 @@
 /* AI Gym PT service worker — cache de mo nhanh + chay offline */
-const CACHE = 'aigympt-v18';  // v18: ban nhap buoi tap — tu luu localStorage sau moi set + khi roi app, tai lai trang hoi khoi phuc (khong mat set da tap)
+const CACHE = 'aigympt-v19';  // v19: sap xep bai A-Z, chon bai an bai khac + hien huong dan, o nhap tay set/rep/kg, xuat log o man nghi, RDL vi tri cap lung (kenh xoay)
 const CORE = ['./', './index.html', './manifest.json', './icon-192.png', './icon-512.png'];
 
 self.addEventListener('install', e => {
