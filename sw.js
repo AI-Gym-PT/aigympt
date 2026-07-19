@@ -1,5 +1,5 @@
 /* AI Gym PT service worker — cache de mo nhanh + chay offline */
-const CACHE = 'aigympt-v17';  // v17: bai MOT BEN (8 bai) — ben 1 -> "Đổi bên!" -> ben 2, luu tong 2 ben; clip doiben/doiben_wrist
+const CACHE = 'aigympt-v18';  // v18: ban nhap buoi tap — tu luu localStorage sau moi set + khi roi app, tai lai trang hoi khoi phuc (khong mat set da tap)
 const CORE = ['./', './index.html', './manifest.json', './icon-192.png', './icon-512.png'];
 
 self.addEventListener('install', e => {

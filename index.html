@@ -519,6 +519,17 @@ label.f{display:block;margin-top:20px;font-size:13px;font-weight:700;color:var(-
     </div>
   </div>
 
+  <!-- ====== MODAL: khoi phuc buoi tap dang do (sau khi tai lai trang) ====== -->
+  <div class="modal" id="modalResume">
+    <div class="sheet">
+      <h2>Buổi tập đang dở 💪</h2>
+      <div class="sub" id="resumeSub">Bạn có một buổi tập chưa kết thúc.</div>
+      <button class="btn btn-main" id="resumeCont">▶️ Tiếp tục buổi tập</button>
+      <button class="btn btn-ghost" id="resumeSave">🏁 Kết thúc &amp; lưu vào lịch sử</button>
+      <button class="btn btn-danger" id="resumeDiscard">🗑 Bỏ buổi này</button>
+    </div>
+  </div>
+
   <!-- ====== MODAL: check-in do nang luc nghi (RPE) ====== -->
   <div class="modal" id="modalRpe">
     <div class="sheet">
@@ -1623,7 +1634,8 @@ document.getElementById('btnStart').addEventListener('click',()=>{
   requestWakeLock();
   if(fresh) openMood(); // hoi trang thai + chao mo buoi (mood ack + chao ghep lien) — thay coach('sessionStart') cu
 });
-document.getElementById('btnBackHome').addEventListener('click',()=>{ releaseWakeLock(); show('scr-home'); }); // ve home = khong tap: nha khoa man hinh (startCountdown se xin lai)
+document.getElementById('btnBackHome').addEventListener('click',()=>{ saveDraft(); releaseWakeLock(); show('scr-home'); }); // ve home = khong tap: nha khoa man hinh (startCountdown se xin lai)
+window.addEventListener('pagehide', saveDraft); // dong / doi trang -> luu nhap (mobile bat pagehide chac hon beforeunload)
 let goBusy=false;
 document.getElementById('btnGo').addEventListener('click',async ()=>{
   if(goBusy || S.phase==='countdown') return; // chong bam dup (ke ca khi dang cho dialog quyen cam bien)
@@ -1634,6 +1646,7 @@ document.getElementById('btnGo').addEventListener('click',async ()=>{
     S.ex={id:S.selEx, name:vietName(exObj), nameFull:exObj.name, sets:S.selSets, reps:S.selReps, rest:S.selRest, kg:S.selKg, timeEx:!!exObj.time, uni:UNILATERAL.has(S.selEx)};
     lastKg[S.selEx]=S.selKg; localStorage.setItem('gpt_lastkg',JSON.stringify(lastKg));
     S.session.exercises.push({id:S.selEx, name:S.ex.name, targetSets:S.selSets, targetReps:S.selReps, kg:S.selKg, rest:S.selRest, sets:[]});
+    saveDraft();
     S.setIdx=0;
     S.prAnnounced=false; // "Kỷ lục mới" chi ho 1 lan cho MOI BAI (khong lap lai o set 2/3)
     // nap truoc (giai ma san) toan bo cau se dung trong bai nay -> phat khong tre
@@ -2072,6 +2085,7 @@ function finishSet(early){
   const _per=realMedian(); // nhip that cua set (ms) -> luu GIAY vao lich su lam prior sach cho buoi sau
   const _tot=(S.ex&&S.ex.uni?(S.side1Reps||0):0)+S.reps; // bai mot-ben: tong CA 2 ben
   cur.sets.push({reps:_tot, dur, kg:S.ex.kg||0, per:_per?+(Math.min(6,_per/1000)).toFixed(2):undefined});
+  saveDraft(); // luu ngay sau moi set -> tai lai trang khong mat
   const done=_tot;
   if(S.setIdx>=S.ex.sets-1){ finishExercise(early,done); return; }
   // rest screen
@@ -2215,6 +2229,35 @@ document.getElementById('mpQuit').addEventListener('click',()=>{
 document.getElementById('btnEndSet').addEventListener('click',()=>{ if(S.phase==='active'||S.phase==='sideswitch') finishSet(true); });
 
 /* ---- end session ---- */
+/* ===== BAN NHAP BUOI TAP: tu luu vao localStorage de tai lai trang KHONG mat set da tap ===== */
+function draftSnapshot(){
+  if(!S.session) return null;
+  const snap={startedAt:S.session.startedAt, mood:S.session.mood||null,
+              exercises:S.session.exercises.map(e=>({id:e.id,name:e.name,targetSets:e.targetSets,targetReps:e.targetReps,kg:e.kg,rest:e.rest,sets:e.sets.slice()}))};
+  // set DANG DO (chua finishSet): dua vao snapshot lam set "tam" -> tai lai khong mat rep dang tap.
+  // Chi vao SNAPSHOT, khong vao S.session live -> finishSet that su khong bi nhan doi.
+  if(S.phase==='active' && S.reps>0 && S.ex && !S.ex.timeEx){
+    const cur=snap.exercises[snap.exercises.length-1];
+    if(cur && cur.id===S.ex.id){
+      const tot=(S.ex.uni?(S.side1Reps||0):0)+S.reps;
+      const dur=Math.max(0,Math.round((Date.now()-(S.setStartAt||Date.now()))/1000));
+      cur.sets=cur.sets.concat([{reps:tot,dur,kg:S.ex.kg||0}]);
+    }
+  }
+  return snap;
+}
+function saveDraft(){ try{
+  const s=draftSnapshot(); if(!(s && s.exercises.some(e=>e.sets.length))) return;
+  const tot=x=>x.exercises.reduce((a,e)=>a+e.sets.reduce((p,q)=>p+(q.reps||0),0),0);
+  const old=loadDraft();
+  // KHONG ghi de ban NHIEU rep hon bang ban IT hon (cung buoi): pagehide luc dieu huong co the luu tu
+  // session live (chua co set dang do) de len snapshot da co set dang do -> mat rep. Rep trong 1 buoi chi tang.
+  if(old && old.startedAt===s.startedAt && tot(old)>tot(s)) return;
+  localStorage.setItem('gpt_draft',JSON.stringify(s));
+}catch(e){} }
+function loadDraft(){ try{ return JSON.parse(localStorage.getItem('gpt_draft')||'null'); }catch(e){ return null; } }
+function clearDraft(){ try{ localStorage.removeItem('gpt_draft'); }catch(e){} }
+
 function endSession(){
   clearTimers(); Demo.stop(); Sensor.stop(); pocketOff(); releaseWakeLock();
   openModal('modalGap',false); openModal('modalRpe',false); // khong de modal treo len man tong ket
@@ -2239,6 +2282,7 @@ function endSession(){
     h.push({startedAt:sess.startedAt, exercises:exs, kcal, vol, mood:sess.mood||null}); // mood PHAI luu, khong thi guard 'buoi met' trong suggestNext la code chet
     localStorage.setItem('gpt_history',JSON.stringify(h.slice(-50)));
   }
+  clearDraft(); // buoi da vao lich su -> xoa nhap
   show('scr-sum');
   // ket buoi + DAN DO theo nhom co troi (ghep lien sau cau ket)
   const ei=pickIdx('sessionEnd', PH.sessionEnd.length);
@@ -2827,6 +2871,7 @@ function onReturnVisible(){
 document.addEventListener('visibilitychange',()=>{
   if(document.visibilityState==='hidden'){
     if(S.phase==='active') hiddenAt=Date.now(); // bi treo giua set (chuyen app / tat man hinh)
+    saveDraft(); // roi app: luu ngay (gom ca set dang do) — OS co the giet tab
     return;
   }
   onReturnVisible();
@@ -3048,6 +3093,22 @@ window.addEventListener('online',()=>{ // mat mang giua chung -> co mang lai thi
   if(!NAMES) loadNames(); // bank ten tai hong luc offline -> thu lai, khong thi ca phien mat goi ten
 });
 if(!getProfile()) setTimeout(()=>openProfileModal(true),600); // lan dau vao: hoi ho so
+// KHOI PHUC buoi tap dang do (tai lai trang / mo lai link) -> khong mat set da tap
+(function(){
+  const d=loadDraft();
+  const has = d && Array.isArray(d.exercises) && d.exercises.some(e=>e.sets&&e.sets.length);
+  if(!has){ clearDraft(); return; }
+  if(Date.now()-(d.startedAt||0) > 6*3600000){ clearDraft(); return; } // qua cu (>6h) -> bo, tranh khoi phuc nham buoi hom truoc
+  S.session=d;
+  const nEx=d.exercises.filter(e=>e.sets.length).length;
+  const nRep=d.exercises.reduce((a,e)=>a+e.sets.reduce((x,y)=>x+(y.reps||0),0),0);
+  const el=document.getElementById('resumeSub');
+  if(el) el.textContent=`Buổi tập đang dở: ${nEx} bài, ${nRep} rep đã ghi. Bạn muốn làm gì?`;
+  setTimeout(()=>openModal('modalResume',true),400);
+})();
+document.getElementById('resumeCont').addEventListener('click',()=>{ openModal('modalResume',false); renderSetup(true); show('scr-setup'); requestWakeLock(); });
+document.getElementById('resumeSave').addEventListener('click',()=>{ openModal('modalResume',false); if(S.session) endSession(); });
+document.getElementById('resumeDiscard').addEventListener('click',()=>{ openModal('modalResume',false); S.session=null; clearDraft(); });
 // PWA: dang ky service worker (that bai em tren cert tu ky/iOS cu — app van chay binh thuong)
 if('serviceWorker' in navigator){ try{ navigator.serviceWorker.register('sw.js').catch(()=>{}); }catch(e){} }
 </script>
