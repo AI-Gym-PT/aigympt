@@ -1,5 +1,5 @@
 /* AI Gym PT service worker — cache de mo nhanh + chay offline */
-const CACHE = 'aigympt-v21';  // v21: thiet ke lai prep 4 chang (xem anh -> cat may -> giong chinh tu the hands-free -> giu yen+3-2-1); bai lan dau doc het cue, nut "Dat may & vao set"/"Bo qua"; clip gy "Giu yen nao"
+const CACHE = 'aigympt-v22';  // v22: Pro - "Tam chuyen luc nghi" (40 mau dua/fact/tam, tui xao khong lap) o khoang giua nghi>=45s; card Pro + toggle tren home; clip rb_0..39
 const CORE = ['./', './index.html', './manifest.json', './icon-192.png', './icon-512.png'];
 
 self.addEventListener('install', e => {
