@@ -814,6 +814,8 @@ function curPersona(){ return PERSONAS.find(p=>p.id===coachId())||PERSONAS[0]; }
 const Voice = {
   ok:false, files:null, base:'voice/', ctx:null, bufs:new Map(), MAX_BUFS:140,
   _prefetchGen:0,
+  _pfDone:{},        // da tai xong ca goi theo TUNG persona (doi qua doi lai khong tai lai)
+  _pfTimer:null,     // hoan tai-ngam sau khi doi HLV (nghe thu nhieu giong khong kich 45MB moi lan)
   cur:null, curSrcs:[], token:0, criticalPlaying:false,
   async init(){
     this.base = curPersona().base; // chon thu muc theo HLV dang chon
@@ -822,15 +824,31 @@ const Voice = {
       if(r.ok){ this.files = new Set(await r.json()); this.ok = this.files.size>0; }
     }catch(e){}
   },
-  async setPersona(id){ // doi HLV: nap manifest giong moi, xoa cache giong cu, chao 1 cau
+  /* doi HLV: TAI TRUOC manifest giong moi vao bien tam roi moi HOAN DOI NGUYEN KHOI.
+     Truoc day xoa sach (ok=false, files=null) ROI moi fetch -> wifi phong gym chap chon la
+     ok=false CA PHIEN: toan bo giong roi xuong TTS may, ma gpt_coach da ghi nen reload van
+     dinh persona hong. Gio: fetch loi -> GIU NGUYEN HLV cu, khong ghi gi. */
+  async setPersona(id){
     const p=PERSONAS.find(x=>x.id===id); if(!p) return;
-    try{ localStorage.setItem('gpt_coach',id); }catch(e){}
-    this.stop(); this.bufs.clear(); this.ok=false; this.files=null;
-    this._prefetchGen++; // giet vong prefetch cua HLV cu truoc khi mo vong moi (khong thi 2 vong chay chong, tranh bang thong)
-    this._prefetching=false; this._prefetchDone=false;
-    await this.init();
-    if(this.ok){ this.prefetchAll(); this.play(['p_voiceon_0'], true); } // chao bang giong moi
-    else speak('Đã đổi huấn luyện viên!', true); // giong chua tai duoc -> bao bang TTS
+    let nf=null;
+    try{
+      const ac=('AbortController' in window)?new AbortController():null;
+      const tm=ac?setTimeout(()=>ac.abort(),6000):null;   // wifi treo: 6s cat, khong cho vo han
+      const r=await fetch(p.base+'manifest.json', Object.assign({cache:'no-cache'}, ac?{signal:ac.signal}:{}));
+      if(tm) clearTimeout(tm);
+      if(r.ok){ const a=await r.json(); if(Array.isArray(a) && a.length) nf=new Set(a); }
+    }catch(e){}
+    if(!nf){ toast('Chưa tải được giọng HLV mới — giữ nguyên HLV cũ'); return; } // khong pha trang thai dang chay
+    this.stop();
+    try{ localStorage.setItem('gpt_coach',id); }catch(e){}         // CHI ghi khi chac chan tai duoc
+    this.base=p.base; this.files=nf; this.ok=true; this.bufs.clear(); // hoan doi nguyen khoi -> khong bao gio co khoang ok=false
+    this._prefetchGen++; // giet vong prefetch cua HLV cu (khong thi 2 vong chay chong, tranh bang thong)
+    this._prefetching=false;
+    clearTimeout(this._pfTimer);
+    this.unlock();                                                 // doi HLV luon den tu cu CHAM cua user -> mo AudioContext ngay,
+    this.warmCore();                                               // khong thi warm() no-op (ctx null) va giong moi im/tre
+    this._pfTimer=setTimeout(()=>this.prefetchAll(), 8000);         // hoan 8s: nghe thu vai giong lien khong kich 45MB moi lan
+    this.play(['p_voiceon_0'], false);                              // chao: KHONG critical -> khong bit 8s tieng dem rep cua set ke tiep
   },
   /* iOS Safari: WebAudio phai duoc unlock boi cham tay 1 lan, sau do timer phat tu do */
   unlock(){
@@ -885,8 +903,23 @@ const Voice = {
   warm(keys){ if(this.ctx) keys.filter(k=>this.has(k)).forEach(k=>this.buffer(k).catch(()=>{})); },
   /* tai ngam TOAN BO file giong ve cache trinh duyet/service-worker (khong giai ma — nhe RAM)
      -> mo app lan dau o noi co mang la tu du offline muot vinh vien */
+  /* clip THIET YEU cho noi duoc NGAY (sau khi doi HLV bufs bi xoa sach): ~40 file, tai trong tich tac.
+     Con lai de prefetchAll tai ngam / hoac lazy khi can -> khong bat user cho 45MB moi lan doi giong. */
+  warmCore(){
+    const ks=['p_voiceon_0','batdau','cb','gy','len','doiben'];
+    for(let i=1;i<=30;i++) ks.push('n'+i);
+    try{ if(S.ex && S.ex.id) ks.push('ex_'+S.ex.id, 'bk_'+S.ex.id+'_0', 'br_'+S.ex.id); }catch(e){}
+    this.warm(ks);
+  },
+  /* mang yeu / bat tiet kiem du lieu -> KHONG tai ngam ca goi 45MB, chi lazy khi can */
+  meteredNet(){
+    try{ const c=navigator.connection; return !!(c && (c.saveData || /(^|-)2g$/.test(c.effectiveType||''))); }catch(e){ return false; }
+  },
   prefetchAll(){
-    if(!this.ok || this._prefetching || this._prefetchDone) return;
+    if(!this.ok || this._prefetching) return;
+    const pid=coachId();
+    if(this._pfDone[pid]) return;   // goi giong NAY da tai xong trong phien -> doi qua doi lai la tuc thi
+    if(this.meteredNet()) return;   // 4G tiet kiem / 2G -> khoi nuot 45MB
     this._prefetching=true;
     const gen = ++this._prefetchGen; // the he: doi HLV giua chung -> vong CU phai tu chet, khong duoc ghi de trang thai
     const names=[...this.files];
@@ -896,7 +929,7 @@ const Voice = {
       if(i>=names.length){
         if(--alive===0){
           this._prefetching=false;
-          this._prefetchDone = fails<10; // fail hang loat (offline) -> chua xong, su kien 'online' se tai lai
+          if(fails<10) this._pfDone[pid]=true; // fail hang loat (offline) -> chua xong, su kien 'online' se tai lai
         }
         return;
       }

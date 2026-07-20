@@ -1,5 +1,5 @@
 /* AI Gym PT service worker — cache de mo nhanh + chay offline */
-const CACHE = 'aigympt-v23';  // v23: FIX nut quay lai - back Android khong con vang khoi web (entry dem + popstate tu xu ly); back dong lop phu truoc roi lui 1 CAP man hinh; 3 nut back trong app dung chung goBack
+const CACHE = 'aigympt-v24';  // v24: doi HLV khong con "reset" - hoan doi manifest NGUYEN KHOI (fetch loi thi giu HLV cu, het roi ve TTS may ca phien), warmCore ~40 clip noi duoc ngay, hoan tai-ngam 8s + nho theo persona + bo qua khi mang tiet kiem, cau chao khong critical
 const CORE = ['./', './index.html', './manifest.json', './icon-192.png', './icon-512.png'];
 
 self.addEventListener('install', e => {
