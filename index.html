@@ -929,7 +929,8 @@ const Voice = {
       if(i>=names.length){
         if(--alive===0){
           this._prefetching=false;
-          if(fails<10) this._pfDone[pid]=true; // fail hang loat (offline) -> chua xong, su kien 'online' se tai lai
+          if(fails<10) this._pfDone[pid]=true;
+          trimVoiceCacheIfTight(); // tai xong roi moi do: may chat thi bo giong khong dung // fail hang loat (offline) -> chua xong, su kien 'online' se tai lai
         }
         return;
       }
@@ -1180,6 +1181,56 @@ const S = {
   selEx: 'bench', selSets: 3, selReps: 12, selRest: 60, selKg: 0,
 };
 /* muc ta lan truoc theo tung bai */
+/* ===== BAO VE DU LIEU KHI MAY HET DUNG LUONG =====
+   Cache giong rat nang (moi persona ~45MB x 1960 file). Neu cham tran quota cua origin thi:
+   (1) localStorage.setItem NEM LOI -> truoc day btnGo/endSession ghi thang nen vang giua chung
+       = mat luon buoi tap; (2) trinh duyet co quyen xoa sach du lieu origin KE CA lich su tap.
+   3 lop chong: xin luu-tru-BEN, ghi CHONG-LOI co tu don rac, va ngan sach cache THICH NGHI. */
+
+/* xoa cache giong (tai lai duoc — KHONG phai du lieu nguoi dung).
+   all=true: xoa het mp3. all=false: chi giu mp3 cua giong DANG dung. */
+async function purgeVoiceCache(all){
+  try{
+    const base = all ? null : (Voice && Voice.base) || 'voice/';
+    for(const name of await caches.keys()){
+      const c = await caches.open(name);
+      for(const req of await c.keys()){
+        const p = new URL(req.url).pathname;
+        if(!/\.mp3$/.test(p)) continue;
+        if(base){ const dir = p.slice(0, p.lastIndexOf('/')+1); if(dir.endsWith('/'+base)) continue; } // giu giong dang dung
+        await c.delete(req);
+      }
+    }
+  }catch(e){}
+}
+/* GHI localStorage AN TOAN: het cho thi tu don rac roi ghi lai, va KHONG BAO GIO nem loi ra
+   ngoai lam dut luong dang chay. Don theo thu tu IT QUAN TRONG NHAT truoc. */
+function lsSet(k, v){
+  try{ localStorage.setItem(k, v); return true; }catch(e){}
+  try{ localStorage.removeItem('gpt_senslog'); }catch(e){}          // 1) nhat ky cam bien: bo duoc
+  try{ localStorage.setItem(k, v); return true; }catch(e){}
+  purgeVoiceCache(true);                                            // 2) cache giong: tai lai duoc
+  try{ localStorage.setItem(k, v); return true; }catch(e){}
+  try{ const h=JSON.parse(localStorage.getItem('gpt_history')||'[]');
+       if(Array.isArray(h) && h.length>10) localStorage.setItem('gpt_history', JSON.stringify(h.slice(-10))); }catch(e){} // 3) cat lich su cu, GIU 10 buoi gan nhat
+  try{ localStorage.setItem(k, v); return true; }catch(e){}
+  try{ toast('Máy hết dung lượng nên chưa lưu được — xoá bớt ảnh/ứng dụng rồi thử lại nhé!', 5000); }catch(e){}
+  return false;                                                     // that bai VAN khong nem loi -> luong tap khong dut
+}
+/* NGAN SACH CACHE THICH NGHI: may rong giu ca 2 giong (offline tot nhat); may chat thi CHI giu
+   giong dang dung -> khong bao gio cham tran de trinh duyet phai xoa du lieu cua minh. */
+async function trimVoiceCacheIfTight(){
+  try{
+    if(!navigator.storage || !navigator.storage.estimate) return;
+    const est = await navigator.storage.estimate();
+    const usage = est.usage||0, quota = est.quota||0;
+    if(!quota) return;
+    if(usage/quota > 0.6 || quota < 200*1048576) await purgeVoiceCache(false);
+  }catch(e){}
+}
+// xin luu-tru BEN: bao trinh duyet "du lieu nay quan trong, dung tu xoa". Khong duoc cap cung vo hai.
+try{ if(navigator.storage && navigator.storage.persist) navigator.storage.persist().catch(()=>{}); }catch(e){}
+
 const lastKg = JSON.parse(localStorage.getItem('gpt_lastkg')||'{}');
 /* ho so nguoi dung: {name, gender, age, height, weight} */
 function getProfile(){ try{ return JSON.parse(localStorage.getItem('gpt_profile')||'null'); }catch(e){ return null; } }
@@ -1408,7 +1459,7 @@ function renderMode(){
 }
 document.getElementById('modeSeg').addEventListener('click',e=>{
   const b=e.target.closest('button'); if(!b) return;
-  S.mode=b.dataset.m; localStorage.setItem('gpt_mode',S.mode); renderMode();
+  S.mode=b.dataset.m; lsSet('gpt_mode',S.mode); renderMode();
 });
 document.getElementById('voiceToggle').addEventListener('click',e=>{
   voiceOn=!voiceOn; e.target.textContent = voiceOn?'🔊 Bật':'🔇 Tắt';
@@ -1535,7 +1586,7 @@ document.getElementById('pfSave').addEventListener('click',()=>{
     height:clamp(document.getElementById('pfHeight').value,120,220,165),
     weight:clamp(document.getElementById('pfWeight').value,30,200,65),
   };
-  localStorage.setItem('gpt_profile',JSON.stringify(p));
+  lsSet('gpt_profile',JSON.stringify(p));
   openModal('modalProfile',false);
   renderProfile(); renderToday();
   sayKeys(p.name?`OK ${p.name}! Hồ sơ đã lưu. Bắt đầu thôi!`:'Hồ sơ đã lưu. Bắt đầu thôi!',['p_voiceok_0'],true);
@@ -1789,7 +1840,7 @@ document.getElementById('btnGo').addEventListener('click',async ()=>{
     const exObj=EXERCISES.find(e=>e.id===S.selEx);
     // name: ten Viet ngan (hien thi khi tap + lich su); nameFull: co ten Anh (man chon bai)
     S.ex={id:S.selEx, name:vietName(exObj), nameFull:exObj.name, sets:S.selSets, reps:S.selReps, rest:S.selRest, kg:S.selKg, timeEx:!!exObj.time, uni:UNILATERAL.has(S.selEx)};
-    lastKg[S.selEx]=S.selKg; localStorage.setItem('gpt_lastkg',JSON.stringify(lastKg));
+    lastKg[S.selEx]=S.selKg; lsSet('gpt_lastkg',JSON.stringify(lastKg)); // het cho KHONG duoc nem loi -> btnGo van vao set duoc
     S.session.exercises.push({id:S.selEx, name:S.ex.name, targetSets:S.selSets, targetReps:S.selReps, kg:S.selKg, rest:S.selRest, sets:[]});
     saveDraft();
     S.setIdx=0;
@@ -2467,7 +2518,7 @@ function saveDraft(){ try{
   // KHONG ghi de ban NHIEU rep hon bang ban IT hon (cung buoi): pagehide luc dieu huong co the luu tu
   // session live (chua co set dang do) de len snapshot da co set dang do -> mat rep. Rep trong 1 buoi chi tang.
   if(old && old.startedAt===s.startedAt && tot(old)>tot(s)) return;
-  localStorage.setItem('gpt_draft',JSON.stringify(s));
+  lsSet('gpt_draft',JSON.stringify(s));
 }catch(e){} }
 function loadDraft(){ try{ return JSON.parse(localStorage.getItem('gpt_draft')||'null'); }catch(e){ return null; } }
 function clearDraft(){ try{ localStorage.removeItem('gpt_draft'); }catch(e){} }
@@ -2494,7 +2545,7 @@ function endSession(){
   if(exs.length){
     const h=JSON.parse(localStorage.getItem('gpt_history')||'[]');
     h.push({startedAt:sess.startedAt, exercises:exs, kcal, vol, mood:sess.mood||null}); // mood PHAI luu, khong thi guard 'buoi met' trong suggestNext la code chet
-    localStorage.setItem('gpt_history',JSON.stringify(h.slice(-50)));
+    lsSet('gpt_history',JSON.stringify(h.slice(-50))); // het cho KHONG duoc nem loi -> endSession khong dut giua chung
   }
   clearDraft(); // buoi da vao lich su -> xoa nhap
   show('scr-sum');
@@ -2977,7 +3028,7 @@ function renderSens(){
 }
 document.getElementById('sensSeg').addEventListener('click',e=>{
   const b=e.target.closest('button'); if(!b) return;
-  Sensor.sens=b.dataset.s; localStorage.setItem('gpt_sens',Sensor.sens); renderSens();
+  Sensor.sens=b.dataset.s; lsSet('gpt_sens',Sensor.sens); renderSens();
   if(Sensor.on) Sensor.reset(); // doi do nhay -> khoa lai chu ky tu vai rep toi
   const st=document.getElementById('sensorState'); if(st) st.textContent='đổi độ nhạy: '+b.textContent.trim()+' — đang bắt lại nhịp…';
 });
@@ -3103,7 +3154,7 @@ document.getElementById('gapSkip').addEventListener('click',()=>{ openModal('mod
 /* =================== HISTORY SCREEN: bieu do tien bo + xoa buoi + backup =================== */
 let histSelEx=null;
 function getHist(){ return JSON.parse(localStorage.getItem('gpt_history')||'[]'); }
-function setHist(h){ localStorage.setItem('gpt_history',JSON.stringify(h)); }
+function setHist(h){ lsSet('gpt_history',JSON.stringify(h)); }
 function renderHistScreen(){
   const h=getHist();
   // chips: cac bai da tung tap (moi nhat truoc)
@@ -3378,6 +3429,7 @@ try{
 renderMode(); renderHistory(); renderProfile(); renderCoachPick(); renderPro();
 loadNames(); // bank ten goi (Goi C) — nap som de match luc chao/khen
 Voice.init().then(()=>{ setTimeout(()=>Voice.prefetchAll(),4000); }); // tai ngam bo giong sau 4s
+setTimeout(trimVoiceCacheIfTight, 12000); // phien truoc co the da cache ca 2 giong -> do lai khi mo app
 window.addEventListener('online',()=>{ // mat mang giua chung -> co mang lai thi tai tiep (SW cache hit = re)
   if(!Voice.ok) Voice.init().then(()=>Voice.prefetchAll());
   else Voice.prefetchAll();
