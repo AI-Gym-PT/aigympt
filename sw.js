@@ -1,5 +1,5 @@
 /* AI Gym PT service worker — cache de mo nhanh + chay offline */
-const CACHE = 'aigympt-v24';  // v24: doi HLV khong con "reset" - hoan doi manifest NGUYEN KHOI (fetch loi thi giu HLV cu, het roi ve TTS may ca phien), warmCore ~40 clip noi duoc ngay, hoan tai-ngam 8s + nho theo persona + bo qua khi mang tiet kiem, cau chao khong critical
+const CACHE = 'aigympt-v25';  // v25: bai vua tap trong buoi khong con bi hoi "lan dau tap" + nho muc ta + "Hom nay" dem ca buoi dang tap (lastPerf/bestRepsFor/renderToday doc them buoi dang tap + ban nhap, khong chi gpt_history)
 const CORE = ['./', './index.html', './manifest.json', './icon-192.png', './icon-512.png'];
 
 self.addEventListener('install', e => {

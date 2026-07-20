@@ -1241,8 +1241,27 @@ function calcVol(sess){
   return Math.round(v);
 }
 /* lich su gan nhat cua 1 bai -> {kg, reps[], target} */
+/* MOI buoi tap CO THAT, moi nhat o cuoi: lich su da luu + ban nhap + buoi DANG tap.
+   Truoc day lastPerf/bestRepsFor/renderToday CHI doc gpt_history — ma gpt_history chi duoc ghi
+   luc endSession. Hau qua (user bao): bai VUA TAP XONG trong buoi nay van bi hoi la "lan dau
+   tap", khong nho muc ta / khong goi y tang ta, "Hom nay" hien 0 rep. Ro nhat khi roi buoi tap
+   ve Home (vd de doi HLV) roi quay lai. */
+function allSessions(){
+  let out=[];
+  try{ const h=JSON.parse(localStorage.getItem('gpt_history')||'[]'); if(Array.isArray(h)) out=h.slice(); }catch(e){}
+  const clean=s=>{ // bo bai chua co set nao (btnGo day entry rong truoc khi tap)
+    if(!s || !Array.isArray(s.exercises)) return null;
+    const exs=s.exercises.filter(e=>e && Array.isArray(e.sets) && e.sets.length);
+    return exs.length ? Object.assign({}, s, {exercises:exs}) : null;
+  };
+  let d=null; try{ d=JSON.parse(localStorage.getItem('gpt_draft')||'null'); }catch(e){}
+  const live=S.session;
+  if(d && !(live && live.startedAt===d.startedAt)){ const c=clean(d); if(c) out.push(c); } // nhap cua buoi KHAC (dong app giua chung)
+  if(live){ const c=clean(live); if(c) out.push(c); }                                      // buoi dang tap = moi nhat
+  return out;
+}
 function lastPerf(exId){
-  const h=JSON.parse(localStorage.getItem('gpt_history')||'[]');
+  const h=allSessions();
   for(let i=h.length-1;i>=0;i--){
     const ms=(h[i].exercises||[]).filter(x=>x.id===exId&&x.sets&&x.sets.length);
     const e=ms[ms.length-1]; // 1 buoi co the tap CUNG bai 2 lan (doi ta) -> lay lan GAN NHAT, khong phai lan dau
@@ -1286,7 +1305,7 @@ function bestRepsFor(exId, kg){ // ky luc rep cao nhat tren MOI buoi da luu (chi
   // Truyen kg -> CHI tinh set CUNG MUC TA: 30 cai@5kg khong phai "ky luc" de so voi hom nay tap 20kg
   // (neu khong loc, HLV vua khong bao gio ho duoc "ky luc moi" o ta nang, vua ho nham khi ha ta nhe).
   if(isTimeEx(exId)) return null;
-  const h=getHist(); let best=null;
+  const h=allSessions(); let best=null; // gom ca buoi dang tap -> ky luc trong ngay duoc tinh
   for(const s of h) for(const e of (s.exercises||[])) if(e.id===exId)
     for(const st of (e.sets||[])){
       if(kg!==undefined && Math.abs((st.kg||0)-(kg||0))>=0.01) continue;
@@ -1448,7 +1467,7 @@ function renderHistory(){
 }
 /* thong ke hom nay + so sanh khoi luong 7 ngay */
 function renderToday(){
-  const h=JSON.parse(localStorage.getItem('gpt_history')||'[]');
+  const h=allSessions(); // gom ca buoi DANG tap -> khong con hien 0 rep giua buoi
   const now=new Date(); const d0=new Date(now.getFullYear(),now.getMonth(),now.getDate()).getTime();
   let ex=0,reps=0,kcal=0;
   for(const s of h){ if(s.startedAt>=d0){
