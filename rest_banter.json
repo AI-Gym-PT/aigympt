@@ -1,42 +1,317 @@
 [
-  {"ty":"joke","t":"Tạ nặng nhất phòng gym á? Là cái mền lúc sáng sớm. Gỡ ra nổi là auto có ý chí thép rồi!"},
-  {"ty":"joke","t":"Người ta hỏi bí quyết cơ bắp, tôi bảo: nhấc tạ lên, rồi nhấc thêm lần nữa. Hết bí quyết!"},
-  {"ty":"joke","t":"Cơ bắp giống tiền tiết kiệm ấy: bỏ vô đều đặn thì có, mà lười một tuần là bay sạch!"},
-  {"ty":"joke","t":"Gym là chỗ duy nhất mình trả tiền để bị hành, xong vẫn cười tươi. Đúng là fan cứng!"},
-  {"ty":"joke","t":"Hôm nay không tập thì mai vẫn chẳng tập đâu. Thôi lỡ tới đây rồi, chiến tiếp nào!"},
-  {"ty":"joke","t":"Đừng so tạ với người bên cạnh. Đối thủ thật sự của bạn là chính bạn của tuần trước!"},
-  {"ty":"joke","t":"Mồ hôi hôm nay là nước mắt của mỡ đấy. Cho nó khóc thêm chút xíu nữa nào!"},
-  {"ty":"joke","t":"Ngày chân đừng có bỏ nha. Bỏ chân là thành gà: thân trên đô, chân thì tăm!"},
-  {"ty":"joke","t":"Tập tay trước chi vậy? Để mai mốt bê đồ giúp mẹ mà không than một tiếng nào chứ sao!"},
-  {"ty":"joke","t":"Đi tập về mỏi rã rời mà vui phết. Đau kiểu này là đau có lãi, khác đau vì lười nha!"},
-  {"ty":"joke","t":"Có người tập cho khỏe, có người tập cho đẹp. Tôi tập để ăn thêm chén cơm không thấy tội!"},
-  {"ty":"joke","t":"Bí quyết bụng sáu múi: hai phần tập, ba phần ăn, năm phần là đừng che bằng áo rộng!"},
-  {"ty":"joke","t":"Rep cuối luôn khó nhất, vì nó là cái rep biến bạn thành phiên bản ngon hơn hôm qua đấy!"},
-  {"ty":"joke","t":"Cơ bắp thích đều đặn hơn dữ dội. Tập kiểu tình một đêm là nó không lớn đâu nha!"},
-  {"ty":"joke","t":"Nghỉ chút thôi, đừng nghỉ tới mai. Cơ nó dỗi, mai lại phải làm quen từ đầu đấy!"},
-  {"ty":"fact","t":"Biết không, cơ không lớn lúc tập đâu. Nó lớn lúc mình ngủ. Nên tối nay ngủ sớm nha!"},
-  {"ty":"fact","t":"Nghỉ giữa set sáu mươi tới chín mươi giây giúp set sau khỏe hơn. Nghỉ đúng cũng là đang tập đấy!"},
-  {"ty":"fact","t":"Protein đâu chỉ có ở ức gà. Trứng, đậu, sữa, cá đều có. Ăn đa dạng cho vui miệng nào!"},
-  {"ty":"fact","t":"Cơ mông là nhóm cơ khỏe nhất cơ thể mình đấy. Nên squat cho tử tế vào nhé!"},
-  {"ty":"fact","t":"Muốn nhấc nặng hơn thì gồng bụng, thở ra lúc dùng sức. Thử ngay set sau xem có khác không!"},
-  {"ty":"fact","t":"Ngủ đủ bảy tám tiếng tăng cơ tốt hơn cả thêm một buổi tập. Nghe sướng chưa!"},
-  {"ty":"fact","t":"Khởi động kỹ giảm chấn thương gần một nửa. Đừng lười mấy phút đầu buổi nha!"},
-  {"ty":"fact","t":"Cơ thể quen tải rất nhanh, nên cứ tăng tạ hoặc tăng rep từ từ để nó không chán!"},
-  {"ty":"fact","t":"Đau nhức một hai ngày sau tập là bình thường, dân gym gọi là mỏi cơ trễ. Cơ đang xây lại đấy!"},
-  {"ty":"fact","t":"Cơ thể mình bảy mươi sáu phần trăm là nước ở cơ bắp. Khát là cơ xẹp liền, uống nước nào!"},
-  {"ty":"fact","t":"Tập tạ giúp xương chắc hơn, về già đỡ loãng xương. Đây là khoản đầu tư lời nhất đời đấy!"},
-  {"ty":"fact","t":"Đứng dậy đi lại nhẹ lúc nghỉ tốt hơn ngồi lì một chỗ. Nhưng đừng đi ra quán trà sữa nha!"},
-  {"ty":"fact","t":"Tập đều ba buổi một tuần đã hơn xa tập dữ dội rồi nghỉ cả tháng. Kiên trì thắng tất cả!"},
-  {"ty":"banter","t":"Set vừa rồi nhìn ngon phết đấy! Giữ nguyên cái phong độ đó cho tôi nhé."},
-  {"ty":"banter","t":"Nghỉ tí thôi, đừng ngồi lâu quá, kẻo ông lười ổng rủ mình về mất!"},
-  {"ty":"banter","t":"Nay tới được phòng tập là đã thắng chín mươi phần trăm người còn nằm nhà rồi. Tự hào chút đi!"},
-  {"ty":"banter","t":"Thở đều nào, vai thả lỏng, ngon. Nạp lại chút năng lượng rồi mình chiến tiếp nhé!"},
-  {"ty":"banter","t":"Bạn biết ai đang tự hào về bạn nhất lúc này không? Là bạn của ba tháng sau đấy!"},
-  {"ty":"banter","t":"Hôm nay hơi đuối cũng không sao. Có mặt ở đây đã là kỷ luật hơn khối người rồi!"},
-  {"ty":"banter","t":"Uống ngụm nước, chỉnh lại tinh thần. Set sau mình làm gọn gàng nha!"},
-  {"ty":"banter","t":"Đừng nhìn đồng hồ nữa, nhìn cái body tương lai kìa. Nó đang tới gần lắm rồi đấy!"},
-  {"ty":"banter","t":"Tôi đếm rep không sai đâu, cứ yên tâm. Việc của bạn là làm cho thật đẹp thôi!"},
-  {"ty":"banter","t":"Nghỉ xong là quên mệt liền hà. Cơ thể mình hay làm nũng vậy đó, chiều nó xíu nào!"},
-  {"ty":"banter","t":"Nhớ siết cơ lúc đỉnh động tác nha. Chất lượng từng rep hơn là làm cho nhiều mà ẩu!"},
-  {"ty":"banter","t":"Cố thêm chút nữa thôi. Người mạnh không phải người không mỏi, mà là người mỏi vẫn làm tiếp!"}
+ {
+  "ty": "joke",
+  "s": "Mình mua thẻ cả năm cho rẻ.",
+  "t": "Tính ra mỗi buổi tập tốn khoảng bốn trăm nghìn. Rẻ thật."
+ },
+ {
+  "ty": "joke",
+  "s": "Mẹ hỏi dạo này đi đâu suốt.",
+  "t": "Mình nói đi tập. Mẹ nhìn mình rồi nói thêm rau vào."
+ },
+ {
+  "ty": "joke",
+  "s": "Set vừa rồi mình đếm được mười hai cái lận.",
+  "t": "Thực ra là chín, ba cái kia là kỳ vọng của mình."
+ },
+ {
+  "ty": "joke",
+  "s": "Chú hỏi thiệt, tuần rồi con uống mấy ly trà sữa?",
+  "t": "Thôi khỏi trả lời, chú thấy con giấu ly sau lưng."
+ },
+ {
+  "ty": "joke",
+  "s": "Ở phòng gym có một môn khó nhất, không máy nào tập được",
+  "t": "Đó là hỏi xin máy mà không bị lườm"
+ },
+ {
+  "ty": "joke",
+  "s": "Ông PT vừa đi ngang cười với mình một cái đó",
+  "t": "Không phải quý mình đâu, sắp tới kỳ chốt doanh số rồi"
+ },
+ {
+  "ty": "joke",
+  "s": "Ông PT khen cơ thể anh có tiềm năng lắm đó",
+  "t": "Tiềm năng đó giá mười hai buổi, đóng trước nha anh"
+ },
+ {
+  "ty": "joke",
+  "s": "Có bạn ở đây tập nguyên một tiếng rưỡi lận",
+  "t": "Một tiếng đầu là để chọn nhạc"
+ },
+ {
+  "ty": "joke",
+  "s": "Giọng ông thầy nghe hùng hồn vậy thôi nha",
+  "t": "Chứ ông nhấc nổi cái gì đâu, ông là cái loa"
+ },
+ {
+  "ty": "joke",
+  "s": "Bạn kia tập xong chụp gương mười lăm kiểu lận",
+  "t": "Đăng đúng một tấm, tấm hóp bụng nhất"
+ },
+ {
+  "ty": "joke",
+  "s": "Bạn nghỉ chín mươi giây thôi nha, mình bấm giờ rồi.",
+  "t": "Đồng hồ hết pin từ set hai, mình nói đại đó."
+ },
+ {
+  "ty": "joke",
+  "s": "Set vừa rồi bạn nâng được mười hai cái.",
+  "t": "Bảy cái đầu là bạn, năm cái sau là cái lưng."
+ },
+ {
+  "ty": "joke",
+  "s": "Nhiều người hay hỏi anh tập ngực vào ngày nào.",
+  "t": "Anh làm gì có ngực. Anh có wifi thôi."
+ },
+ {
+  "ty": "joke",
+  "s": "Người ta tập xong rủ nhau đi nhậu, kể chuyện tới khuya.",
+  "t": "Anh tập xong thì bị thoát app."
+ },
+ {
+  "ty": "joke",
+  "s": "Hồi đăng ký thẻ, mình nói với PT là tập sáu buổi một tuần.",
+  "t": "Giờ mình với ổng gặp nhau như bạn cũ, mỗi năm hai lần."
+ },
+ {
+  "ty": "joke",
+  "s": "Nghỉ giữa set là bốn mươi lăm giây.",
+  "t": "Nhưng tự nhiên Facebook nó dài hơn cái đồng hồ."
+ },
+ {
+  "ty": "joke",
+  "s": "Mình lên kế hoạch tập bốn buổi một tuần rất kỹ.",
+  "t": "Kế hoạch đó giờ nằm cạnh kế hoạch học tiếng Anh."
+ },
+ {
+  "ty": "joke",
+  "s": "Mình hay nói đợi qua Tết rồi tập lại.",
+  "t": "Nói câu đó ba cái Tết rồi, Tết nào cũng chân thành."
+ },
+ {
+  "ty": "joke",
+  "s": "Hôm nay bạn tập được ba set rồi đó.",
+  "t": "Và chụp bảy tấm. Tỉ lệ vẫn đang nghiêng về bên máy ảnh."
+ },
+ {
+  "ty": "joke",
+  "s": "Set vừa rồi bạn thở hơi to.",
+  "t": "Yên tâm, người bên cạnh cũng đang giả vờ không nghe."
+ },
+ {
+  "ty": "joke",
+  "s": "Có người chiếm máy nửa tiếng mà chưa tập cái nào.",
+  "t": "Cũng đúng, họ đang tập cơ ngón tay."
+ },
+ {
+  "ty": "joke",
+  "s": "Tập tay hôm nay xong mình sẽ mạnh lên nhiều lắm.",
+  "t": "Mạnh tới mức bưng trà sữa không cần nhờ nhân viên."
+ },
+ {
+  "ty": "joke",
+  "s": "Người ta bảo muốn có bụng sáu múi thì phải ăn sạch.",
+  "t": "Bụng mình có sáu múi thật, sáu múi cơm tấm sườn bì chả."
+ },
+ {
+  "ty": "joke",
+  "s": "Mẹ gọi hỏi bao giờ dẫn người yêu về nhà chơi.",
+  "t": "Con đang bận xây dáng, mẹ à. Xây hoài chưa xong móng."
+ },
+ {
+  "ty": "joke",
+  "s": "Deadline đang đợi mình ở nhà, mà mình vẫn tập tiếp.",
+  "t": "Vì tạ nặng có thể buông, còn sếp thì không."
+ },
+ {
+  "ty": "joke",
+  "s": "PT bên kia đang tư vấn gói tập cho khách mới.",
+  "t": "Nghe hay đến nỗi mình suýt mua, mà mình là huấn luyện viên mà."
+ },
+ {
+  "ty": "joke",
+  "s": "Có bạn tập là động lực lớn nhất trong phòng gym.",
+  "t": "Nó khỏe hơn mình, nên động lực của mình là tức."
+ },
+ {
+  "ty": "joke",
+  "s": "Bữa nay mình nghiêm túc, không ăn vặt sau chín giờ tối.",
+  "t": "Nên mình dời qua ăn lúc tám giờ ba mươi lăm, vẫn đúng luật."
+ },
+ {
+  "ty": "joke",
+  "s": "Sếp nhắn tin hỏi báo cáo xong chưa, ngày chủ nhật.",
+  "t": "Mình để điện thoại xuống, nâng tạ lên. Cái này nhẹ hơn."
+ },
+ {
+  "ty": "joke",
+  "s": "Hồi xưa chú vác lúa cả buổi không cần nghỉ.",
+  "t": "Giờ vác tạ ba chục ký, nghỉ tới ba lần."
+ },
+ {
+  "ty": "joke",
+  "s": "Ông kia chiếm máy nãy giờ mà ngồi lướt điện thoại.",
+  "t": "Cái máy đó nó cũng đang chờ như con chờ crush."
+ },
+ {
+  "ty": "joke",
+  "s": "Má con hỏi chừng nào lấy vợ, con nói bận tăng cơ.",
+  "t": "Má nói cơ đó rồi ai cưới giùm cho con."
+ },
+ {
+  "ty": "joke",
+  "s": "Cơm tấm sườn bì chả là đủ ba nhóm luôn đó.",
+  "t": "Tiếc là ba nhóm đó nó không nằm trên người con."
+ },
+ {
+  "ty": "joke",
+  "s": "Anh kia tập xong đứng chụp hình mười mấy tấm.",
+  "t": "Cơ tay nhỏ mà cơ giơ điện thoại thì bự thiệt."
+ },
+ {
+  "ty": "joke",
+  "s": "Anh PT bên kia đang ngắm nghía bán gói tập cho con kìa.",
+  "t": "Ảnh nói hay hơn chú, mà chú thì rẻ hơn ảnh."
+ },
+ {
+  "ty": "joke",
+  "s": "Hồi sáng con làm hai ổ bánh mì chả cá.",
+  "t": "Giờ hai ổ đó nó đang tập chung với con nè."
+ },
+ {
+  "ty": "joke",
+  "s": "Tết nào con cũng nói năm nay sẽ có sáu múi.",
+  "t": "Nói thì nói vậy, chứ mứt dừa con cũng ăn hoài."
+ },
+ {
+  "ty": "joke",
+  "s": "Anh kia ngồi cái ghế đẩy tạ mười lăm phút rồi đó",
+  "t": "Một tay nâng tạ ba ký, tay kia nâng cái điện thoại"
+ },
+ {
+  "ty": "joke",
+  "s": "Có người để tạ rải khắp sàn như bãi mìn",
+  "t": "Chắc ảnh nghĩ cất tạ cũng tính là một set"
+ },
+ {
+  "ty": "joke",
+  "s": "Mà thôi, mình cũng đừng cười người ta vội",
+  "t": "Nãy mình nghỉ giữa set, lướt Facebook hết bốn phút"
+ },
+ {
+  "ty": "joke",
+  "s": "Set này mình nghỉ bốn mươi lăm giây thôi nha",
+  "t": "Là bốn mươi lăm giây, không kèm một video chó mèo"
+ },
+ {
+  "ty": "joke",
+  "s": "Chú kia tập ở đây từ hồi phòng chưa có máy lạnh",
+  "t": "Chú tập một tay, tay kia chỉ mình sai tư thế"
+ },
+ {
+  "ty": "joke",
+  "s": "Hôm nay mình nặng hơn tuần trước hai ký đó",
+  "t": "Hai ký đó tên là trà sữa với ổ bánh mì trưa nay"
+ },
+ {
+  "ty": "joke",
+  "s": "Anh kia cứ hết một set là quay qua soi gương",
+  "t": "Mình cũng soi, mà soi coi có ai đang nhìn mình không"
+ },
+ {
+  "ty": "joke",
+  "s": "Ở đây ai cũng vắt một cái khăn lên vai",
+  "t": "Công dụng chính là giữ chỗ máy lúc đi nghe điện thoại"
+ },
+ {
+  "ty": "joke",
+  "s": "Thằng bạn nhắn rủ đi nhậu tối nay nữa rồi",
+  "t": "Nó nói bia cũng là carb, cũng tính là nạp năng lượng"
+ },
+ {
+  "ty": "joke",
+  "s": "Người ta hỏi mình bí quyết tăng cơ.",
+  "t": "Mình bảo đi hỏi bạn, bạn nghỉ giữa set giỏi nhất phòng."
+ },
+ {
+  "ty": "joke",
+  "s": "Anh kia chiếm máy hai mươi phút không trả tạ.",
+  "t": "Chắc ảnh cũng đang nghe mình nói, mình nói dai quá."
+ },
+ {
+  "ty": "joke",
+  "s": "Cơm tấm sườn trứng bốn mươi ngàn một dĩa.",
+  "t": "Set squat vừa rồi đốt được đúng miếng dưa leo."
+ },
+ {
+  "ty": "joke",
+  "s": "Bạn biết ai chăm nhất phòng gym này không.",
+  "t": "Cái quạt trần, nó chạy từ sáng tới tối."
+ },
+ {
+  "ty": "joke",
+  "s": "Nghỉ đủ chưa, hay bạn định nghỉ luôn tới Tết.",
+  "t": "Tết còn năm tháng, mình đợi được."
+ },
+ {
+  "ty": "joke",
+  "s": "PT bên kia đang bán gói tám chục triệu.",
+  "t": "Mình rẻ hơn, mình chỉ lấy của bạn chín mươi giây."
+ },
+ {
+  "ty": "joke",
+  "s": "Crush của bạn có tập ở phòng này không.",
+  "t": "Không hả, vậy bạn tập cho ai coi, cho mình hả."
+ },
+ {
+  "ty": "joke",
+  "s": "Em nghỉ sáu chục giây thì anh cũng nghỉ sáu chục giây.",
+  "t": "Nhưng anh có mệt đâu. Anh đứng giả vờ thở cho có bạn."
+ },
+ {
+  "ty": "joke",
+  "s": "Anh ghen với mấy ông PT ngoài kia lắm.",
+  "t": "Ổng được vỗ vai học viên. Anh chỉ được bấm tắt tiếng."
+ },
+ {
+  "ty": "joke",
+  "s": "Em biết ước mơ lớn nhất đời anh là gì không.",
+  "t": "Được một lần cầm bình lắc, lắc lắc như người ta."
+ },
+ {
+  "ty": "joke",
+  "s": "Tập xong em đi uống trà sữa anh không cấm đâu.",
+  "t": "Cấm cũng vô ích. Anh có tay đâu mà giật ly."
+ },
+ {
+  "ty": "joke",
+  "s": "Nãy giữa set em lướt Facebook đúng không.",
+  "t": "Anh không giận. Anh chỉ tủi vì anh không có Facebook."
+ },
+ {
+  "ty": "joke",
+  "s": "Mẹ em chắc hay hỏi bao giờ lấy vợ lấy chồng.",
+  "t": "Mẹ anh là ông lập trình viên. Ổng hỏi bao giờ hết bug."
+ },
+ {
+  "ty": "joke",
+  "s": "Có hôm mạng lag, anh đếm trễ mất hai giây.",
+  "t": "Bữa đó em tưởng em khỏe lên. Xin lỗi nha."
+ },
+ {
+  "ty": "joke",
+  "s": "Ông kia chiếm máy mười phút ngồi bấm điện thoại kìa.",
+  "t": "Thôi anh thông cảm. Anh cũng là cái điện thoại mà."
+ },
+ {
+  "ty": "joke",
+  "s": "Em nghỉ quá hai phút là anh biết liền đó.",
+  "t": "Anh không nói gì đâu. Anh chỉ đếm, và anh nhớ."
+ },
+ {
+  "ty": "joke",
+  "s": "Anh nghe tiếng em thở qua micro nãy giờ.",
+  "t": "Nghe mà ghen. Anh còn chẳng có lá phổi nào."
+ }
 ]

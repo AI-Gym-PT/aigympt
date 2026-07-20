@@ -1140,10 +1140,23 @@ function sayBanter(){
   if(S.phase!=='rest' || !isPro() || !banterOn()) return;
   if(!Array.isArray(REST_BANTER) || !REST_BANTER.length) return;
   if(S.session && S.session.mood==='tired') return; // met -> khong dua, de yen cho nghi
-  const i=pickIdx('banter', REST_BANTER.length), it=REST_BANTER[i];
-  if(!it || !Voice.has('rb_'+i)) return; // thieu clip -> im, khong doc TTS may (giong khac han)
-  setCoachMsg(it.t);
-  sayKeys(it.t, ['rb_'+i], false); // khong critical: mau chuyen vui, bi cat cung khong sao
+  // boc mau CO CLIP: giong nay co the thieu vai clip (edge-tts thi thoang loi 1 file) ->
+  // boc lai vai lan thay vi im lang mat luot
+  let i=-1, it=null;
+  for(let k=0;k<5;k++){ const j=pickIdx('banter', REST_BANTER.length);
+    if(REST_BANTER[j] && Voice.has('rb_'+j)){ i=j; it=REST_BANTER[j]; break; } }
+  if(!it) return;
+  // khong critical: mau chuyen vui, bi cat cung khong sao
+  const chot=()=>{ if(S.phase!=='rest') return; setCoachMsg(it.t); sayKeys(it.t, ['rb_'+i], false); };
+  // DANG 2 THI: cau MOI -> KHOANG LANG ~1s -> cau CHOT. Hai nam o khoang lang do;
+  // doc lien tu ti mot cau nhu truoc thi dua may cung phang.
+  if(it.s && Voice.has('rbs_'+i)){
+    setCoachMsg(it.s);
+    sayKeys(it.s, ['rbs_'+i], false);
+    Voice.buffer('rbs_'+i)
+      .then(c=>after(Math.max(1300, (c.dur||1.6)*1000 + 950), chot)) // cho cau moi phat XONG roi moi nghi ~0.95s
+      .catch(()=>after(2600, chot));
+  } else chot();
 }
 /* HIEU LENH VAO SET: dem nguoc 5..1 xong -> ho "Bắt đầu!" dut khoat roi moi vao rep 1.
    Man hinh van hien cau day du ("Set 2 bắt đầu! ..."), rieng AUDIO la tieng ho ngan cho punchy. */
@@ -2398,6 +2411,11 @@ function finishSet(early){
     const afterMk=(S.ex.rest>=75 && mk.length>1)?34000:17000;  // sau khi (cac) cau nhac loi phat xong
     const bAt=Math.min(Math.round(restMs*0.5), restMs-14000);
     if(bAt>=afterMk) after(bAt, sayBanter);
+    // nghi DAI thi ke them mau nua (user che "chi noi mot hai cau"). Van chua >=16s cuoi de lay tinh than.
+    if(S.ex.rest>=75){
+      const b2=Math.round(restMs*0.72);
+      if(b2>=bAt+18000 && b2<=restMs-16000) after(b2, sayBanter);
+    }
   }
   let saidReady=false;
   const tick=()=>{
