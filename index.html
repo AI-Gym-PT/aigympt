@@ -1727,7 +1727,7 @@ document.getElementById('btnStart').addEventListener('click',()=>{
   requestWakeLock();
   if(fresh) openMood(); // hoi trang thai + chao mo buoi (mood ack + chao ghep lien) — thay coach('sessionStart') cu
 });
-document.getElementById('btnBackHome').addEventListener('click',()=>{ saveDraft(); releaseWakeLock(); show('scr-home'); }); // ve home = khong tap: nha khoa man hinh (startCountdown se xin lai)
+document.getElementById('btnBackHome').addEventListener('click',()=>goBack()); // dung CHUNG goBack voi nut back Android -> hanh vi nhat quan (setup -> home, co saveDraft + nha khoa man hinh)
 window.addEventListener('pagehide', saveDraft); // dong / doi trang -> luu nhap (mobile bat pagehide chac hon beforeunload)
 let goBusy=false;
 document.getElementById('btnGo').addEventListener('click',async ()=>{
@@ -2454,7 +2454,7 @@ function endSession(){
   sayKeys(endTxt, endKeys, true);
   S.session=null;
 }
-document.getElementById('btnHome').addEventListener('click',()=>{ renderHistory(); show('scr-home'); });
+document.getElementById('btnHome').addEventListener('click',()=>goBack()); // chung goBack
 
 /* =================== REP SOURCES =================== */
 /* Tap */
@@ -3124,7 +3124,7 @@ document.getElementById('histAll').addEventListener('click',e=>{
   renderHistScreen(); renderHistory();
 });
 document.getElementById('btnHistAll').addEventListener('click',()=>{ renderHistScreen(); show('scr-hist'); });
-document.getElementById('btnHistBack').addEventListener('click',()=>{ renderHistory(); show('scr-home'); });
+document.getElementById('btnHistBack').addEventListener('click',()=>goBack()); // chung goBack
 
 /* ===== sao luu / khoi phuc ===== */
 const BK_KEYS=['gpt_history','gpt_profile','gpt_lastkg','gpt_mode','gpt_sens','gpt_bw','gpt_coach'];
@@ -3248,6 +3248,81 @@ document.addEventListener('keydown',e=>{ if(!LB.el.classList.contains('on'))retu
 
 /* =================== INIT =================== */
 S.selKg = lastKg[S.selEx]!==undefined ? +lastKg[S.selEx] : 0;
+/* =================== NUT QUAY LAI (Android + trong app) ===================
+   SPA nay doi man bang show() ma KHONG day history -> back cua Android pop entry DUY NHAT
+   => vang thang ra khoi web (user bao). Cach lam: luon giu 1 entry "DEM" tren root. Moi lan
+   back -> popstate (an mat dem) -> minh TU xu ly (dong lop phu dang mo, hoac lui 1 CAP man
+   hinh theo phan cap) roi DAY LAI dem => back khong bao gio thoat ngoai y muon.
+   Chi that su thoat khi dang o Home (va neu con buoi tap do thi phai bam 2 lan). */
+const MODAL_IDS=['modalNext','modalProfile','modalPause','modalGap','modalMood','modalResume','modalRpe'];
+const SCR_PARENT={'scr-hist':'scr-home','scr-sum':'scr-home','scr-setup':'scr-home'};
+let _exitingApp=false, _armAt=0, _armKey='';
+function curScreen(){ const el=document.querySelector('.screen.on'); return el?el.id:'scr-home'; }
+/* bam-2-lan: lan 1 nhac bang toast, lan 2 (trong 2.4s) moi lam that */
+function armBack(key,msg){
+  const now=Date.now();
+  if(_armKey===key && now-_armAt<2400){ _armKey=''; return true; }
+  _armKey=key; _armAt=now; toast(msg); return false;
+}
+/* lop phu dang mo tren cung (back phai dong cai nay TRUOC khi lui man) */
+function topOverlay(){
+  try{ if(LB && LB.el && LB.el.classList.contains('on')) return 'lightbox'; }catch(e){}
+  const tf=document.getElementById('txtFall'); if(tf && tf.classList.contains('on')) return 'txtFall';
+  if(pocketEl && pocketEl.classList.contains('on')) return 'pocket';
+  for(let i=0;i<MODAL_IDS.length;i++){ const m=document.getElementById(MODAL_IDS[i]); if(m && m.classList.contains('on')) return MODAL_IDS[i]; }
+  return null;
+}
+/* roi man tap ve man chon bai: dung sach moi thu dang chay (timer/cam bien/demo/bo tui) */
+function leaveToSetup(){
+  clearTimers(); Demo.stop(); Sensor.stop(); pocketOff();
+  _armKey='';                                       // roi man -> xoa "len nong" cu (khoi ket set nham khi quay lai nhanh)
+  S.phase='idle'; S._tick=null; S.prepWatch=false; S._prep=''; S.freeRest=false;
+  saveDraft();
+  pickedView=false; renderSetup(true); show('scr-setup');
+}
+/* true = da xu ly (giu app lai) | false = het cho lui -> cho thoat that */
+function goBack(){
+  const ov=topOverlay();
+  if(ov){
+    if(ov==='lightbox') LB.close();
+    else if(ov==='txtFall') document.getElementById('txtFall').classList.remove('on');
+    else if(ov==='pocket') pocketOff();
+    else openModal(ov,false);
+    return true;
+  }
+  const cur=curScreen();
+  if(cur==='scr-home'){
+    if(!S.session) return false;                                            // khong co buoi do -> thoat luon
+    // co buoi do -> chan nham. armBack: lan 1 tra false (moi len nong) => PHAI dao dau vi
+    // goBack quy uoc true=giu app. Lan 2 armBack tra true => !true=false => cho thoat.
+    return !armBack('home','Đang có buổi tập dở — bấm lần nữa để thoát');
+  }
+  if(cur==='scr-work'){ // dang dem rep: bam 2 lan moi ket set (khong dung confirm() — popstate hay bi chan)
+    if(S.phase==='active'||S.phase==='sideswitch'){
+      if(!armBack('work','Bấm lần nữa để kết thúc set')) return true;
+      finishSet(true); return true;                                         // luu rep da tap roi sang man nghi
+    }
+    leaveToSetup(); return true;
+  }
+  if(cur==='scr-count'||cur==='scr-rest'){ leaveToSetup(); return true; }    // dang chuan bi/nghi -> lui ve chon bai
+  if(cur==='scr-setup'){ saveDraft(); releaseWakeLock(); renderHistory(); show('scr-home'); return true; }
+  renderHistory(); show(SCR_PARENT[cur]||'scr-home'); return true;           // hist / sum -> home
+}
+try{
+  history.replaceState({n:0},'');
+  history.pushState({n:1},'');                     // entry DEM
+  window.addEventListener('popstate',()=>{
+    if(_exitingApp) return;
+    if(goBack()) history.pushState({n:1},'');      // day lai dem -> lan back sau van vao tay minh
+    else{
+      _exitingApp=true; try{ history.back(); }catch(e){} // o root -> lui them 1 nac = roi app
+      // PWA mo tu man hinh chinh KHONG co entry truoc -> history.back() vo hieu, app van o day.
+      // Neu con song sau 700ms thi khoi phuc (khong thi user MAT HAN nut back vinh vien).
+      setTimeout(()=>{ if(_exitingApp){ _exitingApp=false; try{ history.pushState({n:1},''); }catch(e){} } }, 700);
+    }
+  });
+}catch(e){}
+
 renderMode(); renderHistory(); renderProfile(); renderCoachPick(); renderPro();
 loadNames(); // bank ten goi (Goi C) — nap som de match luc chao/khen
 Voice.init().then(()=>{ setTimeout(()=>Voice.prefetchAll(),4000); }); // tai ngam bo giong sau 4s

@@ -1,5 +1,5 @@
 /* AI Gym PT service worker — cache de mo nhanh + chay offline */
-const CACHE = 'aigympt-v22';  // v22: Pro - "Tam chuyen luc nghi" (40 mau dua/fact/tam, tui xao khong lap) o khoang giua nghi>=45s; card Pro + toggle tren home; clip rb_0..39
+const CACHE = 'aigympt-v23';  // v23: FIX nut quay lai - back Android khong con vang khoi web (entry dem + popstate tu xu ly); back dong lop phu truoc roi lui 1 CAP man hinh; 3 nut back trong app dung chung goBack
 const CORE = ['./', './index.html', './manifest.json', './icon-192.png', './icon-512.png'];
 
 self.addEventListener('install', e => {
