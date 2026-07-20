@@ -1647,13 +1647,16 @@ function renderKg(){
   el.innerHTML=h;
   const sb=document.getElementById('sugBtn');
   if(sb) sb.onclick=()=>{
-    if(pendingSug.kg!==undefined) S.selKg=pendingSug.kg;
+    if(pendingSug.kg!==undefined){ S.selKg=pendingSug.kg; rememberKg(); }
     if(pendingSug.reps!==undefined) S.selReps=pendingSug.reps;
     renderSetup(S.session!==null&&S.session.exercises.length>0);
   };
 }
-document.getElementById('kgMinus').onclick=()=>{S.selKg=Math.max(0,S.selKg-2.5);renderKg()};
-document.getElementById('kgPlus').onclick=()=>{S.selKg=Math.min(500,S.selKg+2.5);renderKg()};
+/* NHO NGAY muc ta vua chon cho bai nay. Truoc day chi luu luc bam "Vao set 1" -> chinh ta xong
+   ma thoat ra (hoac dong app) la mat, user tuong web khong luu. */
+function rememberKg(){ if(!S.selEx) return; lastKg[S.selEx]=S.selKg; lsSet('gpt_lastkg',JSON.stringify(lastKg)); }
+document.getElementById('kgMinus').onclick=()=>{S.selKg=Math.max(0,S.selKg-2.5);rememberKg();renderKg()};
+document.getElementById('kgPlus').onclick=()=>{S.selKg=Math.min(500,S.selKg+2.5);rememberKg();renderKg()};
 /* the huong dan: hinh 2 tu the + cach lam + nhom co + link video */
 /* name = "English (Tiếng Việt)". vietName = phần tiếng Việt (hô + hiển thị pill/lịch sử);
    engName = phần tiếng Anh (hiển thị đậm trong danh sách chọn bài). */
@@ -1695,6 +1698,7 @@ document.getElementById('exCats').addEventListener('click',e=>{
   if(chip){
     const wasTime=isTimeEx(S.selEx);
     S.selEx=chip.dataset.id; S.selKg=lastKg[S.selEx]!==undefined?+lastKg[S.selEx]:0;
+    lsSet('gpt_lastex', S.selEx); // nho bai dang chon -> mo app lan sau khong nhay ve mac dinh
     const nowTime=isTimeEx(S.selEx);
     if(nowTime&&!wasTime) S.selReps=isCardio(S.selEx)?60:30; // cardio 60s, giữ tư thế 30s
     else if(nowTime&&wasTime && isCardio(S.selEx)&&S.selReps<40) S.selReps=60; // chuyển sang cardio
@@ -1726,7 +1730,7 @@ function bindNum(id, apply){
 }
 bindNum('setVal', v=>{ let x=Math.round(parseFloat(v)); if(!isFinite(x)) x=S.selSets; S.selSets=Math.max(1,Math.min(10,x)); });
 bindNum('repVal', v=>{ let x=Math.round(parseFloat(v)); if(!isFinite(x)) x=S.selReps; const st=repStep(); if(isTimeEx(S.selEx)) x=Math.round(x/st)*st; S.selReps=Math.max(st,Math.min(repMax(),x)); });
-bindNum('kgVal',  v=>{ let x=parseFloat(String(v).replace(',','.')); if(!isFinite(x)) x=S.selKg; S.selKg=Math.max(0,Math.min(500,Math.round(x*2)/2)); });
+bindNum('kgVal',  v=>{ let x=parseFloat(String(v).replace(',','.')); if(!isFinite(x)) x=S.selKg; S.selKg=Math.max(0,Math.min(500,Math.round(x*2)/2)); rememberKg(); });
 
 /* voice input */
 const SR = window.SpeechRecognition||window.webkitSpeechRecognition;
@@ -1841,6 +1845,7 @@ document.getElementById('btnGo').addEventListener('click',async ()=>{
     // name: ten Viet ngan (hien thi khi tap + lich su); nameFull: co ten Anh (man chon bai)
     S.ex={id:S.selEx, name:vietName(exObj), nameFull:exObj.name, sets:S.selSets, reps:S.selReps, rest:S.selRest, kg:S.selKg, timeEx:!!exObj.time, uni:UNILATERAL.has(S.selEx)};
     lastKg[S.selEx]=S.selKg; lsSet('gpt_lastkg',JSON.stringify(lastKg)); // het cho KHONG duoc nem loi -> btnGo van vao set duoc
+    lsSet('gpt_lastex', S.selEx); // phu ca duong chon bai bang GIONG NOI (khong qua cu cham chip)
     S.session.exercises.push({id:S.selEx, name:S.ex.name, targetSets:S.selSets, targetReps:S.selReps, kg:S.selKg, rest:S.selRest, sets:[]});
     saveDraft();
     S.setIdx=0;
@@ -3350,6 +3355,8 @@ LB.stage.addEventListener('click',e=>{
 document.addEventListener('keydown',e=>{ if(!LB.el.classList.contains('on'))return; if(e.key==='Escape')LB.close(); else if(e.key==='ArrowLeft')LB.go(-1); else if(e.key==='ArrowRight')LB.go(1); });
 
 /* =================== INIT =================== */
+// mo app: quay lai dung BAI lan truoc (khong thi luon nhay ve 'bench' 0kg -> nhin nhu mat het)
+try{ const le=localStorage.getItem('gpt_lastex'); if(le && EXERCISES.some(e=>e.id===le)) S.selEx=le; }catch(e){}
 S.selKg = lastKg[S.selEx]!==undefined ? +lastKg[S.selEx] : 0;
 /* =================== NUT QUAY LAI (Android + trong app) ===================
    SPA nay doi man bang show() ma KHONG day history -> back cua Android pop entry DUY NHAT

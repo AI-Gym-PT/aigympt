@@ -1,5 +1,5 @@
 /* AI Gym PT service worker — cache de mo nhanh + chay offline */
-const CACHE = 'aigympt-v26';  // v26: bao ve du lieu khi may het dung luong - xin luu-tru-BEN (storage.persist), ghi localStorage chong-loi co tu don rac (khong con nem loi lam dut endSession/btnGo), ngan sach cache giong THICH NGHI (may chat chi giu giong dang dung)
+const CACHE = 'aigympt-v27';  // v27: nho muc ta NGAY khi chinh (nut +/- va nhap tay, khong doi toi luc bam Vao set) + nho BAI da chon lan truoc (gpt_lastex) -> mo app vao thang bai cu voi dung muc ta
 const CORE = ['./', './index.html', './manifest.json', './icon-192.png', './icon-512.png'];
 
 self.addEventListener('install', e => {
