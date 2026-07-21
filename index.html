@@ -512,6 +512,34 @@ label.f{display:block;margin-top:20px;font-size:13px;font-weight:700;color:var(-
     </div>
   </div>
 
+  <!-- ====== MODAL: them bai tu chon ====== -->
+  <div class="modal" id="modalCustom">
+    <div class="sheet">
+      <h2>Thêm bài tập khác</h2>
+      <div class="sub">Bài chưa có trong danh mục? Tự thêm để app <b>đếm rep và lưu lại</b>. HLV sẽ đếm và cổ vũ cơ bản — chưa có hướng dẫn tư thế riêng cho bài này.</div>
+      <label class="f">Tên bài tập</label>
+      <input class="inp" id="cxName" placeholder="Ví dụ: Landmine Press" maxlength="32" autocomplete="off">
+      <label class="f">Máy đọc chuyển động ở đâu? (để đếm đúng nhịp)</label>
+      <div class="chips" id="cxPos">
+        <button class="chip" data-p="wrist">💪 Tay, vai · đeo cổ tay</button>
+        <button class="chip" data-p="chest">🏋️ Đẩy-kéo thân trên · túi áo ngực</button>
+        <button class="chip" data-p="pocket">🦵 Squat, cả người · túi quần</button>
+        <button class="chip" data-p="waist">🍑 Gập hông, lưng · cạp quần sau</button>
+        <button class="chip" data-p="shin">🦿 Chân · ống chân</button>
+        <button class="chip" data-p="time">⏱ Giữ tư thế · tính theo giây</button>
+      </div>
+      <div id="cxAmpWrap">
+        <label class="f">Biên độ động tác</label>
+        <div class="chips" id="cxAmp">
+          <button class="chip" data-a="big">Lớn — squat, đẩy, kéo…</button>
+          <button class="chip" data-a="small">Nhỏ — động tác cô lập</button>
+        </div>
+      </div>
+      <button class="btn btn-main" id="cxSave" style="margin-top:16px">Thêm &amp; chọn bài này</button>
+      <button class="btn btn-ghost" id="cxCancel" style="margin-top:8px">Huỷ</button>
+    </div>
+  </div>
+
   <!-- ====== MODAL: pause ====== -->
   <div class="modal" id="modalPause">
     <div class="sheet">
@@ -581,6 +609,7 @@ const CATS = [
   {id:'tricep',   name:'Tay sau',                    icon:'🦾'},
   {id:'core',     name:'Bụng · Core',                icon:'🔥'},
   {id:'cardio',   name:'Cardio · Khởi động',         icon:'⚡'},
+  {id:'custom',   name:'Bài của bạn',                 icon:'✍️'},
 ];
 /* name: Việt trước — Anh trong ngoặc. mus: nhóm cơ. cues: 2-3 điểm form cho người mới. */
 const EXERCISES = [
@@ -1624,11 +1653,16 @@ function renderSetup(isNext=false){
       const exs=EXERCISES.filter(e=>e.cat===c.id).slice().sort((a,b)=>vietName(a).localeCompare(vietName(b),'vi',{numeric:true,sensitivity:'base'}));
       const picked=exs.find(e=>e.id===S.selEx);
       const isOpen=c.id===openCat;
+      const chips=exs.map(e=>`<button class="exch ${e.id===S.selEx?'sel':''}" data-id="${e.id}"><b>${engName(e)}</b>${engName(e)!==vietName(e)?`<span class="ex-vn">${vietName(e)}</span>`:''}<span class="ex-eq">🔧 ${e.equip||'—'}${e.time?' · ⏱ theo giây':''}</span>${e.custom?`<span class="cx-del" data-del="${e.id}" title="Xoá bài này" style="margin-left:auto;padding:2px 9px;color:var(--sub);font-weight:800">✕</span>`:''}</button>`).join('');
+      // nhom "Bai cua ban": luon co nut them (ke ca khi chua co bai nao)
+      const body = c.id==='custom'
+        ? `<div class="exlist">${chips}</div><button class="btn btn-ghost btn-sm" id="cxAdd" style="width:auto;margin:6px 2px 2px">➕ Thêm bài tập khác</button>`
+        : `<div class="exlist">${chips}</div>`;
       return `<div class="cat ${isOpen?'open':''} ${picked?'haspick':''}" data-cat="${c.id}">
         <div class="cat-h"><span class="ico">${c.icon}</span>${c.name}
-          ${picked?`<span class="picked">✓ ${engName(picked)}</span>`:`<span class="cnt">${exs.length} bài</span>`}
+          ${picked?`<span class="picked">✓ ${engName(picked)}</span>`:`<span class="cnt">${c.id==='custom'?'tự thêm':exs.length+' bài'}</span>`}
           <span class="chev">▼</span></div>
-        <div class="cat-body"><div class="exlist">${exs.map(e=>`<button class="exch ${e.id===S.selEx?'sel':''}" data-id="${e.id}"><b>${engName(e)}</b><span class="ex-vn">${vietName(e)}</span><span class="ex-eq">🔧 ${e.equip||'—'}${e.time?' · ⏱ theo giây':''}</span></button>`).join('')}</div></div>
+        <div class="cat-body">${body}</div>
       </div>`;
     }).join('');
     if(gc) gc.style.display='none'; // duyet: an huong dan cho gon
@@ -1707,6 +1741,8 @@ function renderGuide(){
 }
 document.getElementById('exCats').addEventListener('click',e=>{
   const isNext=S.session!==null&&S.session.exercises.length>0;
+  if(e.target.closest('#cxAdd')){ openCustomForm(); return; }               // ➕ them bai tu chon
+  const del=e.target.closest('.cx-del'); if(del){ deleteCustom(del.dataset.del); return; } // xoa bai tu chon (chan truoc chip)
   const chip=e.target.closest('.exch');
   if(chip){
     const wasTime=isTimeEx(S.selEx);
@@ -1723,6 +1759,82 @@ document.getElementById('exCats').addEventListener('click',e=>{
   const h=e.target.closest('.cat-h');
   if(h){ const c=h.parentElement.dataset.cat; openCat=(openCat===c)?'':c; renderSetup(isNext); }
 });
+/* ===== BAI TAP TU THEM (custom) =====
+   Bai chua co trong danh muc -> user tu them. Dem rep + luu ta/lich su chay BINH THUONG
+   (cam bien SPARC dem generic, chi can biet VI TRI dat may + bien do). Phan "noi chuyen rieng
+   theo bai" (cue/bark/nhac loi/ten doc san/hinh) la GENERIC. Moi ten user go = 1 tin hieu nhu cau. */
+function cxSlug(name){
+  let s=(name||'').toLowerCase();
+  try{ s=s.normalize('NFD').replace(/[̀-ͯ]/g,''); }catch(e){}
+  s=s.replace(/đ/g,'d').replace(/[^a-z0-9]+/g,'_').replace(/^_+|_+$/g,'');
+  return 'cx_'+(s||'x');
+}
+function makeCustomEx(name, pos, gentle){
+  const time = pos==='time';
+  return { id:cxSlug(name), cat:'custom', name:name, equip:'Tự thêm', alias:[],
+    mus:'Bài tự thêm — HLV đếm nhịp và cổ vũ cơ bản', cues:[], setup:[], custom:true,
+    pos: time?undefined:pos, gentle: time?false:!!gentle, time: time?1:undefined };
+}
+/* dua bai custom vao dung cac cau truc app SAN co -> khong phai sua posOf/isTimeEx/GENTLE.
+   POS Set va GENTLE_EX la Set mutable; isTimeEx doc field .time cua object da push vao EXERCISES */
+function registerCustom(ex){
+  if(!ex || !ex.id) return;
+  if(!EXERCISES.some(e=>e.id===ex.id)) EXERCISES.push(ex);
+  if(ex.pos==='wrist') POS_WRIST.add(ex.id);
+  else if(ex.pos==='shin') POS_SHIN.add(ex.id);
+  else if(ex.pos==='chest') POS_CHEST.add(ex.id);
+  else if(ex.pos==='waist') POS_WAIST.add(ex.id);
+  if(ex.gentle) GENTLE_EX.add(ex.id);
+}
+function loadCustomEx(){ try{ const a=JSON.parse(localStorage.getItem('gpt_customex')||'[]'); return Array.isArray(a)?a:[]; }catch(e){ return []; } }
+function saveCustomEx(list){ lsSet('gpt_customex', JSON.stringify(list)); }
+function logExWant(name, pos){ // tin hieu nhu cau: biet bai nao can lam tu te tiep theo
+  try{ let a=JSON.parse(localStorage.getItem('gpt_exwant')||'[]'); if(!Array.isArray(a)) a=[];
+    a.push({name, pos, ts:Date.now()}); lsSet('gpt_exwant', JSON.stringify(a.slice(-200))); }catch(e){}
+}
+function openCustomForm(){
+  S._cxPos=null; S._cxAmp='big';
+  document.getElementById('cxName').value='';
+  document.querySelectorAll('#cxPos .chip').forEach(b=>b.classList.remove('sel'));
+  document.querySelectorAll('#cxAmp .chip').forEach(b=>b.classList.toggle('sel', b.dataset.a==='big'));
+  document.getElementById('cxAmpWrap').style.display='';
+  openModal('modalCustom', true);
+  setTimeout(()=>{ try{ document.getElementById('cxName').focus(); }catch(e){} }, 60);
+}
+document.getElementById('cxPos').addEventListener('click',e=>{
+  const b=e.target.closest('.chip'); if(!b) return;
+  S._cxPos=b.dataset.p;
+  document.querySelectorAll('#cxPos .chip').forEach(x=>x.classList.toggle('sel', x===b));
+  document.getElementById('cxAmpWrap').style.display = (S._cxPos==='time')?'none':''; // giu tinh gio -> khong hoi bien do
+});
+document.getElementById('cxAmp').addEventListener('click',e=>{
+  const b=e.target.closest('.chip'); if(!b) return;
+  S._cxAmp=b.dataset.a; document.querySelectorAll('#cxAmp .chip').forEach(x=>x.classList.toggle('sel', x===b));
+});
+document.getElementById('cxCancel').addEventListener('click',()=>openModal('modalCustom',false));
+document.getElementById('cxSave').addEventListener('click',()=>{
+  const name=(document.getElementById('cxName').value||'').trim();
+  if(!name){ toast('Nhập tên bài tập nhé!'); return; }
+  if(!S._cxPos){ toast('Chọn nơi đặt máy để đếm đúng nhé!'); return; }
+  const ex=makeCustomEx(name, S._cxPos, S._cxAmp==='small');
+  const list=loadCustomEx().filter(x=>x.id!==ex.id); list.push(ex); saveCustomEx(list); // trung ten -> ghi de cau hinh moi
+  registerCustom(ex);
+  logExWant(name, S._cxPos);
+  openModal('modalCustom',false);
+  S.selEx=ex.id; S.selKg=lastKg[ex.id]!==undefined?+lastKg[ex.id]:0; lsSet('gpt_lastex', ex.id);
+  S.selReps = ex.time?30:12; openCat='custom'; pickedView=true;
+  renderSetup(S.session!==null&&S.session.exercises.length>0);
+});
+function deleteCustom(id){
+  const ex=EXERCISES.find(e=>e.id===id); const nm=ex?ex.name:'';
+  saveCustomEx(loadCustomEx().filter(x=>x.id!==id));
+  const i=EXERCISES.findIndex(e=>e.id===id); if(i>=0) EXERCISES.splice(i,1);
+  POS_WRIST.delete(id); POS_SHIN.delete(id); POS_CHEST.delete(id); POS_WAIST.delete(id); GENTLE_EX.delete(id);
+  if(S.selEx===id){ S.selEx='bench'; S.selKg=0; pickedView=false; }
+  lastGuideId=null;
+  renderSetup(S.session!==null&&S.session.exercises.length>0);
+  toast('Đã xoá'+(nm?' "'+nm+'"':' bài tự thêm'));
+}
 document.getElementById('restChips').addEventListener('click',e=>{
   const b=e.target.closest('.chip'); if(!b) return;
   S.selRest=+b.dataset.r; renderSetup(S.session!==null&&S.session.exercises.length>0);
@@ -3253,7 +3365,7 @@ document.getElementById('btnHistAll').addEventListener('click',()=>{ renderHistS
 document.getElementById('btnHistBack').addEventListener('click',()=>goBack()); // chung goBack
 
 /* ===== sao luu / khoi phuc ===== */
-const BK_KEYS=['gpt_history','gpt_profile','gpt_lastkg','gpt_mode','gpt_sens','gpt_bw','gpt_coach'];
+const BK_KEYS=['gpt_history','gpt_profile','gpt_lastkg','gpt_mode','gpt_sens','gpt_bw','gpt_coach','gpt_customex','gpt_exwant','gpt_lastex','gpt_plan'];
 document.getElementById('btnBackup').addEventListener('click',()=>{
   const data={app:'AI Gym PT', version:1, exportedAt:new Date().toISOString()};
   BK_KEYS.forEach(k=>{ const v=localStorage.getItem(k); if(v!==null) data[k]=v; });
@@ -3272,7 +3384,7 @@ document.getElementById('restoreFile').addEventListener('change',e=>{
       const staged={};
       BK_KEYS.forEach(k=>{
         if(typeof data[k]!=='string') return;
-        if(k==='gpt_mode'||k==='gpt_sens'||k==='gpt_bw'||k==='gpt_coach'){ staged[k]=data[k]; return; } // gia tri thuong, khong phai JSON
+        if(k==='gpt_mode'||k==='gpt_sens'||k==='gpt_bw'||k==='gpt_coach'||k==='gpt_lastex'||k==='gpt_plan'){ staged[k]=data[k]; return; } // gia tri thuong, khong phai JSON
         const v=JSON.parse(data[k]); // hong -> nem, khong ghi gi
         if(k==='gpt_history' && !Array.isArray(v)) throw new Error('lịch sử sai định dạng');
         if((k==='gpt_profile'||k==='gpt_lastkg') && (typeof v!=='object'||v===null||Array.isArray(v))) throw new Error(k+' sai định dạng');
@@ -3373,6 +3485,7 @@ LB.stage.addEventListener('click',e=>{
 document.addEventListener('keydown',e=>{ if(!LB.el.classList.contains('on'))return; if(e.key==='Escape')LB.close(); else if(e.key==='ArrowLeft')LB.go(-1); else if(e.key==='ArrowRight')LB.go(1); });
 
 /* =================== INIT =================== */
+loadCustomEx().forEach(registerCustom); // nap bai tu them vao danh muc + cac Set (pos/gentle) truoc moi thu
 // mo app: quay lai dung BAI lan truoc (khong thi luon nhay ve 'bench' 0kg -> nhin nhu mat het)
 try{ const le=localStorage.getItem('gpt_lastex'); if(le && EXERCISES.some(e=>e.id===le)) S.selEx=le; }catch(e){}
 S.selKg = lastKg[S.selEx]!==undefined ? +lastKg[S.selEx] : 0;
