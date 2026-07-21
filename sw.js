@@ -1,5 +1,5 @@
 /* AI Gym PT service worker — cache de mo nhanh + chay offline */
-const CACHE = 'aigympt-v29';  // v29: Bai tap tu them (custom) - go ten + chon vi tri dat may + bien do -> dem rep/luu ta/lich su binh thuong, coaching generic; nhom "Bai cua ban", log tin hieu nhu cau (gpt_exwant)
+const CACHE = 'aigympt-v30';  // v30: calo tinh them HE SO TAI (kg so voi can nang, tran +50%) + EPOC 10% bai ta -> ta nang doc cao hon hop ly; cardio/plank/nghi giu nguyen MET
 const CORE = ['./', './index.html', './manifest.json', './icon-192.png', './icon-512.png'];
 
 self.addEventListener('install', e => {

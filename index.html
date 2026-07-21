@@ -1311,14 +1311,24 @@ function posTextOf(id){ const t=POS_TEXT[posOf(id)], n=POS_NOTE[id]; return n? t
 /* MET theo bai: cardio/toan than > compound > isolation */
 const MET_COMPOUND=new Set(["chestdip","deadlift","pullup","ohp","bulgarian","latlunge","stepup","sumosquat","chinup","dip","cgbench","abwheel",'machinechest','dbpress','bench','incline','latpull','cablerow','chestrow','dbrow','machinerow','assistpullup','backext','machineshoulder','dbshoulder','legpress','goblet','smithsquat','rdl','hipthrust','glutebridge','lunge','closegrip','assistdip']);
 function METof(id){ return isCardio(id)?7 : isTimeEx(id)?4 : MET_COMPOUND.has(id)?6 : 5; }
-/* kcal = MET × cân nặng(kg) × giờ — set tập MET theo bài, nghỉ giữa set MET 2 */
+/* kcal = MET × cân nặng × giờ (chuẩn khoa học), + 2 tinh chỉnh cho khớp thực tế & kỳ vọng người dùng:
+   (1) HỆ SỐ TẢI: tạ càng nặng so với cân nặng -> công cơ học lớn hơn -> đốt nhiều hơn. f=1+0.35·(kg/bw),
+       CHẶN TRẦN +50% (tạ ~>1.4× cân nặng). Số REP đã được tính GIÁN TIẾP qua thời lượng set (nhiều rep = set lâu hơn),
+       nên không nhân rep lần nữa (tránh đếm 2 lần).
+   (2) EPOC ~10%: bài tạ đốt thêm SAU buổi (afterburn) — có cơ sở, chỉ áp cho bài kháng lực (không cardio/giữ-giờ/nghỉ).
+   Vẫn là ƯỚC LƯỢNG (hiển thị ~): không đo nhịp tim thì mọi con số chỉ chính xác ±20-30%. */
 function calcKcal(sess){
   const bw=bodyWeight(); let kcal=0;
   for(const e of sess.exercises){
-    const met=METof(e.id||'');
+    const id=e.id||'', met=METof(id), resist=!isCardio(id)&&!isTimeEx(id);
     (e.sets||[]).forEach((s,i)=>{
-      kcal += met*bw*((s.dur||0)/3600);
-      if(i<e.sets.length-1) kcal += 2*bw*((e.rest||60)/3600);
+      let k = met*bw*((s.dur||0)/3600);
+      if(resist){
+        const f = Math.min(1.5, 1 + 0.35*(bw>0?(s.kg||0)/bw:0)); // hệ số tải, trần +50%
+        k *= f * 1.10;                                            // 1.10 = EPOC bài tạ (~10%)
+      }
+      kcal += k;
+      if(i<e.sets.length-1) kcal += 2*bw*((e.rest||60)/3600);     // nghỉ giữa set: MET 2, không tải/EPOC
     });
   }
   const p=getProfile();
