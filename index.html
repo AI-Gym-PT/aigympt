@@ -1251,11 +1251,16 @@ function lsSet(k, v){
   try{ localStorage.setItem(k, v); return true; }catch(e){}
   try{ localStorage.removeItem('gpt_senslog'); }catch(e){}          // 1) nhat ky cam bien: bo duoc
   try{ localStorage.setItem(k, v); return true; }catch(e){}
-  purgeVoiceCache(true);                                            // 2) cache giong: tai lai duoc
+  try{ localStorage.removeItem('gpt_exwant'); }catch(e){}           // 2) tin hieu nhu cau: khong thiet yeu
   try{ localStorage.setItem(k, v); return true; }catch(e){}
-  try{ const h=JSON.parse(localStorage.getItem('gpt_history')||'[]');
-       if(Array.isArray(h) && h.length>10) localStorage.setItem('gpt_history', JSON.stringify(h.slice(-10))); }catch(e){} // 3) cat lich su cu, GIU 10 buoi gan nhat
-  try{ localStorage.setItem(k, v); return true; }catch(e){}
+  // 3) CHI khi dang ghi CHINH gpt_history ma van khong du -> cat bot lich su cu (giam dan, giu cang nhieu cang tot).
+  //    KHONG cat lich su de cuu key vun (rememberKg/lastex) -> khoi hy sinh 40 buoi cho vai byte.
+  //    (Bo purgeVoiceCache: Cache Storage khac quota localStorage -> xoa mp3 khong giai phong duoc cho.)
+  if(k==='gpt_history'){
+    for(const keep of [40,25,12,5]){
+      try{ const arr=JSON.parse(v); if(Array.isArray(arr) && arr.length>keep){ v=JSON.stringify(arr.slice(-keep)); localStorage.setItem(k,v); return true; } }catch(e){}
+    }
+  }
   try{ toast('Máy hết dung lượng nên chưa lưu được — xoá bớt ảnh/ứng dụng rồi thử lại nhé!', 5000); }catch(e){}
   return false;                                                     // that bai VAN khong nem loi -> luong tap khong dut
 }
@@ -1273,7 +1278,8 @@ async function trimVoiceCacheIfTight(){
 // xin luu-tru BEN: bao trinh duyet "du lieu nay quan trong, dung tu xoa". Khong duoc cap cung vo hai.
 try{ if(navigator.storage && navigator.storage.persist) navigator.storage.persist().catch(()=>{}); }catch(e){}
 
-const lastKg = JSON.parse(localStorage.getItem('gpt_lastkg')||'{}');
+let lastKg; try{ lastKg=JSON.parse(localStorage.getItem('gpt_lastkg')||'{}'); }catch(e){ lastKg={}; }
+if(typeof lastKg!=='object'||lastKg===null||Array.isArray(lastKg)) lastKg={}; // gpt_lastkg hong khong duoc CRASH ca app
 /* ho so nguoi dung: {name, gender, age, height, weight} */
 function getProfile(){ try{ return JSON.parse(localStorage.getItem('gpt_profile')||'null'); }catch(e){ return null; } }
 function bodyWeight(){ const p=getProfile(); return (p&&+p.weight)||+(localStorage.getItem('gpt_bw')||65); }
@@ -1284,6 +1290,8 @@ const POS_WAIST=new Set(['rdl','backext']); // gap hong: than TILT ra truoc -> k
 const POS_CHEST=new Set(['crunch','cablecrunch','russian']); // bung gap/xoay THAN TREN — dui dung yen, tui quan cam
 function posOf(id){ return POS_WRIST.has(id)?'wrist':POS_WAIST.has(id)?'waist':POS_SHIN.has(id)?'shin':POS_CHEST.has(id)?'chest':'pocket'; }
 function isTimeEx(id){ const e=EXERCISES.find(x=>x.id===id); return !!(e&&e.time); }
+// phan loai giu-gio doc CO tren ban ghi (e.timeEx) -> khong mo coi khi custom bi xoa; fallback lookup
+function exIsTime(e){ return (e && e.timeEx!=null) ? !!e.timeEx : isTimeEx(e&&e.id); }
 const CARDIO_IDS=new Set(['treadmill','bike','elliptical','farmer','battlerope']);
 function isCardio(id){ return CARDIO_IDS.has(id); }
 const POS_TEXT={
@@ -1320,7 +1328,7 @@ function METof(id){ return isCardio(id)?7 : isTimeEx(id)?4 : MET_COMPOUND.has(id
 function calcKcal(sess){
   const bw=bodyWeight(); let kcal=0;
   for(const e of sess.exercises){
-    const id=e.id||'', met=METof(id), resist=!isCardio(id)&&!isTimeEx(id);
+    const id=e.id||'', isTime=exIsTime(e), met=isCardio(id)?7:isTime?4:MET_COMPOUND.has(id)?6:5, resist=!isCardio(id)&&!isTime; // giu-gio khong ap he so tai/EPOC ke ca khi bai da xoa
     (e.sets||[]).forEach((s,i)=>{
       let k = met*bw*((s.dur||0)/3600);
       if(resist){
@@ -1338,7 +1346,7 @@ function calcKcal(sess){
 function calcVol(sess){
   let v=0;
   for(const e of sess.exercises){
-    if(isTimeEx(e.id)) continue; // bài theo giây: kg×giây vô nghĩa, bỏ qua
+    if(exIsTime(e)) continue; // bài theo giây: kg×giây vô nghĩa, bỏ qua
     for(const s of (e.sets||[])) v+=(s.kg||0)*(s.reps||0);
   }
   return Math.round(v);
@@ -1560,8 +1568,8 @@ function renderHistory(){
   if(!h.length){ el.innerHTML='<div class="sub" style="margin-top:8px">Chưa có buổi tập nào. Bắt đầu ngay hôm nay! 🔥</div>'; }
   else el.innerHTML = h.slice(-3).reverse().map(s=>{
     const d=new Date(s.startedAt);
-    const totalReps=s.exercises.filter(e=>!isTimeEx(e.id)).reduce((a,e)=>a+e.sets.reduce((x,y)=>x+y.reps,0),0);
-    const totalSecs=s.exercises.filter(e=>isTimeEx(e.id)).reduce((a,e)=>a+e.sets.reduce((x,y)=>x+y.reps,0),0); // timeEx luu GIAY vao truong reps
+    const totalReps=s.exercises.filter(e=>!exIsTime(e)).reduce((a,e)=>a+e.sets.reduce((x,y)=>x+y.reps,0),0);
+    const totalSecs=s.exercises.filter(e=>exIsTime(e)).reduce((a,e)=>a+e.sets.reduce((x,y)=>x+y.reps,0),0); // timeEx luu GIAY vao truong reps
     const amt = totalReps ? `${totalReps} rep${totalSecs?' · '+totalSecs+'s':''}` : (totalSecs?`${totalSecs}s giữ`:'0 rep');
     const kc=s.kcal?` · ~${s.kcal} kcal`:'';
     return `<div class="hist">📅 ${d.getDate()}/${d.getMonth()+1} — ${s.exercises.map(e=>e.name).join(', ')} · <b style="color:var(--txt)">${amt}</b>${kc}</div>`;
@@ -1575,7 +1583,7 @@ function renderToday(){
   let ex=0,reps=0,kcal=0;
   for(const s of h){ if(s.startedAt>=d0){
     ex+=s.exercises.length;
-    reps+=s.exercises.filter(e=>!isTimeEx(e.id)).reduce((a,e)=>a+e.sets.reduce((x,y)=>x+y.reps,0),0);
+    reps+=s.exercises.filter(e=>!exIsTime(e)).reduce((a,e)=>a+e.sets.reduce((x,y)=>x+y.reps,0),0);
     kcal+=s.kcal||calcKcal(s);
   }}
   document.getElementById('tdEx').textContent=ex;
@@ -1789,7 +1797,9 @@ function makeCustomEx(name, pos, gentle){
    POS Set va GENTLE_EX la Set mutable; isTimeEx doc field .time cua object da push vao EXERCISES */
 function registerCustom(ex){
   if(!ex || !ex.id) return;
-  if(!EXERCISES.some(e=>e.id===ex.id)) EXERCISES.push(ex);
+  POS_WRIST.delete(ex.id); POS_SHIN.delete(ex.id); POS_CHEST.delete(ex.id); POS_WAIST.delete(ex.id); GENTLE_EX.delete(ex.id); // xoa dang ky CU (sua cau hinh) -> khong nam 2 Set
+  const _i=EXERCISES.findIndex(e=>e.id===ex.id);
+  if(_i>=0) EXERCISES[_i]=ex; else EXERCISES.push(ex); // THAY object -> doi vi tri/bien do/time co hieu luc NGAY (khong cho reload)
   if(ex.pos==='wrist') POS_WRIST.add(ex.id);
   else if(ex.pos==='shin') POS_SHIN.add(ex.id);
   else if(ex.pos==='chest') POS_CHEST.add(ex.id);
@@ -1827,6 +1837,7 @@ document.getElementById('cxSave').addEventListener('click',()=>{
   if(!name){ toast('Nhập tên bài tập nhé!'); return; }
   if(!S._cxPos){ toast('Chọn nơi đặt máy để đếm đúng nhé!'); return; }
   const ex=makeCustomEx(name, S._cxPos, S._cxAmp==='small');
+  { const others=loadCustomEx(); let base=ex.id, k=2; while(others.some(x=>x.id===ex.id && x.name!==name)) ex.id=base+'_'+(k++); } // slug va cham: 2 ten khac -> id khac (khong tron lich su/ta)
   const list=loadCustomEx().filter(x=>x.id!==ex.id); list.push(ex); saveCustomEx(list); // trung ten -> ghi de cau hinh moi
   registerCustom(ex);
   logExWant(name, S._cxPos);
@@ -1981,7 +1992,7 @@ document.getElementById('btnGo').addEventListener('click',async ()=>{
     S.ex={id:S.selEx, name:vietName(exObj), nameFull:exObj.name, sets:S.selSets, reps:S.selReps, rest:S.selRest, kg:S.selKg, timeEx:!!exObj.time, uni:UNILATERAL.has(S.selEx)};
     lastKg[S.selEx]=S.selKg; lsSet('gpt_lastkg',JSON.stringify(lastKg)); // het cho KHONG duoc nem loi -> btnGo van vao set duoc
     lsSet('gpt_lastex', S.selEx); // phu ca duong chon bai bang GIONG NOI (khong qua cu cham chip)
-    S.session.exercises.push({id:S.selEx, name:S.ex.name, targetSets:S.selSets, targetReps:S.selReps, kg:S.selKg, rest:S.selRest, sets:[]});
+    S.session.exercises.push({id:S.selEx, name:S.ex.name, targetSets:S.selSets, targetReps:S.selReps, kg:S.selKg, rest:S.selRest, timeEx:!!S.ex.timeEx, sets:[]}); // timeEx: phan loai giu-gio ben (khong mo coi khi xoa custom)
     saveDraft();
     S.setIdx=0;
     S.prAnnounced=false; // "Kỷ lục mới" chi ho 1 lan cho MOI BAI (khong lap lai o set 2/3)
@@ -2614,10 +2625,10 @@ document.getElementById('btnPause').addEventListener('click',()=>{
   clearTimers(); Demo.stop(); Sensor.stop();
   coach('pause'); openModal('modalPause',true);
 });
-document.getElementById('mpResume').addEventListener('click',()=>{
+function resumeFromPause(){
+  if(S.phase!=='paused') return;
   openModal('modalPause',false);
   // dich moi moc thoi gian tien len dung bang thoi gian pause:
-  // nhip tap, dong ho stall va thoi luong set deu giu nguyen y nghia
   const d = Date.now()-S.pausedAt;
   S.setStartAt += d;
   S.repTimes = S.repTimes.map(t=>t+d);
@@ -2630,7 +2641,8 @@ document.getElementById('mpResume').addEventListener('click',()=>{
     if(S.mode==='demo') Demo.start();
     every(1000,watchdog);
   }
-});
+}
+document.getElementById('mpResume').addEventListener('click',resumeFromPause);
 document.getElementById('mpQuit').addEventListener('click',()=>{
   openModal('modalPause',false);
   // record partial set
@@ -2644,10 +2656,10 @@ document.getElementById('btnEndSet').addEventListener('click',()=>{ if(S.phase==
 function draftSnapshot(){
   if(!S.session) return null;
   const snap={startedAt:S.session.startedAt, mood:S.session.mood||null,
-              exercises:S.session.exercises.map(e=>({id:e.id,name:e.name,targetSets:e.targetSets,targetReps:e.targetReps,kg:e.kg,rest:e.rest,sets:e.sets.slice()}))};
+              exercises:S.session.exercises.map(e=>({id:e.id,name:e.name,targetSets:e.targetSets,targetReps:e.targetReps,kg:e.kg,rest:e.rest,timeEx:!!e.timeEx,sets:e.sets.slice()}))};
   // set DANG DO (chua finishSet): dua vao snapshot lam set "tam" -> tai lai khong mat rep dang tap.
   // Chi vao SNAPSHOT, khong vao S.session live -> finishSet that su khong bi nhan doi.
-  if(S.phase==='active' && S.reps>0 && S.ex && !S.ex.timeEx){
+  if((S.phase==='active'||S.phase==='paused') && S.reps>0 && S.ex && !S.ex.timeEx){ // gom ca luc TAM DUNG -> khong mat rep set dang do
     const cur=snap.exercises[snap.exercises.length-1];
     if(cur && cur.id===S.ex.id){
       const tot=(S.ex.uni?(S.side1Reps||0):0)+S.reps;
@@ -2675,25 +2687,26 @@ function endSession(){
   S.phase='idle'; S.freeRest=false; S._tick=null;
   const sess=S.session;
   const exs=sess.exercises.filter(e=>e.sets.length);
-  const totalReps=exs.filter(e=>!isTimeEx(e.id)).reduce((a,e)=>a+e.sets.reduce((x,y)=>x+y.reps,0),0);
-  const totalSecs=exs.filter(e=>isTimeEx(e.id)).reduce((a,e)=>a+e.sets.reduce((x,y)=>x+y.reps,0),0);
+  const totalReps=exs.filter(e=>!exIsTime(e)).reduce((a,e)=>a+e.sets.reduce((x,y)=>x+y.reps,0),0);
+  const totalSecs=exs.filter(e=>exIsTime(e)).reduce((a,e)=>a+e.sets.reduce((x,y)=>x+y.reps,0),0);
   const mins=Math.max(1,Math.round((Date.now()-sess.startedAt)/60000));
   const kcal=calcKcal({exercises:exs});
   const vol=calcVol({exercises:exs});
   const pfName=(getProfile()||{}).name;
   document.getElementById('sumSub').textContent=`${pfName?'Quá đỉnh, '+pfName+'! ':''}${exs.length} bài · ${totalReps} rep${totalSecs?' · '+totalSecs+'s giữ':''} · ${mins} phút · ~${kcal} kcal`;
   document.getElementById('sumStats').innerHTML =
-    exs.map(e=>`<div class="stat"><span>${e.name}</span><b>${e.sets.map(s=>s.reps).join(' + ')} ${isTimeEx(e.id)?'giây':'rep'}${e.kg>0?' @ '+fmtKg(e.kg)+'kg':''}</b></div>`).join('')
+    exs.map(e=>`<div class="stat"><span>${e.name}</span><b>${e.sets.map(s=>s.reps).join(' + ')} ${exIsTime(e)?'giây':'rep'}${e.kg>0?' @ '+fmtKg(e.kg)+'kg':''}</b></div>`).join('')
     + (vol>0?`<div class="stat"><span>Khối lượng tập</span><b>${vol>=1000?(vol/1000).toFixed(1)+' tấn':vol+' kg'}</b></div>`:'')
     + `<div class="stat"><span>Calo tiêu hao (ước tính)</span><b style="color:var(--accent)">~${kcal} kcal</b></div>`
     + `<div class="stat"><span>Tổng cộng</span><b style="color:var(--accent)">${totalReps} rep${totalSecs?' + '+totalSecs+'s':''} · ${mins} phút</b></div>`;
   // save history
+  let _saved=true;
   if(exs.length){
     const h=JSON.parse(localStorage.getItem('gpt_history')||'[]');
     h.push({startedAt:sess.startedAt, exercises:exs, kcal, vol, mood:sess.mood||null}); // mood PHAI luu, khong thi guard 'buoi met' trong suggestNext la code chet
-    lsSet('gpt_history',JSON.stringify(h.slice(-50))); // het cho KHONG duoc nem loi -> endSession khong dut giua chung
+    _saved=lsSet('gpt_history',JSON.stringify(h.slice(-50))); // het cho KHONG duoc nem loi -> endSession khong dut giua chung
   }
-  clearDraft(); // buoi da vao lich su -> xoa nhap
+  if(_saved) clearDraft(); // GHI THAT BAI (het cho) -> GIU draft lam backup, mo app sau con khoi phuc buoi
   show('scr-sum');
   // ket buoi + DAN DO theo nhom co troi (ghep lien sau cau ket)
   const ei=pickIdx('sessionEnd', PH.sessionEnd.length);
@@ -3363,8 +3376,8 @@ function renderHistScreen(){
   if(!h.length){ all.innerHTML='<div class="sub" style="margin-top:8px">Chưa có buổi tập nào.</div>'; return; }
   all.innerHTML=[...h].reverse().map(s=>{
     const d=new Date(s.startedAt);
-    const reps=s.exercises.filter(e=>!isTimeEx(e.id)).reduce((a,e)=>a+e.sets.reduce((x,y)=>x+y.reps,0),0);
-    const secs=s.exercises.filter(e=>isTimeEx(e.id)).reduce((a,e)=>a+e.sets.reduce((x,y)=>x+y.reps,0),0);
+    const reps=s.exercises.filter(e=>!exIsTime(e)).reduce((a,e)=>a+e.sets.reduce((x,y)=>x+y.reps,0),0);
+    const secs=s.exercises.filter(e=>exIsTime(e)).reduce((a,e)=>a+e.sets.reduce((x,y)=>x+y.reps,0),0);
     const meta=[`${reps} rep${secs?' + '+secs+'s':''}`]; if(s.vol) meta.push(s.vol>=1000?(s.vol/1000).toFixed(1)+' tấn':s.vol+' kg'); if(s.kcal) meta.push('~'+s.kcal+' kcal');
     return `<div class="histrow"><div class="hinfo">
       <div class="hd">📅 ${d.getDate()}/${d.getMonth()+1}/${d.getFullYear()} · ${meta.join(' · ')}</div>
@@ -3552,7 +3565,7 @@ S.selKg = lastKg[S.selEx]!==undefined ? +lastKg[S.selEx] : 0;
    back -> popstate (an mat dem) -> minh TU xu ly (dong lop phu dang mo, hoac lui 1 CAP man
    hinh theo phan cap) roi DAY LAI dem => back khong bao gio thoat ngoai y muon.
    Chi that su thoat khi dang o Home (va neu con buoi tap do thi phai bam 2 lan). */
-const MODAL_IDS=['modalNext','modalProfile','modalPause','modalGap','modalMood','modalResume','modalRpe'];
+const MODAL_IDS=['modalNext','modalProfile','modalCustom','modalPause','modalGap','modalMood','modalResume','modalRpe'];
 const SCR_PARENT={'scr-hist':'scr-home','scr-sum':'scr-home','scr-setup':'scr-home'};
 let _exitingApp=false, _armAt=0, _armKey='';
 function curScreen(){ const el=document.querySelector('.screen.on'); return el?el.id:'scr-home'; }
@@ -3585,6 +3598,7 @@ function goBack(){
     if(ov==='lightbox') LB.close();
     else if(ov==='txtFall') document.getElementById('txtFall').classList.remove('on');
     else if(ov==='pocket') pocketOff();
+    else if(ov==='modalPause') resumeFromPause();   // back luc TAM DUNG = tiep tuc tap (khong de ket buoi ket/mat rep)
     else openModal(ov,false);
     return true;
   }

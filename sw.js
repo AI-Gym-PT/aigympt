@@ -1,5 +1,5 @@
 /* AI Gym PT service worker — cache de mo nhanh + chay offline */
-const CACHE = 'aigympt-v32';  // v32: nut "Xuat log cam bien" gio HIEN BAN CHAN DOAN GON tren man (chup/copy duoc, khong phai tim file tai ve): may co accel tuyen tinh khong + nhip rep (thay dem doi) + kenh/vi tri
+const CACHE = 'aigympt-v33';  // v33: fix 10 loi tu review (gpt_lastkg hong crash app; mat buoi khi het cho; hy sinh 40 buoi cho key vun; back luc pause ket buoi/mat rep; back khong dong form them bai; sua bai custom khong an; xoa bai giu-gio -> giay tinh thanh rep; slug va cham)
 const CORE = ['./', './index.html', './manifest.json', './icon-192.png', './icon-512.png'];
 
 self.addEventListener('install', e => {
