@@ -2778,6 +2778,33 @@ function showTextFallback(name, text, hint){
   document.getElementById('txtFallBody').value=text;
   document.getElementById('txtFall').classList.add('on');
 }
+/* CHAN DOAN CAM BIEN gon -> hien TREN MAN de user CHUP/COPY gui (dien thoai khong tim duoc file tai ve).
+   Doc duoc ngay: may co accel tuyen tinh khong (nghi thu pham chinh), kenh, nhip rep (thay dem doi). */
+function sensorDiagText(){
+  const raw=SLOG.raw||[];
+  const laN=raw.filter(s=>s.la && (Math.abs(s.la[0])+Math.abs(s.la[1])+Math.abs(s.la[2]))>0.02).length; // la that su co gia tri (khac 0)
+  let hz=0; if(raw.length>3){ const dt=(raw[raw.length-1].t-raw[0].t)/(raw.length-1); if(dt>0) hz=Math.round(1000/dt); }
+  const ivs=SLOG.arr.filter(x=>x.emit===1).slice(-24).map(x=>x.iv);
+  const last=SLOG.arr.length?SLOG.arr[SLOG.arr.length-1]:{};
+  const ex=(S.ex&&S.ex.id)?S.ex.id:'?';
+  const laLine = raw.length ? (laN+'/'+raw.length+(laN<raw.length*0.5?'  ⚠ THIẾU (nghi thủ phạm)':'  OK')) : '(chưa ghi được)';
+  return [
+    '=== Chẩn đoán cảm biến AI Gym PT ===',
+    'Bài: '+ex+' · đặt máy: '+(ex!=='?'?posOf(ex):'?')+' · kênh: '+(Sensor.chan||'?')+' · nhạy: '+Sensor.sens,
+    'App đếm: '+S.reps+(S.ex?(' / mục tiêu '+S.ex.reps):''),
+    'Mẫu tín hiệu: '+raw.length+' (~'+hz+' Hz)',
+    'Gia tốc tuyến tính: '+laLine,
+    'Nhịp giữa các rep (giây): '+(ivs.length?ivs.join(' '):'(chưa có)'),
+    'Trạng thái cuối: amp '+(last.amp!=null?last.amp:'?')+' · P '+(last.P!=null?last.P:'?')+' · conf '+(last.conf!=null?last.conf:'?')+' · khoá '+(last.locked!=null?last.locked:'?'),
+    '',
+    '(nhịp rep ~ một nửa nhịp thật + app đếm gấp đôi = lỗi đếm đôi)'
+  ].join('\n');
+}
+function exportSensorLog(){
+  SLOG.save();
+  if(!(SLOG.raw&&SLOG.raw.length) && !SLOG.arr.length){ toast('Chưa có dữ liệu — tập 1 set ở chế độ Cảm biến rồi thử lại nhé'); return; }
+  showTextFallback('chẩn đoán cảm biến', sensorDiagText(), '📋 CHỤP MÀN HÌNH (hoặc bấm Sao chép) đoạn dưới rồi gửi cho tôi nhé — không cần tìm file:');
+}
 function exportJSON(filename, obj, label){
   const text=JSON.stringify(obj,null,1);
   // (1) Khay chia se kem FILE — duong duy nhat chay tren iOS/PWA. Goi THANG trong cu cham (khong await truoc do) de khong mat user-gesture.
@@ -3232,8 +3259,8 @@ function updatePocket(){
   else pocketOff();
 }
 document.getElementById('btnPocket').addEventListener('click',pocketOn);
-document.getElementById('slogExport').addEventListener('click',()=>{ SLOG.save(); SLOG.export(); });
-document.getElementById('slogExportRest').addEventListener('click',()=>{ SLOG.save(); SLOG.export(); }); // xuat log ngay sau set (man nghi)
+document.getElementById('slogExport').addEventListener('click',exportSensorLog);
+document.getElementById('slogExportRest').addEventListener('click',exportSensorLog); // chan doan ngay sau set (man nghi)
 pocketEl.addEventListener('pointerdown',()=>{
   const now=Date.now();
   if(now-pocketTap<450) pocketOff();
@@ -3401,7 +3428,7 @@ document.getElementById('btnBackup').addEventListener('click',()=>{
   BK_KEYS.forEach(k=>{ const v=localStorage.getItem(k); if(v!==null) data[k]=v; });
   exportJSON('aigympt-saoluu-'+new Date().toISOString().slice(0,10)+'.json', data, 'bản sao lưu');
 });
-document.getElementById('btnSlogHist').addEventListener('click',()=>{ SLOG.save(); SLOG.export(); });
+document.getElementById('btnSlogHist').addEventListener('click',exportSensorLog);
 document.getElementById('btnRestore').addEventListener('click',()=>document.getElementById('restoreFile').click());
 document.getElementById('restoreFile').addEventListener('change',e=>{
   const f=e.target.files[0]; if(!f) return;

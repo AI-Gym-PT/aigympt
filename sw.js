@@ -1,5 +1,5 @@
 /* AI Gym PT service worker — cache de mo nhanh + chay offline */
-const CACHE = 'aigympt-v31';  // v31: nut "Xuat log cam bien" gio ghi kem TIN HIEU THO (accel tuyen tinh + co trong luc + rotationRate) cua set gan nhat -> replay tim goc dem sai tren may that; ro may nao thieu accel tuyen tinh (laMissing)
+const CACHE = 'aigympt-v32';  // v32: nut "Xuat log cam bien" gio HIEN BAN CHAN DOAN GON tren man (chup/copy duoc, khong phai tim file tai ve): may co accel tuyen tinh khong + nhip rep (thay dem doi) + kenh/vi tri
 const CORE = ['./', './index.html', './manifest.json', './icon-192.png', './icon-512.png'];
 
 self.addEventListener('install', e => {
