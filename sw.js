@@ -1,5 +1,5 @@
 /* AI Gym PT service worker — cache de mo nhanh + chay offline */
-const CACHE = 'aigympt-v30';  // v30: calo tinh them HE SO TAI (kg so voi can nang, tran +50%) + EPOC 10% bai ta -> ta nang doc cao hon hop ly; cardio/plank/nghi giu nguyen MET
+const CACHE = 'aigympt-v31';  // v31: nut "Xuat log cam bien" gio ghi kem TIN HIEU THO (accel tuyen tinh + co trong luc + rotationRate) cua set gan nhat -> replay tim goc dem sai tren may that; ro may nao thieu accel tuyen tinh (laMissing)
 const CORE = ['./', './index.html', './manifest.json', './icon-192.png', './icon-512.png'];
 
 self.addEventListener('install', e => {

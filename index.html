@@ -2175,6 +2175,7 @@ function startSet(){
   hiddenAt = (document.visibilityState==='hidden') ? Date.now() : 0; // set BAT DAU khi man dang tat (nghi het gio luc khoa may) -> danh dau de con hoi bu; clamp theo setStartAt o onReturnVisible
   S.setStartAt=Date.now(); // dat TRUOC phase='active' de van an-dinh (repGrace) co moc dung ngay tu su kien dau tien
   if(S.mode==='sensor' && !S.ex.timeEx && Sensor.on && !keepSensor) Sensor.armForSet(); // binh thuong: arm sach. Tu prep: GIU nao dang khoa (dang dem chuan)
+  if(S.mode==='sensor' && !S.ex.timeEx) SLOG.raw=[]; // ghi tin hieu tho set MOI (go loi dem sai)
   S.phase='active'; S.reps=0; S.repTimes=[]; S.lastStallLevel=0; S.slowWarned=0; S.safetyWarned=false; S.fastWarned=0;
   S.flowMode=false; S.flowSaid=false; S.repFbCount=0; S.lastRepFbAt=0; S._realFrom=0; S._minusTaps=0; // Goi C + danh dau sua tay
   S.side=1; S.side1Reps=0; S.armAt=keepSensor?(S._prepArmAt||S.setStartAt):S.setStartAt; // bai mot-ben + moc van an dinh (tu prep thi giu moc cu -> khong chan rep dang tap)
@@ -2732,14 +2733,32 @@ const Demo={
    de tinh chinh nguong bang du lieu tap that. Luu 400 dong gan nhat. */
 const SLOG={
   arr: JSON.parse(localStorage.getItem('gpt_senslog')||'[]'),
+  raw: [],            // TIN HIEU THO cua set gan nhat (accel tuyen tinh + accel co trong luc + rotationRate)
   push(e){
     this.arr.push(e);
     if(this.arr.length>400) this.arr=this.arr.slice(-400);
   },
+  /* ghi mau tho — de REPLAY qua dung thuat toan, tim GOC vi sao dem sai tren may THAT
+     (test tong hop dat nhung may thT sai -> phai co tin hieu that). Goi tu Sensor.onMotion. */
+  pushRaw(la, ag, rr){
+    if(this.raw.length>=6000) return; // cap ~1 set (xoa dau set o startSet)
+    const R=x=>Math.round((x||0)*1000)/1000;
+    this.raw.push({
+      t: Math.round(performance.now()),
+      la: (la&&la.x!=null)?[R(la.x),R(la.y),R(la.z)]:null,   // acceleration (da tru trong luc) — null tren vai may Android!
+      ag: (ag&&ag.x!=null)?[R(ag.x),R(ag.y),R(ag.z)]:null,   // accelerationIncludingGravity
+      rr: (rr&&rr.alpha!=null)?[R(rr.alpha),R(rr.beta),R(rr.gamma)]:null
+    });
+  },
   save(){ try{ localStorage.setItem('gpt_senslog',JSON.stringify(this.arr)); }catch(e){} },
   export(){
-    if(!this.arr.length){ toast('Chưa có dữ liệu — tập 1 set ở chế độ Cảm biến rồi xuất lại'); return; }
-    const data={exportedAt:new Date().toISOString(), profile:getProfile(), sens:Sensor.sens, log:this.arr};
+    if(!this.arr.length && !this.raw.length){ toast('Chưa có dữ liệu — tập 1 set ở chế độ Cảm biến rồi xuất lại'); return; }
+    const laN=this.raw.filter(s=>s.la).length;
+    const data={exportedAt:new Date().toISOString(), profile:getProfile(), sens:Sensor.sens,
+      ex:S.ex?S.ex.id:'', pos:(S.ex&&S.ex.id)?posOf(S.ex.id):'', chan:Sensor.chan, seed:Sensor.axisSeed,
+      countedReps:S.reps, targetReps:S.ex?S.ex.reps:0,
+      rawSummary:{samples:this.raw.length, laAvailable:laN, laMissing:this.raw.length-laN}, // laMissing>0 = may khong cho accel tuyen tinh -> dung fallback nhieu hon
+      log:this.arr, raw:this.raw};
     exportJSON('aigympt-sensorlog-'+new Date().toISOString().slice(0,10)+'.json', data, 'log cảm biến');
   }
 };
@@ -2940,6 +2959,7 @@ const Sensor={
     if(!this.on) return;
     if(S.phase!=='active' && S.phase!=='countdown') return;
     const g=e.accelerationIncludingGravity, ag=(g&&g.x!=null)?[g.x||0,g.y||0,g.z||0]:null;
+    if(S.phase==='active') SLOG.pushRaw(e.acceleration, g, e.rotationRate); // ghi tin hieu tho de go loi dem sai
     if(ag) for(let i=0;i<3;i++) this.gvec[i]+=0.02*(ag[i]-this.gvec[i]);   // gravity/DC cham
     let a; const la=e.acceleration;
     if(la && la.x!=null && (Math.abs(la.x||0)+Math.abs(la.y||0)+Math.abs(la.z||0))>0.0005) a=[la.x||0,la.y||0,la.z||0];
