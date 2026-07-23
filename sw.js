@@ -1,5 +1,5 @@
 /* AI Gym PT service worker — cache de mo nhanh + chay offline */
-const CACHE = 'aigympt-v35';  // v35: vao-set-som them duong nhan biet theo NHIP DEU (khong con doi autocorr phai khoa kip) -> de bat duoc hon khi user tap luon
+const CACHE = 'aigympt-v36';  // v36: bai CHI-XOAY doc bang GOC NGHIENG thay vi gia toc (shin: hipabduct/legext/legcurl/kickback + hipthrust/glutebridge) - bang chung log that: hipthrust kenh t amp CHI 0.34, khong bao gio khoa
 const CORE = ['./', './index.html', './manifest.json', './icon-192.png', './icon-512.png'];
 
 self.addEventListener('install', e => {

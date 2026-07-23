@@ -2901,6 +2901,8 @@ function _cov3(arr,m){ let a=0,b=0,c=0,d=0,e=0,f=0; for(const p of arr){ const x
   a+=x*x;b+=x*y;c+=x*z;d+=y*y;e+=y*z;f+=z*z; } const n=arr.length||1;
   return [a/n,b/n,c/n, b/n,d/n,e/n, c/n,e/n,f/n]; }
 /* Bai nhe/bien do thap/cham -> ha nguong + gieo chu ky dai (prior tung bai) */
+// bai o TUI QUAN nhung ban chat la XOAY (duoi hong): than nam yen, dui xoay -> doc GOC NGHIENG
+const ROT_EX=new Set(['hipthrust','glutebridge']);
 const GENTLE_EX=new Set(["hipabduct","ohcable","scable","revcrunch","sideplank",'hipthrust','glutebridge','rdl','kickback','backext','legext','legcurl','latraise','cablelatraise','reardelt','facepull','pecdeck','fly','pallof','deadbug','cablecrunch','straightarm','frontraise']);
 
 /* ===== SPARC — Signed Principal-Axis Rep Counter =====
@@ -2935,7 +2937,13 @@ const Sensor={
     this.gf=null; this.uR=[1,0,0]; this.meanG=[0,0,0]; this.kAlt=0; this.chanSw=0; this.rmsP=0;
     // bai deo CO TAY / kep NGUC: rep = cu XOAY (tay ~120°, than gap ~30-45°) -> kenh xoay; bai bo tui: tinh tien -> kenh gia toc. Sau do tu doi theo nhip ro hon.
     const _pos = S.ex ? posOf(S.ex.id) : 'pocket';
-    this.chan = (_pos==='wrist' || _pos==='chest' || _pos==='waist') ? 'r' : 't';
+    // KENH: 'r' = GOC NGHIENG (tin hieu dang VI TRI, 1 rep = 1 chu ky sach) | 't' = gia toc tuyen tinh.
+    // Bai mà CHI-XOAY (than khong di chuyen, chi chi/hong xoay) PHAI dung 'r':
+    //  - shin (hipabduct/legext/legcurl/kickback): cang chan XOAY quanh goi -> nghieng nhieu, tinh tien ~0
+    //  - hipthrust/glutebridge: duoi hong, DUI xoay ~45 do, than nam yen -> may trong tui NGHIENG, khong tinh tien
+    // (Bang chung tu log that: hipthrust kenh 't' amp CHI 0.34 + khong bao gio khoa; cable fly kenh 'r' dem dung.)
+    const _rotEx = ROT_EX.has(S.ex?S.ex.id:'');
+    this.chan = (_pos==='wrist' || _pos==='chest' || _pos==='waist' || _pos==='shin' || _rotEx) ? 'r' : 't';
     this.acc=0; this.tNow=0; this.lastT=performance.now(); this.kHeavy=0; this.orientHold=0;
     this.sm=0; this.rms2=0; this.ampEMA=0.6; this.noiseFloor=0.05;
     this.locked=false; this.lockCnt=0; this.jumpCnt=0; this.conf=0; this.lowConf=0; this.fastRej=0; this.fastIv=0; this.provOpp=0; this.lastEmitLead=0; this.gaitHold=0;
