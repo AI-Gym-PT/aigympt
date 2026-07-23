@@ -2031,7 +2031,7 @@ document.getElementById('btnGo').addEventListener('click',async ()=>{
 // bat SAU khi cat may (khong rep ma tu viec cam may doc cue). Cue tu the doc bang GIONG luc user dang
 // vao tu the (tay ranh) -> de chinh + giong PT that hon; bai LAN DAU doc HET, bai quen doc gon.
 function startCountdown(){
-  clearTimers(); S.phase='countdown'; S.prepWatch=false; S._fromPrep=0; S._keepSensor=false; S._prepReps=0; S._prep='intro'; S._prepSeq=(S._prepSeq||0)+1;
+  clearTimers(); S.phase='countdown'; S.prepWatch=false; S._fromPrep=0; S._keepSensor=false; S._prepReps=0; S._prepT=[]; S._prep='intro'; S._prepSeq=(S._prepSeq||0)+1;
   openModal('modalRpe',false); // dong hoi-do-nang neu con mo (het gio nghi truoc khi user tra loi)
   show('scr-count');
   requestWakeLock(); // giu man hinh sang suot buoi tap
@@ -2104,7 +2104,7 @@ function startCountdown(){
     showEl(elSkip,'block'); elSkip.textContent='Vào luôn ▶';
     elSkip.onclick=()=>{ if(S._prep==='place'||S._prep==='cues'){ clearTimers(); ++S._prepSeq; stageSettle(3); } };
     if(!Sensor.on) Sensor.start(); // BAT o day (khong o chang 1 -> khong rep ma tu viec cam may doc cue)
-    S.prepWatch=true; S._prepReps=0; S._prepArmAt=Date.now(); S.armAt=S._prepArmAt; // canh vao set som
+    S.prepWatch=true; S._prepReps=0; S._prepT=[]; S._prepArmAt=Date.now(); S.armAt=S._prepArmAt; // canh vao set som
     const items=[{keys:['pp_'+pos], text:POS_SAY[pos], label:POS_SAY[pos]}];
     if(pos==='pocket'){ try{ if(!localStorage.getItem('gpt_pocketVoice') && Voice.has('p_pockettip_0')){ localStorage.setItem('gpt_pocketVoice','1'); items.push({keys:['p_pockettip_0'], text:POCKET_TIP, label:'Mẹo: nút 🌙 Bỏ túi'}); } }catch(e){} }
     speakSeq(items, 0, 400, ()=>{ after(1800, ()=>{ if(S._prep==='place') (skipCues?stageSettle(3):stageCues()); }); }, tok); // cho user dut may vao roi doc cue
@@ -2300,9 +2300,19 @@ function renderDots(){
    -> chac chan tap that, khong phai dong tac vao tu the / rung nhe. */
 function prepRepDetected(){
   S._prepReps=(S._prepReps||0)+1;
-  // Bang chung MANH la dang tap that (khong phai rung/chinh tu the): >=3 nhip lien tiep + nhip DA KHOA
-  // (autocorrelation locked, conf cao). Rung ngau nhien rat kho gia dong thoi ca 3 + khoa duoc autocorr.
-  if(S._prepReps>=3 && Sensor.bstate==='RUN' && Sensor.locked && Sensor.conf>=0.45) enterSetFromPrep(S._prepReps);
+  const _t=Sensor.tNow||0; (S._prepT=S._prepT||[]).push(_t); if(S._prepT.length>4) S._prepT.shift();
+  // Bang chung dang tap THAT (khong phai rung/chinh tu the), CHAP NHAN 1 TRONG 2 duong:
+  //  (a) NHIP DEU: >=3 nhip + 2 khoang cach lien tiep deu nhau (ty le >=0.7) va nam trong 0.7-6s.
+  //  (b) autocorr DA KHOA (nhu cu).
+  // Truoc day CHI co (b) -> trong prep user vua CAT MAY (dong tac nhet lam ban ring) + cam bien vua bat
+  // (ring rong) nen RAT KHO khoa kip => khong bat duoc, rep tap som bi MAT (user bao 'chua duoc ghi nhan').
+  let deu=false;
+  if(S._prepT.length>=3){
+    const m=S._prepT.length, i1=S._prepT[m-1]-S._prepT[m-2], i2=S._prepT[m-2]-S._prepT[m-3];
+    deu = i1>0.7 && i1<6 && i2>0.7 && i2<6 && Math.min(i1,i2)/Math.max(i1,i2)>=0.7;
+  }
+  const khoa = Sensor.bstate==='RUN' && Sensor.locked && Sensor.conf>=0.45;
+  if(S._prepReps>=3 && (deu||khoa)) enterSetFromPrep(S._prepReps);
 }
 function enterSetFromPrep(credit){
   if(S.phase!=='countdown') return;

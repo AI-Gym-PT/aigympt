@@ -1,5 +1,5 @@
 /* AI Gym PT service worker — cache de mo nhanh + chay offline */
-const CACHE = 'aigympt-v34';  // v34: CHONG KHOA NHAM NUA CHU KY (octave guard) - nguyen nhan 'hai nhip ra vo dem thanh 2 rep'; chan doan them dinh chu ky de xac nhan
+const CACHE = 'aigympt-v35';  // v35: vao-set-som them duong nhan biet theo NHIP DEU (khong con doi autocorr phai khoa kip) -> de bat duoc hon khi user tap luon
 const CORE = ['./', './index.html', './manifest.json', './icon-192.png', './icon-512.png'];
 
 self.addEventListener('install', e => {
