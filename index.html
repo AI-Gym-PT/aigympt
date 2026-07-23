@@ -304,7 +304,11 @@ label.f{display:block;margin-top:20px;font-size:13px;font-weight:700;color:var(-
     <div class="sub" style="margin-top:4px">Chọn bài hoặc bấm mic và nói tên bài tiếng Việt: <i>"Cuốn tạ tay trước 3 set 12 cái"</i></div>
     <button class="micbtn" id="micBtn">🎤 Nói bài tập</button>
     <div class="sub" id="micHeard" style="margin-top:6px;text-align:center;font-size:12px;display:none"></div>
-    <label class="f">Bài tập — chọn nhóm cơ</label>
+    <label class="f">Bài tập — tìm hoặc chọn nhóm cơ</label>
+    <div id="exSearchWrap" style="position:relative;margin-bottom:8px">
+      <input class="inp" id="exSearch" placeholder="🔍 Gõ tên bài (không dấu cũng được)…" autocomplete="off" spellcheck="false" style="padding-right:38px">
+      <span id="exSearchClear" style="display:none;position:absolute;right:10px;top:50%;transform:translateY(-50%);cursor:pointer;color:var(--sub);font-weight:800;padding:4px 6px">✕</span>
+    </div>
     <div id="exCats"></div>
     <div class="guide" id="guideCard">
       <div class="gimgs" id="gImgs">
@@ -1655,9 +1659,19 @@ document.getElementById('pfSave').addEventListener('click',()=>{
 /* =================== SETUP =================== */
 let openCat = null; // nhom co dang mo (mac dinh: nhom cua bai dang chon)
 let pickedView = false; // true = da chon 1 bai -> chi hien bai do + huong dan (an cac bai khac)
+let exQuery='';   // tu khoa dang tim (o tim kiem bai)
+function exChipHtml(e){ return `<button class="exch ${e.id===S.selEx?'sel':''}" data-id="${e.id}"><b>${engName(e)}</b>${engName(e)!==vietName(e)?`<span class="ex-vn">${vietName(e)}</span>`:''}<span class="ex-eq">🔧 ${e.equip||'—'}${e.time?' · ⏱ theo giây':''}</span>${e.custom?`<span class="cx-del" data-del="${e.id}" title="Xoá bài này" style="margin-left:auto;padding:2px 9px;color:var(--sub);font-weight:800">✕</span>`:''}</button>`; }
+// khop tim kiem: BO DAU ca 2 phia (vnorm) -> go 'day nguc' hay 'đẩy ngực' deu ra;
+// tim ca ten Anh, ten Viet, cac alias va dung cu
+function exMatch(e,q){
+  const hay=vnorm([engName(e), vietName(e), (e.alias||[]).join(' '), e.equip||''].join(' '));
+  return hay.indexOf(q)>=0;
+}
 function renderSetup(isNext=false){
   document.getElementById('setupTitle').textContent = isNext?'Bài tập tiếp theo?':'Hôm nay tập gì?';
   const box=document.getElementById('exCats'), gc=document.getElementById('guideCard');
+  const _sw=document.getElementById('exSearchWrap');
+  if(_sw) _sw.style.display = (pickedView && S.selEx) ? 'none' : '';   // da chon bai -> khoi hien o tim
   if(pickedView && S.selEx){
     // DA CHON: 1 thanh gon + huong dan ngay duoi (khong phai keo qua danh sach)
     const ex=EXERCISES.find(e=>e.id===S.selEx);
@@ -1665,13 +1679,32 @@ function renderSetup(isNext=false){
     if(gc) gc.style.display='';
     renderGuide();
   } else {
+    // TIM KIEM: co tu khoa -> danh sach PHANG tat ca nhom (khoi phai biet bai nam nhom nao)
+    const q=vnorm(exQuery||'');
+    if(q){
+      const hit=EXERCISES.filter(e=>exMatch(e,q))
+        .sort((a,b)=>vietName(a).localeCompare(vietName(b),'vi',{numeric:true,sensitivity:'base'}));
+      box.innerHTML = hit.length
+        ? `<div class="sub" style="margin:2px 2px 6px">Tìm thấy ${hit.length} bài</div><div class="exlist">${hit.map(exChipHtml).join('')}</div>`
+        : `<div class="sub" style="margin:6px 2px">Không thấy bài nào khớp “${exQuery}”.<br>Bạn có thể tự thêm bài này ở nhóm <b>Bài của bạn</b>.</div><button class="btn btn-ghost btn-sm" id="cxAdd" style="width:auto;margin:6px 2px">➕ Thêm bài tập khác</button>`;
+      if(gc) gc.style.display='none';
+      renderKg();
+      const tEx0=isTimeEx(S.selEx);
+      document.getElementById('lblReps').textContent = tEx0?'Số giây giữ mỗi set':'Số rep mỗi set';
+      document.getElementById('repUnit').textContent = tEx0?(UNILATERAL.has(S.selEx)?'giây/bên':'giây'):(UNILATERAL.has(S.selEx)?'rep/bên':'rep');
+      document.getElementById('setVal').value=S.selSets;
+      document.getElementById('repVal').value=S.selReps;
+      document.getElementById('restChips').innerHTML = REST_OPTS.map(r=>`<button class="chip ${r===S.selRest?'sel':''}" data-r="${r}">${r}s</button>`).join('');
+      document.getElementById('btnGo').textContent='Vào set 1 →';
+      return;
+    }
     // DUYET: danh sach theo nhom, MOI NHOM sap xep A-Z (ten tieng Viet)
     if(openCat===null){ const cur=EXERCISES.find(e=>e.id===S.selEx); openCat=cur?cur.cat:CATS[0].id; }
     box.innerHTML = CATS.map(c=>{
       const exs=EXERCISES.filter(e=>e.cat===c.id).slice().sort((a,b)=>vietName(a).localeCompare(vietName(b),'vi',{numeric:true,sensitivity:'base'}));
       const picked=exs.find(e=>e.id===S.selEx);
       const isOpen=c.id===openCat;
-      const chips=exs.map(e=>`<button class="exch ${e.id===S.selEx?'sel':''}" data-id="${e.id}"><b>${engName(e)}</b>${engName(e)!==vietName(e)?`<span class="ex-vn">${vietName(e)}</span>`:''}<span class="ex-eq">🔧 ${e.equip||'—'}${e.time?' · ⏱ theo giây':''}</span>${e.custom?`<span class="cx-del" data-del="${e.id}" title="Xoá bài này" style="margin-left:auto;padding:2px 9px;color:var(--sub);font-weight:800">✕</span>`:''}</button>`).join('');
+      const chips=exs.map(exChipHtml).join('');
       // nhom "Bai cua ban": luon co nut them (ke ca khi chua co bai nao)
       const body = c.id==='custom'
         ? `<div class="exlist">${chips}</div><button class="btn btn-ghost btn-sm" id="cxAdd" style="width:auto;margin:6px 2px 2px">➕ Thêm bài tập khác</button>`
@@ -1771,6 +1804,8 @@ document.getElementById('exCats').addEventListener('click',e=>{
     else if(nowTime&&wasTime && isCardio(S.selEx)&&S.selReps<40) S.selReps=60; // chuyển sang cardio
     else if(nowTime&&wasTime && !isCardio(S.selEx)&&S.selReps>300) S.selReps=30; // cardio(≤1800s) -> giữ tư thế (cap 300s): kéo về mặc định
     else if(!nowTime&&wasTime) S.selReps=12;  // quay về mặc định 12 rep
+    exQuery=''; { const _si=document.getElementById('exSearch'), _sc=document.getElementById('exSearchClear');
+      if(_si) _si.value=''; if(_sc) _sc.style.display='none'; }   // chon xong -> don o tim
     pickedView=true; renderSetup(isNext); return; // chon bai -> hien huong dan, an bai khac
   }
   if(e.target.closest('.pickbar')){ pickedView=false; const cur=EXERCISES.find(x=>x.id===S.selEx); if(cur) openCat=cur.cat; renderSetup(isNext); return; } // Doi bai khac
@@ -1855,6 +1890,20 @@ function deleteCustom(id){
   lastGuideId=null;
   renderSetup(S.session!==null&&S.session.exercises.length>0);
   toast('Đã xoá'+(nm?' "'+nm+'"':' bài tự thêm'));
+}
+{ const _si=document.getElementById('exSearch'), _sc=document.getElementById('exSearchClear');
+  if(_si){
+    _si.addEventListener('input',()=>{
+      exQuery=_si.value||'';
+      if(_sc) _sc.style.display = exQuery?'':'none';
+      pickedView=false;                       // dang go -> ve che do duyet de thay ket qua
+      renderSetup(S.session!==null&&S.session.exercises.length>0);
+    });
+  }
+  if(_sc) _sc.addEventListener('click',()=>{
+    exQuery=''; if(_si) _si.value=''; _sc.style.display='none';
+    renderSetup(S.session!==null&&S.session.exercises.length>0);
+  });
 }
 document.getElementById('restChips').addEventListener('click',e=>{
   const b=e.target.closest('.chip'); if(!b) return;

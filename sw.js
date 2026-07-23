@@ -1,5 +1,5 @@
 /* AI Gym PT service worker — cache de mo nhanh + chay offline */
-const CACHE = 'aigympt-v37';  // v37: app TU SUA kenh do - chi ngung do kenh khi da THAT SU khoa duoc nhip (truoc day commit rep rac cung vao RUN roi tu khoa minh vao kenh sai vinh vien)
+const CACHE = 'aigympt-v38';  // v38: THANH TIM KIEM BAI - go ten (khong dau cung duoc), tim ca ten Viet/Anh/alias/dung cu, ket qua phang tat ca nhom; khong thay thi goi y tu them
 const CORE = ['./', './index.html', './manifest.json', './icon-192.png', './icon-512.png'];
 
 self.addEventListener('install', e => {
