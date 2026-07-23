@@ -2809,6 +2809,7 @@ function sensorDiagText(){
     'Gia tốc tuyến tính: '+laLine,
     'Nhịp giữa các rep (giây): '+(ivs.length?ivs.join(' '):'(chưa có)'),
     'Trạng thái cuối: amp '+(last.amp!=null?last.amp:'?')+' · P '+(last.P!=null?last.P:'?')+' · conf '+(last.conf!=null?last.conf:'?')+' · khoá '+(last.locked!=null?last.locked:'?'),
+    'Đỉnh chu kỳ (giây:điểm): '+((Sensor._pk&&Sensor._pk.length)?Sensor._pk.map(x=>x[0]+':'+x[1]).join('  '):'(chưa có)'),
     '',
     '(nhịp rep ~ một nửa nhịp thật + app đếm gấp đôi = lỗi đếm đôi)'
   ].join('\n');
@@ -3181,6 +3182,21 @@ const Sensor={
     let Pest=null,c=0;
     for(let L=lagMin+1;L<lagMax;L++) if(r[L]>r[L-1]&&r[L]>=r[L+1]&&r[L]>=0.85*best){ Pest=L/FS; c=r[L]; break; }
     if(Pest==null){ this.conf=0; return; }
+    // r[L]=sum/C0 KHONG chia so mau chong lan -> giam tu nhien theo L. Chuan hoa lai de so cong bang giua P va 2P.
+    const _nrm=L=>r[L]*p.length/Math.max(1,p.length-L);
+    // CHONG KHOA NHAM NUA CHU KY (octave error): 1 rep = ra + vo, moi nua co the trong nhu 1 chu ky
+    // -> may khoa P = T/2 va dem DOI rep (user: 'hai nhip ra va vo dem thanh hai rep').
+    // Voi chu ky THAT T thi 2T khop KEM hon T; nen neu 2P khop TOT HON P => P dang la nua chu ky -> lay 2P.
+    // AN TOAN: khoa dung thi dieu kien nay khong bao gio dung, guard khong kich.
+    { const L2=Math.round(2*Pest*FS);
+      if(L2<=lagMax){
+        let b2=L2, n2=_nrm(L2);
+        for(let d=-3;d<=3;d++){ const L=L2+d; if(L>lagMin && L<=lagMax && _nrm(L)>n2){ n2=_nrm(L); b2=L; } }
+        if(n2 > _nrm(Math.round(Pest*FS))*1.05){ Pest=b2/FS; c=r[b2]; } // 2P khop hon han -> P cu la NUA chu ky
+      } }
+    // luu 3 dinh manh nhat (de bang chan doan cho biet co bay octave khong)
+    { const pk=[]; for(let L=lagMin+1;L<lagMax;L++) if(r[L]>r[L-1]&&r[L]>=r[L+1]) pk.push([L/FS,_nrm(L)]);
+      pk.sort((a,b)=>b[1]-a[1]); this._pk=pk.slice(0,3).map(x=>[+x[0].toFixed(2),+x[1].toFixed(2)]); }
     this.conf=c;
     if(!this.locked){ if(S.phase==='active'||S.prepWatch){ if(c>=0.5){ if(++this.lockCnt>=2) this.locked=true; } else this.lockCnt=0; this.Plock=Pest; } } // dem nguoc (di bo toi ghe): khong khoa, khong keo Plock — giu prior cua bai
     else if(Math.abs(Pest-this.Plock)/this.Plock<0.30){ this.Plock+=0.25*(Pest-this.Plock); this.jumpCnt=0; }

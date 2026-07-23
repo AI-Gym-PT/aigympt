@@ -1,5 +1,5 @@
 /* AI Gym PT service worker — cache de mo nhanh + chay offline */
-const CACHE = 'aigympt-v33';  // v33: fix 10 loi tu review (gpt_lastkg hong crash app; mat buoi khi het cho; hy sinh 40 buoi cho key vun; back luc pause ket buoi/mat rep; back khong dong form them bai; sua bai custom khong an; xoa bai giu-gio -> giay tinh thanh rep; slug va cham)
+const CACHE = 'aigympt-v34';  // v34: CHONG KHOA NHAM NUA CHU KY (octave guard) - nguyen nhan 'hai nhip ra vo dem thanh 2 rep'; chan doan them dinh chu ky de xac nhan
 const CORE = ['./', './index.html', './manifest.json', './icon-192.png', './icon-512.png'];
 
 self.addEventListener('install', e => {
