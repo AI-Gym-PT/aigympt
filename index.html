@@ -3221,7 +3221,11 @@ const Sensor={
     else if(++this.jumpCnt>=2){ this.Plock=Pest; this.jumpCnt=0; }
   },
   chanScan(){ // trong bootstrap: kenh UNG VIEN co diem "nhip x bien do" lon hon han -> doi kenh
-    if(this.bstate==='RUN' || (S.phase!=='active'&&!S.prepWatch) || this.chanSw>=2 || this.filled<150) return; // cho >=3s du lieu, tranh tuong quan gia luc dau
+    // NGUNG do kenh khi da RUN *VA* DA KHOA duoc nhip (dang dem tot that su).
+    // Truoc day chi can RUN la ngung -> app commit rep RAC tren kenh sai cung vao RUN roi TU KHOA MINH
+    // vao kenh sai vinh vien (log that hipthrust: amp 0.34, conf 0, locked false, van dem 12 rep rac).
+    // Chua khoa duoc nhip = chua chac kenh dung -> phai cho doi kenh tiep (van cap chanSw<=2).
+    if((this.bstate==='RUN' && this.locked) || (S.phase!=='active'&&!S.prepWatch) || this.chanSw>=2 || this.filled<150) return;
     if((this.kAlt^=1)!==1) return; // moi 0.6s mot lan cho re
     const rot=this.chan==='t'; // ung vien = kenh con lai
     const ord=this.chronoOf(rot?this.ringG:this.ringA); if(ord.length<50) return;
